@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table, Enum
 from sqlalchemy.orm import relationship
 from infrastructure.database import Base
+import enum
 
 class Voter(Base):
     __tablename__ = "voters"
@@ -8,12 +9,17 @@ class Voter(Base):
     name = Column(String, index=True)
     has_voted = Column(Boolean, default=False)
 
+class ElectionStatus(str, enum.Enum):
+    ACTIVE = "active"
+    COMPLETED = "completed"
+
 class Election(Base):
     __tablename__ = "elections"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    candidates = Column(String)  # Comma-separated list of candidates
-    votes = Column(String)  # Comma-separated votes count (e.g., "0,2,5")
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    candidates = Column(String)
+    votes = Column(String)
+    status = Column(Enum(ElectionStatus), default=ElectionStatus.ACTIVE)  # Comma-separated votes count (e.g., "0,2,5")
 
     def increment_vote(self, candidate_name: str):
         candidate_list = self.candidates.split(",")

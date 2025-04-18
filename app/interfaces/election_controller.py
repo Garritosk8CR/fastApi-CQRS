@@ -1,3 +1,8 @@
+from fastapi import Depends, HTTPException
+from app.application.queries import GetElectionResultsQuery
+from app.infrastructure import election_repo
+from app.infrastructure.database import SessionLocal
+from app.infrastructure.election_repo import ElectionRepository
 from application.commands import CreateElectionCommand
 from infrastructure.models import Election
 
@@ -9,17 +14,44 @@ def get_election_results(election_id: int):
         raise HTTPException(status_code=404, detail="Election not found")
     return {"results": election.votes}
 
-@app.post("/elections/")
-def create_election(command: CreateElectionCommand, db: Session = Depends(get_db)):
+@app.get("/elections/{election_id}/")
+def get_election_details(election_id: int, db: Session = Depends(get_db)):
     repo = ElectionRepository(db)
+    election = repo.get_election_by_id(election_id)
+    if not election:
+        raise HTTPException(status_code=404, detail="Election not found")
+
+    return {
+        "election_id": election.id,
+        "name": election.name,
+        "candidates": election.candidates.split(","),
+        "votes": list(map(int, election.votes.split(",")))
+    }
+
+@app.put("/elections/{election_id}/end/")
+def end_election(election_id: int, db: Session = Depends(get_db)):
+    repo = ElectionRepository(db)
+    election = repo.get_election_by_id(election_id)
+    if not election:
+        raise HTTPException(status_code=404, detail="Election not found")
     
-    # Create a new election
-    new_election = Election(
-        name=command.name,
-        candidates=",".join(command.candidates),
-        votes=",".join(["0"] * len(command.candidates))  # Initialize votes to zero
-    )
+    # Update the status to completed
+    election.status = "completed"
+    db.commit()
+    return {"message": f"Election {election_id} has been ended successfully."}
+
+@app.get("/elections/")
+def list_all_elections(db: Session = Depends(get_db)):
+    repo = ElectionRepository(db)
+    elections = db.query(Election).all()
     
-    created_election = repo.create_election(new_election)
-    return {"message": "Election created successfully", "election_id": created_election.id}
+    return [
+        {
+            "election_id": election.id,
+            "name": election.name,
+            "candidates": election.candidates.split(","),
+            "votes": list(map(int, election.votes.split(",")))
+        }
+        for election in elections
+    ]
 
