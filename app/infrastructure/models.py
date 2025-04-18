@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table
 from sqlalchemy.orm import relationship
-from app.infrastructure.database import Base
+from infrastructure.database import Base
 
 class Voter(Base):
     __tablename__ = "voters"

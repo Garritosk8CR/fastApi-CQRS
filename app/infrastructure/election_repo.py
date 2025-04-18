@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.infrastructure.models import Election
+from infrastructure.models import Election
 
 class ElectionRepository:
     def __init__(self, db: Session):

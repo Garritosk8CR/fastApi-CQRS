@@ -1,9 +1,10 @@
-class RegisterVoterCommand:
-    def __init__(self, voter_id: int, name: str):
-        self.voter_id = voter_id
-        self.name = name
+from pydantic import BaseModel
 
-class CastVoteCommand:
-    def __init__(self, voter_id: int, candidate: str):
-        self.voter_id = voter_id
-        self.candidate = candidate
+class RegisterVoterCommand(BaseModel):
+    voter_id: int
+    name: str
+
+
+class CastVoteCommand(BaseModel):
+    voter_id: int
+    candidate: str

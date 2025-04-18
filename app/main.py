@@ -1,6 +1,13 @@
 import uvicorn
-from app.interfaces.voter_controller import app
-from app.infrastructure.database import engine, Base
+from infrastructure.database import engine, Base
+import sqlalchemy
+from fastapi import FastAPI
+from interfaces.voter_controller import router as voter_router
+
+app = FastAPI()
+
+# Include the voter router
+app.include_router(voter_router, prefix="/voter", tags=["Voters"])
 
 # Create tables in the database
 Base.metadata.create_all(bind=engine)

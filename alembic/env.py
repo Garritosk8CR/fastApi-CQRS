@@ -18,11 +18,14 @@ def run_migrations_online():
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
-    with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=Base.metadata)
 
-    with context.begin_transaction():
-        context.run_migrations()
+    connection = connectable.connect()
+    try:
+        context.configure(connection=connection, target_metadata=Base.metadata)
+        with context.begin_transaction():
+            context.run_migrations()
+    finally:
+        connection.close()
 
 if context.is_offline_mode():
     run_migrations_offline()
