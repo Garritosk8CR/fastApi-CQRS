@@ -1,9 +1,15 @@
-from app.domain.election import Election
-from app.infrastructure.database import election_database
+from sqlalchemy.orm import Session
+from app.infrastructure.models import Election
 
 class ElectionRepository:
-    def create_election(self, election: Election):
-        election_database[election.election_id] = election
+    def __init__(self, db: Session):
+        self.db = db
 
-    def get_election_by_id(self, election_id: int) -> Election:
-        return election_database.get(election_id)
+    def create_election(self, election: Election):
+        self.db.add(election)
+        self.db.commit()
+        self.db.refresh(election)
+        return election
+
+    def get_election_by_id(self, election_id: int):
+        return self.db.query(Election).filter(Election.id == election_id).first()
