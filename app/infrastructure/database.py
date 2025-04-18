@@ -1,6 +1,19 @@
-from typing import Dict
-from app.domain.voter import Voter
-from app.domain.election import Election
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-voter_database: Dict[int, Voter] = {}
-election_database: Dict[int, Election] = {}
+# PostgreSQL connection string
+DATABASE_URL = "postgresql://postgres:1A0b2C9d3E@localhost:5432/voting_system"
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+# Dependency to get a database session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
