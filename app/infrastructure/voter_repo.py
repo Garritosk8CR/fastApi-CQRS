@@ -1,9 +1,15 @@
-from app.domain.voter import Voter
-from app.infrastructure.database import voter_database
+from sqlalchemy.orm import Session
+from app.infrastructure.models import Voter
 
 class VoterRepository:
-    def register_voter(self, voter: Voter):
-        voter_database[voter.voter_id] = voter
+    def __init__(self, db: Session):
+        self.db = db
 
-    def get_voter_by_id(self, voter_id: int) -> Voter:
-        return voter_database.get(voter_id)
+    def register_voter(self, voter: Voter):
+        self.db.add(voter)
+        self.db.commit()
+        self.db.refresh(voter)
+        return voter
+
+    def get_voter_by_id(self, voter_id: int):
+        return self.db.query(Voter).filter(Voter.id == voter_id).first()
