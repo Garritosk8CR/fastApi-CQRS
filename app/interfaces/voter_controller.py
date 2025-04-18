@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from application.commands import RegisterVoterCommand, CastVoteCommand
-from infrastructure.models import Voter
-from infrastructure.database import get_db
-from infrastructure.voter_repo import VoterRepository
-from infrastructure.election_repo import ElectionRepository
+from app.application.commands import RegisterVoterCommand, CastVoteCommand
+from app.infrastructure.models import Voter
+from app.infrastructure.database import get_db
+from app.infrastructure.voter_repo import VoterRepository
+from app.infrastructure.election_repo import ElectionRepository
 
 router = APIRouter()
 

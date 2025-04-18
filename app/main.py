@@ -1,8 +1,8 @@
 import uvicorn
-from infrastructure.database import engine, Base
+from app.infrastructure.database import engine, Base
 import sqlalchemy
 from fastapi import FastAPI
-from interfaces.voter_controller import router as voter_router
+from app.interfaces.voter_controller import router as voter_router
 
 app = FastAPI()
 

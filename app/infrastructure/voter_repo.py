@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from infrastructure.models import Voter
+from app.infrastructure.models import Voter
 
 class VoterRepository:
     def __init__(self, db: Session):

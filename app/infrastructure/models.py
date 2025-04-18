@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table, Enum
 from sqlalchemy.orm import relationship
-from infrastructure.database import Base
+from app.infrastructure.database import Base
 import enum
 
 class Voter(Base):
