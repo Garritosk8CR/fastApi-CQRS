@@ -23,6 +23,7 @@ def test_create_election():
             "candidates": ["Alice", "Bob", "Charlie"]
         },
     )
+    print("Response JSON:", response.json())  # Debugging output
     assert response.status_code == 200
     assert response.json()["message"] == "Election created successfully"
     assert "election_id" in response.json()
