@@ -12,3 +12,7 @@ class CheckVoterExistsQuery:
 
 class GetAllElectionsQuery:
     pass  # No parameters are required for fetching all elections
+
+class GetElectionDetailsQuery:
+    def __init__(self, election_id: int):
+        self.election_id = election_id
