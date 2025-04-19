@@ -68,6 +68,16 @@ async def cast_vote(voter_id: int, request: Request, db: Session = Depends(get_d
         {"request": request, "candidate": candidate, "election_name": election.name},
     )
 
+@app.get("/results", response_class=HTMLResponse)
+async def get_results(request: Request, db: Session = Depends(get_db)):
+    election = db.query(Election).filter(Election.id == 1).first()  # Assuming election ID = 1
+    if not election:
+        raise HTTPException(status_code=404, detail="Election not found")
+
+    results = {candidate: vote for candidate, vote in zip(election.candidates.split(","), election.votes.split(","))}
+    return templates.TemplateResponse("results.html", {"request": request, "results": results})
+
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
