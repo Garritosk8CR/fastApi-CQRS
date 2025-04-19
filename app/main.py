@@ -3,7 +3,7 @@ import uvicorn
 from app.application.commands import RegisterVoterCommand
 from app.application.handlers import CommandBus
 from app.application.query_bus import query_bus
-from app.application.queries import GetAllElectionsQuery, GetElectionResultsQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery
 from app.infrastructure.database import SessionLocal, engine, Base, get_db
 import sqlalchemy
 from sqlalchemy.orm import Session
@@ -36,16 +36,17 @@ async def home(request: Request):
     # Pass elections to the template
     return templates.TemplateResponse("home.html", {"request": request, "elections": elections})
 
-app.get("/elections/{election_id}", response_class=HTMLResponse)
-async def election_details(election_id: int, request: Request, db: Session = Depends(get_db)):
-    election = db.query(Election).filter(Election.id == election_id).first()
-    if not election:
-        raise HTTPException(status_code=404, detail="Election not found")
-    election_data = {
-        "id": election.id,
-        "name": election.name,
-        "candidates": election.candidates.split(",")
-    }
+@app.get("/elections/{election_id}", response_class=HTMLResponse)
+async def election_details(election_id: int, request: Request):
+    query = GetElectionDetailsQuery(election_id)
+    try:
+        election_data = query_bus.handle(query)  # Dispatch the query to the handler
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
+    # Pass the data to the template
     return templates.TemplateResponse("election.html", {"request": request, "election": election_data})
 
 @app.post("/voters/{voter_id}/vote/", response_class=HTMLResponse)
