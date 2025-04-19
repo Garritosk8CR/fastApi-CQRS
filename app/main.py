@@ -1,5 +1,7 @@
 from fastapi.responses import HTMLResponse
 import uvicorn
+from app.application.commands import RegisterVoterCommand
+from app.application.handlers import CommandBus
 from app.application.query_bus import query_bus
 from app.application.queries import GetAllElectionsQuery
 from app.infrastructure.database import SessionLocal, engine, Base, get_db
@@ -90,28 +92,46 @@ async def register_voter_page(request: Request):
 async def register_voter_page(request: Request):
     return templates.TemplateResponse("register_voter.html", {"request": request})
 
-
 @app.post("/register/", response_class=HTMLResponse)
-async def register_voter(request: Request, db: Session = Depends(get_db)):
+async def register_voter(request: Request):
     form_data = await request.form()
     voter_id = int(form_data["voter_id"])
     name = form_data["name"]
 
-    voter_repo = VoterRepository(db)
-    if voter_repo.get_voter_by_id(voter_id):
+    command = RegisterVoterCommand(voter_id=voter_id, name=name)
+    try:
+        CommandBus.handle(command)
+    except ValueError as e:
         return templates.TemplateResponse(
-            "register.html",
-            {"request": request, "error": "Voter ID already exists! Try a different ID."}
+            "register.html", {"request": request, "error": str(e)}
         )
-
-    # Register voter
-    voter_repo.create_voter(voter_id=voter_id, name=name)
-    db.commit()
 
     return templates.TemplateResponse(
         "confirmation.html",
         {"request": request, "candidate": name, "election_name": "Registration"},
     )
+
+# @app.post("/register/", response_class=HTMLResponse)
+# async def register_voter(request: Request, db: Session = Depends(get_db)):
+#     form_data = await request.form()
+#     voter_id = int(form_data["voter_id"])
+#     name = form_data["name"]
+
+#     voter_repo = VoterRepository(db)
+#     if voter_repo.get_voter_by_id(voter_id):
+#         return templates.TemplateResponse(
+#             "register.html",
+#             {"request": request, "error": "Voter ID already exists! Try a different ID."}
+#         )
+
+#     # Register voter
+#     voter_repo.create_voter(voter_id=voter_id, name=name)
+#     db.commit()
+
+#     return templates.TemplateResponse(
+#         "confirmation.html",
+#         {"request": request, "candidate": name, "election_name": "Registration"},
+#     )
 
 @app.get("/elections/create", response_class=HTMLResponse)
 async def create_election_page(request: Request):
