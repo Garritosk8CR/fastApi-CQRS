@@ -100,7 +100,7 @@ async def register_voter(request: Request):
 
     command = RegisterVoterCommand(voter_id=voter_id, name=name)
     try:
-        CommandBus.handle(command)
+       new_voter = CommandBus.handle(command)
     except ValueError as e:
         return templates.TemplateResponse(
             "register.html", {"request": request, "error": str(e)}
@@ -108,7 +108,7 @@ async def register_voter(request: Request):
 
     return templates.TemplateResponse(
         "confirmation.html",
-        {"request": request, "candidate": name, "election_name": "Registration"},
+        {"request": request, "candidate": name, "election_name": "Registration", "voter": new_voter},
     )
 
 # @app.post("/register/", response_class=HTMLResponse)
