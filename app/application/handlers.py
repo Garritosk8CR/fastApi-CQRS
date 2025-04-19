@@ -1,4 +1,5 @@
-from app.application.commands import CheckVoterExistsQuery, CreateElectionCommand
+from app.application import query_bus
+from app.application.commands import CheckVoterExistsQuery, CreateElectionCommand, RegisterVoterCommand
 from app.infrastructure.models import Election
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import Voter
@@ -6,7 +7,9 @@ class CheckVoterExistsHandler:
     def handle(self, query: CheckVoterExistsQuery):
         with SessionLocal() as db:
             return db.query(Voter).filter(Voter.id == query.voter_id).first() is not None
-        
+
+query_bus.register_handler(CheckVoterExistsQuery, CheckVoterExistsHandler())       
+
 class CreateElectionHandler:
     def handle(self, command):
         with SessionLocal() as db:
@@ -22,6 +25,23 @@ class CreateElectionHandler:
             )
             db.add(new_election)
             db.commit()
+
+class RegisterVoterHandler:
+    def handle(self, command: RegisterVoterCommand):
+        # Delegate the existence check to the query bus
+        query = CheckVoterExistsQuery(command.voter_id)
+        voter_exists = query_bus.handle(query)  # Use query bus to check if voter exists
+
+        # Raise an error if the voter already exists
+        if voter_exists:
+            raise ValueError("Voter ID already exists!")
+
+        # Proceed with voter registration
+        with SessionLocal() as db:
+            new_voter = Voter(id=command.voter_id, name=command.name, has_voted=False)
+            db.add(new_voter)
+            db.commit()
+
 
 
 class CommandBus:

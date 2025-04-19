@@ -6,6 +6,7 @@ from app.infrastructure.database import get_db
 from app.infrastructure.voter_repo import VoterRepository
 from app.infrastructure.election_repo import ElectionRepository
 
+
 router = APIRouter()
 
 @router.post("/voters/")
