@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Register Voter{% endblock %}
+
+{% block content %}
+<h2>Register as a Voter</h2>
+<form id="register-voter-form">
+    <label for="voter_id">Voter ID:</label>
+    <input type="number" name="voter_id" id="voter_id" required>
+
+    <label for="name">Name:</label>
+    <input type="text" name="name" id="name" required>
+
+    <button type="submit">Register</button>
+</form>
+
+<script>
+    document.getElementById('register-voter-form').addEventListener('submit', async (event) => {
+        event.preventDefault(); // Prevent default form submission
+
+        const voterId = document.getElementById('voter_id').value;
+        const name = document.getElementById('name').value;
+
+        // Send data to the API as JSON
+        const response = await fetch('/voters/voters', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ voter_id: parseInt(voterId), name: name }),
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert(result.message); // Notify success
+        } else {
+            alert('Error: ' + result.detail); // Notify errors
+        }
+    });
+</script>
+{% endblock %}
