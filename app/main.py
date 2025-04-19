@@ -81,6 +81,11 @@ async def get_results(request: Request, db: Session = Depends(get_db)):
 async def register_voter_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
+@app.get("/voters/register", response_class=HTMLResponse)
+async def register_voter_page(request: Request):
+    return templates.TemplateResponse("register_voter.html", {"request": request})
+
+
 @app.post("/register/", response_class=HTMLResponse)
 async def register_voter(request: Request, db: Session = Depends(get_db)):
     form_data = await request.form()
