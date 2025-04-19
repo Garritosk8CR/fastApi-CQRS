@@ -77,6 +77,33 @@ async def get_results(request: Request, db: Session = Depends(get_db)):
     results = {candidate: vote for candidate, vote in zip(election.candidates.split(","), election.votes.split(","))}
     return templates.TemplateResponse("results.html", {"request": request, "results": results})
 
+@app.get("/register", response_class=HTMLResponse)
+async def register_voter_page(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+@app.post("/register/", response_class=HTMLResponse)
+async def register_voter(request: Request, db: Session = Depends(get_db)):
+    form_data = await request.form()
+    voter_id = int(form_data["voter_id"])
+    name = form_data["name"]
+
+    voter_repo = VoterRepository(db)
+    if voter_repo.get_voter_by_id(voter_id):
+        return templates.TemplateResponse(
+            "register.html",
+            {"request": request, "error": "Voter ID already exists! Try a different ID."}
+        )
+
+    # Register voter
+    voter_repo.create_voter(voter_id=voter_id, name=name)
+    db.commit()
+
+    return templates.TemplateResponse(
+        "confirmation.html",
+        {"request": request, "candidate": name, "election_name": "Registration"},
+    )
+
+
 
 
 if __name__ == "__main__":
