@@ -3,7 +3,6 @@ import uvicorn
 from app.infrastructure.database import SessionLocal, engine, Base, get_db
 import sqlalchemy
 from sqlalchemy.orm import Session
-
 from fastapi import Depends, FastAPI, Request
 from app.infrastructure.models import Election
 from app.interfaces.voter_controller import router as voter_router
