@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Create Election{% endblock %}
+
+{% block content %}
+<h2>Create a New Election</h2>
+<form method="post" action="/elections/elections">
+    <label for="name">Election Name:</label>
+    <input type="text" name="name" id="name" required>
+
+    <label for="candidates">Candidates (comma-separated):</label>
+    <input type="text" name="candidates" id="candidates" required>
+
+    <button type="submit">Create Election</button>
+</form>
+{% endblock %}
