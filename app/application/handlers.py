@@ -5,6 +5,7 @@ from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import Voter
+
 class CheckVoterExistsHandler:
     def handle(self, query: CheckVoterExistsQuery):
         with SessionLocal() as db:
@@ -15,6 +16,10 @@ class GetAllElectionsHandler:
     def handle(self, query: GetAllElectionsQuery):
         with SessionLocal() as db:
             elections = db.query(Election).all()
+
+            if not elections:  # No elections in the database
+                return []  # Return an empty list instead of None
+
             return [
                 {
                     "election_id": election.id,
@@ -24,6 +29,7 @@ class GetAllElectionsHandler:
                 }
                 for election in elections
             ]
+
 
 class GetElectionDetailsHandler:
     def handle(self, query: GetElectionDetailsQuery):
