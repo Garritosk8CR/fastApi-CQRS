@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Vote Confirmation{% endblock %}
+
+{% block content %}
+<h2>Thank You for Voting!</h2>
+<p>You voted for {{ candidate }} in the election "{{ election_name }}".</p>
+<a href="/">Back to Home</a>
+{% endblock %}
