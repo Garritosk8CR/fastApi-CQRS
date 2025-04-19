@@ -1,7 +1,12 @@
-from app.application.commands import CreateElectionCommand
+from app.application.commands import CheckVoterExistsQuery, CreateElectionCommand
 from app.infrastructure.models import Election
 from app.infrastructure.database import SessionLocal
-
+from app.infrastructure.models import Voter
+class CheckVoterExistsHandler:
+    def handle(self, query: CheckVoterExistsQuery):
+        with SessionLocal() as db:
+            return db.query(Voter).filter(Voter.id == query.voter_id).first() is not None
+        
 class CreateElectionHandler:
     def handle(self, command):
         with SessionLocal() as db:
