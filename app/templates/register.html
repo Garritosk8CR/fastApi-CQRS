@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Register Voter{% endblock %}
+
+{% block content %}
+<h2>Register as a Voter</h2>
+<form method="post" action="/register/">
+    <label for="voter_id">Voter ID:</label>
+    <input type="number" name="voter_id" id="voter_id" required>
+    
+    <label for="name">Name:</label>
+    <input type="text" name="name" id="name" required>
+    
+    <button type="submit">Register</button>
+</form>
+{% endblock %}
