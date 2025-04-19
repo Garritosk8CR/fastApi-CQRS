@@ -25,7 +25,7 @@ def test_cast_vote():
         },
     )
     assert create_response.status_code == 200
-    election_id = create_response.json()["election_id"]
+    
 
     # Step 2: Register a voter
     register_response = client.post(
@@ -54,7 +54,6 @@ def test_cast_vote_voter_already_voted():
             "candidates": ["Alice", "Bob", "Charlie"]
         },
     )
-    election_id = create_response.json()["election_id"]
 
     # Step 2: Register a voter
     register_response = client.post(
@@ -89,7 +88,6 @@ def test_cast_vote_invalid_candidate():
             "candidates": ["Alice", "Bob", "Charlie"]
         },
     )
-    election_id = create_response.json()["election_id"]
 
     # Step 2: Register a voter
     register_response = client.post(
@@ -118,6 +116,7 @@ def test_vote_results():
             "candidates": ["Alice", "Bob", "Charlie"]
         },
     )
+    print(create_response.json())
     election_id = create_response.json()["election_id"]
 
     # Step 2: Register voters and cast votes

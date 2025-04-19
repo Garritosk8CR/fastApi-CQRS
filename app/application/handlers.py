@@ -1,5 +1,7 @@
+from app.application.queries import GetAllElectionsQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CheckVoterExistsQuery, CreateElectionCommand, RegisterVoterCommand
+from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import Voter
@@ -9,23 +11,38 @@ class CheckVoterExistsHandler:
             return db.query(Voter).filter(Voter.id == query.voter_id).first() is not None
 
        
-
+class GetAllElectionsHandler:
+    def handle(self, query: GetAllElectionsQuery):
+        with SessionLocal() as db:
+            elections = db.query(Election).all()
+            return [
+                {
+                    "election_id": election.id,
+                    "name": election.name,
+                    "candidates": election.candidates.split(","),
+                    "votes": list(map(int, election.votes.split(",")))
+                }
+                for election in elections
+            ]
 
 class CreateElectionHandler:
-    def handle(self, command):
+    def handle(self, command: CreateElectionCommand):
         with SessionLocal() as db:
-            # Ensure the election name is unique
-            if db.query(Election).filter(Election.name == command.name).first():
-                raise ValueError("Election name already exists!")
+            repo = ElectionRepository(db)
 
-            # Create and save the new election
+            # Create the election object
             new_election = Election(
                 name=command.name,
                 candidates=",".join(command.candidates),
                 votes=",".join(["0"] * len(command.candidates))  # Initialize all votes to 0
             )
-            db.add(new_election)
-            db.commit()
+
+            # Save the election using the repository
+            created_election = repo.create_election(new_election)
+
+            # Return the created election
+            return created_election
+
 
 class RegisterVoterHandler:
     def handle(self, command: RegisterVoterCommand):
@@ -68,3 +85,4 @@ command_bus.register_handler(RegisterVoterCommand, RegisterVoterHandler())
 
 # Create and register the query handler
 query_bus.register_handler(CheckVoterExistsQuery, CheckVoterExistsHandler())
+query_bus.register_handler(GetAllElectionsQuery, GetAllElectionsHandler())
