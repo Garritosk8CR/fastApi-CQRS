@@ -77,19 +77,19 @@ class CreateElectionHandler:
 
 class RegisterVoterHandler:
     def handle(self, command: RegisterVoterCommand):
-        # Delegate the existence check to the query bus
         query = CheckVoterExistsQuery(command.voter_id)
-        voter_exists = query_bus.handle(query)  # Use query bus to check if voter exists
+        voter_exists = query_bus.handle(query)
 
-        # Raise an error if the voter already exists
         if voter_exists:
             raise ValueError("Voter ID already exists!")
 
-        # Proceed with voter registration
         with SessionLocal() as db:
             new_voter = Voter(id=command.voter_id, name=command.name, has_voted=False)
             db.add(new_voter)
             db.commit()
+
+        return new_voter  # Optionally return the voter object
+
 
 
 
