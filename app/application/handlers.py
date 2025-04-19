@@ -1,4 +1,4 @@
-from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CheckVoterExistsQuery, CreateElectionCommand, RegisterVoterCommand
 from app.infrastructure.election_repo import ElectionRepository
@@ -90,7 +90,22 @@ class RegisterVoterHandler:
 
         return new_voter  # Optionally return the voter object
 
+class GetElectionResultsHandler:
+    def handle(self, query: GetElectionResultsQuery):
+        with SessionLocal() as db:
+            # Fetch the election by ID
+            election = db.query(Election).filter(Election.id == query.election_id).first()
 
+            if not election:
+                raise ValueError("Election not found")
+
+            # Process results
+            results = {
+                candidate: int(vote)
+                for candidate, vote in zip(election.candidates.split(","), election.votes.split(","))
+            }
+
+            return results
 
 
 class CommandBus:
