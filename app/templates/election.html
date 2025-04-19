@@ -10,7 +10,7 @@
     <li>{{ candidate }}</li>
     {% endfor %}
 </ul>
-<form method="post" action="/voters/{{ voter_id }}/vote/">
+<form method="post" action="voters/voters/{{ voter_id }}/vote/">
     <label for="candidate">Select Candidate:</label>
     <select name="candidate" id="candidate">
         {% for candidate in election.candidates %}
