@@ -103,6 +103,11 @@ async def register_voter(request: Request, db: Session = Depends(get_db)):
         {"request": request, "candidate": name, "election_name": "Registration"},
     )
 
+@app.get("/elections/create", response_class=HTMLResponse)
+async def create_election_page(request: Request):
+    return templates.TemplateResponse("create_election.html", {"request": request})
+
+
 
 
 

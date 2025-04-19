@@ -4,7 +4,7 @@
 
 {% block content %}
 <h2>Create a New Election</h2>
-<form method="post" action="/elections/elections">
+<form id="create-election-form">
     <label for="name">Election Name:</label>
     <input type="text" name="name" id="name" required>
 
@@ -13,4 +13,29 @@
 
     <button type="submit">Create Election</button>
 </form>
+
+<script>
+    document.getElementById('create-election-form').addEventListener('submit', async (event) => {
+        event.preventDefault(); // Prevent normal form submission
+
+        const name = document.getElementById('name').value;
+        const candidates = document.getElementById('candidates').value.split(',');
+
+        // Send JSON payload using Fetch API
+        const response = await fetch('/elections/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, candidates }),
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert(result.message);
+        } else {
+            alert('Error: ' + result.detail);
+        }
+    });
+</script>
 {% endblock %}
