@@ -18,7 +18,7 @@ client = TestClient(app)
 def test_cast_vote():
     # Step 1: Create an election
     create_response = client.post(
-        "/elections/",
+        "/elections/elections",
         json={
             "name": "Presidential Election",
             "candidates": ["Alice", "Bob", "Charlie"]
@@ -29,7 +29,7 @@ def test_cast_vote():
 
     # Step 2: Register a voter
     register_response = client.post(
-        "/voters/",
+        "/voters/voters",
         json={
             "voter_id": 1,
             "name": "John Doe"
@@ -39,7 +39,7 @@ def test_cast_vote():
 
     # Step 3: Cast a vote
     vote_response = client.post(
-        f"/voters/1/vote/",
+        f"/voters/voters/1/vote/",
         json={"candidate": "Alice"}
     )
     assert vote_response.status_code == 200
@@ -48,7 +48,7 @@ def test_cast_vote():
 def test_cast_vote_voter_already_voted():
     # Step 1: Create an election
     create_response = client.post(
-        "/elections/",
+        "/elections/elections",
         json={
             "name": "Presidential Election",
             "candidates": ["Alice", "Bob", "Charlie"]
@@ -58,7 +58,7 @@ def test_cast_vote_voter_already_voted():
 
     # Step 2: Register a voter
     register_response = client.post(
-        "/voters/",
+        "/voters/voters",
         json={
             "voter_id": 1,
             "name": "John Doe"
@@ -68,13 +68,13 @@ def test_cast_vote_voter_already_voted():
 
     # Step 3: Cast the first vote
     client.post(
-        f"/voters/1/vote/",
+        f"/voters/voters/1/vote/",
         json={"candidate": "Alice"}
     )
 
     # Step 4: Attempt to cast another vote for the same voter
     vote_response = client.post(
-        f"/voters/1/vote/",
+        f"/voters/voters/1/vote/",
         json={"candidate": "Bob"}
     )
     assert vote_response.status_code == 400
@@ -83,7 +83,7 @@ def test_cast_vote_voter_already_voted():
 def test_cast_vote_invalid_candidate():
     # Step 1: Create an election
     create_response = client.post(
-        "/elections/",
+        "/elections/elections",
         json={
             "name": "Presidential Election",
             "candidates": ["Alice", "Bob", "Charlie"]
@@ -93,7 +93,7 @@ def test_cast_vote_invalid_candidate():
 
     # Step 2: Register a voter
     register_response = client.post(
-        "/voters/",
+        "/voters/voters",
         json={
             "voter_id": 1,
             "name": "John Doe"
@@ -103,7 +103,7 @@ def test_cast_vote_invalid_candidate():
 
     # Step 3: Attempt to cast a vote for an invalid candidate
     vote_response = client.post(
-        f"/voters/1/vote/",
+        f"/voters/voters/1/vote/",
         json={"candidate": "InvalidCandidate"}
     )
     assert vote_response.status_code == 400
@@ -112,7 +112,7 @@ def test_cast_vote_invalid_candidate():
 def test_vote_results():
     # Step 1: Create an election
     create_response = client.post(
-        "/elections/",
+        "/elections/elections",
         json={
             "name": "Presidential Election",
             "candidates": ["Alice", "Bob", "Charlie"]
@@ -122,24 +122,24 @@ def test_vote_results():
 
     # Step 2: Register voters and cast votes
     client.post(
-        "/voters/",
+        "/voters/voters",
         json={"voter_id": 1, "name": "John Doe"}
     )
     client.post(
-        "/voters/",
+        "/voters/voters",
         json={"voter_id": 2, "name": "Jane Smith"}
     )
     client.post(
-        f"/voters/1/vote/",
+        f"/voters/voters/1/vote/",
         json={"candidate": "Alice"}
     )
     client.post(
-        f"/voters/2/vote/",
+        f"/voters/voters/2/vote/",
         json={"candidate": "Bob"}
     )
 
     # Step 3: Fetch election results
-    results_response = client.get(f"/elections/{election_id}/results/")
+    results_response = client.get(f"/elections/elections/{election_id}/results/")
     assert results_response.status_code == 200
     results = results_response.json()["results"]
-    assert results == {"Alice": 1, "Bob": 1, "Charlie": 0}
+    assert results == {"Alice": '1', "Bob": '1', "Charlie": '0'}

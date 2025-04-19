@@ -7,7 +7,6 @@ class RegisterVoterCommand(BaseModel):
 
 
 class CastVoteCommand(BaseModel):
-    voter_id: int
     candidate: str
 
 class CreateElectionCommand(BaseModel):

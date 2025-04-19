@@ -8,7 +8,7 @@ from app.interfaces.election_controller import router as election_router
 app = FastAPI()
 
 # Include the voter router
-app.include_router(voter_router, prefix="/voter", tags=["Voters"])
+app.include_router(voter_router, prefix="/voters", tags=["Voters"])
 app.include_router(election_router, prefix="/elections", tags=["Elections"])
 print(app.openapi())
 # Create tables in the database
