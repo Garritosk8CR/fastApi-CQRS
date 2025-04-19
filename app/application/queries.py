@@ -5,3 +5,7 @@ class GetElectionResultsQuery:
 class GetVoterDetailsQuery:
     def __init__(self, voter_id: int):
         self.voter_id = voter_id
+
+class CheckVoterExistsQuery:
+    def __init__(self, voter_id: int):
+        self.voter_id = voter_id
