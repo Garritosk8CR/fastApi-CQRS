@@ -5,16 +5,21 @@ from app.infrastructure.models import Voter
 from app.infrastructure.database import get_db
 from app.infrastructure.voter_repo import VoterRepository
 from app.infrastructure.election_repo import ElectionRepository
+from app.application.handlers import command_bus
 
 
 router = APIRouter()
 
 @router.post("/voters/")
-def register_voter(command: RegisterVoterCommand, db: Session = Depends(get_db)):
-    repo = VoterRepository(db)
-    voter = Voter(name=command.name, has_voted=False)
-    registered_voter = repo.register_voter(voter)
-    return {"id": registered_voter.id, "message": "Voter registered successfully"}
+def register_voter(command: RegisterVoterCommand):
+    try:
+        command_bus.handle(command)  # Dispatch the command to the handler
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred!")
+
+    return {"message": "Voter registered successfully"}
 
 @router.post("/voters/{voter_id}/vote/")
 def cast_vote(voter_id: int, command: CastVoteCommand, db: Session = Depends(get_db)):

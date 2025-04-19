@@ -1,4 +1,4 @@
-from app.application import query_bus
+from app.application.query_bus import query_bus
 from app.application.commands import CheckVoterExistsQuery, CreateElectionCommand, RegisterVoterCommand
 from app.infrastructure.models import Election
 from app.infrastructure.database import SessionLocal
@@ -8,7 +8,7 @@ class CheckVoterExistsHandler:
         with SessionLocal() as db:
             return db.query(Voter).filter(Voter.id == query.voter_id).first() is not None
 
-query_bus.register_handler(CheckVoterExistsQuery, CheckVoterExistsHandler())       
+       
 
 
 class CreateElectionHandler:
@@ -65,3 +65,6 @@ class CommandBus:
 command_bus = CommandBus()
 command_bus.register_handler(CreateElectionCommand, CreateElectionHandler())
 command_bus.register_handler(RegisterVoterCommand, RegisterVoterHandler())
+
+# Create and register the query handler
+query_bus.register_handler(CheckVoterExistsQuery, CheckVoterExistsHandler())

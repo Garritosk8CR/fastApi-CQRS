@@ -1,4 +1,4 @@
-from app.application.commands import CheckVoterExistsQuery
+
 class QueryBus:
     def __init__(self):
         self.handlers = {}  # A dictionary to store query types and their handlers
