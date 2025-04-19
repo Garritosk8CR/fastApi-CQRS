@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<h2>Available Elections</h2>
+<ul>
+    {% for election in elections %}
+    <li>
+        <a href="/elections/{{ election.id }}">{{ election.name }}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}
