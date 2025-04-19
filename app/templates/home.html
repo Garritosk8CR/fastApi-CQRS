@@ -7,7 +7,7 @@
 <ul>
     {% for election in elections %}
     <li>
-        <a href="/elections/{{ election.id }}">{{ election.name }}</a>
+        <a href="/elections/{{ election.election_id }}">{{ election.name }}</a>
     </li>
     {% endfor %}
 </ul>
