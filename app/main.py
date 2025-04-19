@@ -1,6 +1,6 @@
 from fastapi.responses import HTMLResponse
 import uvicorn
-from app.application import query_bus
+from app.application.query_bus import query_bus
 from app.application.queries import GetAllElectionsQuery
 from app.infrastructure.database import SessionLocal, engine, Base, get_db
 import sqlalchemy
@@ -26,6 +26,7 @@ app.include_router(election_router, prefix="/elections", tags=["Elections"])
 # Create tables in the database
 Base.metadata.create_all(bind=engine)
 
+@app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     query = GetAllElectionsQuery()
     elections = query_bus.handle(query)  # Dispatch the query to the handler
