@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.application.query_bus import query_bus
-from app.application.queries import GetAllElectionsQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery
 from app.infrastructure.database import get_db
 from app.application.commands import CreateElectionCommand
 from app.infrastructure.models import Election, ElectionResponse
@@ -26,18 +26,16 @@ def create_election(command: CreateElectionCommand):
     return election  # Return the created election as a JSON response
 
 @router.get("/elections/{election_id}/")
-def get_election_details(election_id: int, db: Session = Depends(get_db)):
-    repo = ElectionRepository(db)
-    election = repo.get_election_by_id(election_id)
-    if not election:
-        raise HTTPException(status_code=404, detail="Election not found")
+def get_election_details(election_id: int):
+    query = GetElectionDetailsQuery(election_id)
+    try:
+        election = query_bus.handle(query)  # Dispatch the query
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
-    return {
-        "election_id": election.id,
-        "name": election.name,
-        "candidates": election.candidates.split(","),
-        "votes": list(map(int, election.votes.split(",")))
-    }
+    return election
 
 @router.get("/elections/")
 def list_all_elections():
