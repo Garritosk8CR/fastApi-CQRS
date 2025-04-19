@@ -3,7 +3,7 @@ import uvicorn
 from app.application.commands import RegisterVoterCommand
 from app.application.handlers import CommandBus
 from app.application.query_bus import query_bus
-from app.application.queries import GetAllElectionsQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionResultsQuery
 from app.infrastructure.database import SessionLocal, engine, Base, get_db
 import sqlalchemy
 from sqlalchemy.orm import Session
@@ -76,12 +76,16 @@ async def cast_vote(voter_id: int, request: Request, db: Session = Depends(get_d
     )
 
 @app.get("/results", response_class=HTMLResponse)
-async def get_results(request: Request, db: Session = Depends(get_db)):
-    election = db.query(Election).filter(Election.id == 1).first()  # Assuming election ID = 1
-    if not election:
-        raise HTTPException(status_code=404, detail="Election not found")
+async def get_results(request: Request):
+    query = GetElectionResultsQuery(election_id=1)  # Assuming election ID = 1
+    try:
+        results = query_bus.handle(query)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
-    results = {candidate: vote for candidate, vote in zip(election.candidates.split(","), election.votes.split(","))}
+    # Pass the results to the template
     return templates.TemplateResponse("results.html", {"request": request, "results": results})
 
 @app.get("/register", response_class=HTMLResponse)
