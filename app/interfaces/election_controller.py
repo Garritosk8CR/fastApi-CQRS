@@ -4,6 +4,8 @@ from app.infrastructure.database import get_db
 from app.application.commands import CreateElectionCommand
 from app.infrastructure.models import Election
 from app.infrastructure.election_repo import ElectionRepository
+from app.application.commands import CreateElectionCommand
+from app.application.handlers import command_bus
 
 router = APIRouter()  # Define the router object
 
