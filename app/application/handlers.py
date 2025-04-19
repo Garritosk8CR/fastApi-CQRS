@@ -10,6 +10,7 @@ class CheckVoterExistsHandler:
 
 query_bus.register_handler(CheckVoterExistsQuery, CheckVoterExistsHandler())       
 
+
 class CreateElectionHandler:
     def handle(self, command):
         with SessionLocal() as db:
@@ -58,7 +59,9 @@ class CommandBus:
         handler = self.handlers[command_type]
         handler.handle(command)
 
+
+
 # Create and register the command handler
 command_bus = CommandBus()
 command_bus.register_handler(CreateElectionCommand, CreateElectionHandler())
-
+command_bus.register_handler(RegisterVoterCommand, RegisterVoterHandler())
