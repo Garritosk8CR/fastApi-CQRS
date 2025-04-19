@@ -10,16 +10,13 @@ from app.application.handlers import command_bus
 router = APIRouter()  # Define the router object
 
 @router.post("/elections/")
-def create_election(command: CreateElectionCommand, db: Session = Depends(get_db)):
-    repo = ElectionRepository(db)
-    
-    new_election = Election(
-        name=command.name,
-        candidates=",".join(command.candidates),
-        votes=",".join(["0"] * len(command.candidates))
-    )
-    created_election = repo.create_election(new_election)
-    return {"message": "Election created successfully", "election_id": created_election.id}
+def create_election(command: CreateElectionCommand):
+    try:
+        command_bus.handle(command)  # Dispatch the command to the handler
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return {"message": "Election created successfully"}
 
 @router.get("/elections/{election_id}/")
 def get_election_details(election_id: int, db: Session = Depends(get_db)):

@@ -4,17 +4,16 @@ from app.infrastructure.database import SessionLocal
 
 class CreateElectionHandler:
     def handle(self, command):
-        # Create a new session for the database
         with SessionLocal() as db:
-            # Check if election with the same name already exists
+            # Ensure the election name is unique
             if db.query(Election).filter(Election.name == command.name).first():
                 raise ValueError("Election name already exists!")
 
-            # Create and persist the new election
+            # Create and save the new election
             new_election = Election(
                 name=command.name,
                 candidates=",".join(command.candidates),
-                votes=",".join(["0"] * len(command.candidates))
+                votes=",".join(["0"] * len(command.candidates))  # Initialize all votes to 0
             )
             db.add(new_election)
             db.commit()
@@ -34,6 +33,7 @@ class CommandBus:
         handler = self.handlers[command_type]
         handler.handle(command)
 
-# Initialize and register the CreateElectionHandler
+# Create and register the command handler
 command_bus = CommandBus()
 command_bus.register_handler(CreateElectionCommand, CreateElectionHandler())
+
