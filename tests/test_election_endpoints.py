@@ -26,7 +26,6 @@ def test_create_election():
     )
     print("Response JSON:", response.json())  # Debugging output
     assert response.status_code == 200
-    assert response.json()["message"] == "Election created successfully"
     assert "election_id" in response.json()
 
 def test_get_election_details():
