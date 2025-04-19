@@ -4,24 +4,26 @@ from app.application.query_bus import query_bus
 from app.application.queries import GetAllElectionsQuery
 from app.infrastructure.database import get_db
 from app.application.commands import CreateElectionCommand
-from app.infrastructure.models import Election
+from app.infrastructure.models import Election, ElectionResponse
 from app.infrastructure.election_repo import ElectionRepository
 from app.application.commands import CreateElectionCommand
 from app.application.handlers import command_bus
 
 router = APIRouter()  # Define the router object
 
-@router.post("/elections/")
+@router.post("/elections/", response_model=ElectionResponse)
 def create_election(command: CreateElectionCommand):
     try:
-        election = command_bus.handle(command)  # Dispatch the command to the handler
+        # Dispatch the command and get the election object
+        election = command_bus.handle(command)
+        if election is None:
+            print("Election creation failed")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    return {
-        "message": "Election created successfully",
-        "election_id": election.id
-    }
+    print(election)
+    # Return the election object as JSON
+    return election  # Return the created election as a JSON response
 
 @router.get("/elections/{election_id}/")
 def get_election_details(election_id: int, db: Session = Depends(get_db)):

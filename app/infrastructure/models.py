@@ -1,3 +1,5 @@
+from typing import List
+from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table, Enum
 from sqlalchemy.orm import relationship
 from app.infrastructure.database import Base
@@ -30,3 +32,10 @@ class Election(Base):
             self.votes = ",".join(map(str, vote_counts))
         except ValueError:
             raise ValueError("Candidate not found")
+
+
+class ElectionResponse(BaseModel):
+    election_id: int
+    name: str
+    candidates: List[str]
+    votes: List[int]

@@ -39,9 +39,18 @@ class CreateElectionHandler:
 
             # Save the election using the repository
             created_election = repo.create_election(new_election)
+            print(f"Created election with ID: {created_election.id}")
+            
+            # Return the object as a dictionary
+            created_election_dict = {
+                "election_id": created_election.id,
+                "name": created_election.name,
+                "candidates": created_election.candidates.split(","),
+                "votes": list(map(int, created_election.votes.split(",")))
+            }
+            print(f"Election created: {created_election_dict}")
+            return created_election_dict
 
-            # Return the created election
-            return created_election
 
 
 class RegisterVoterHandler:
@@ -74,7 +83,10 @@ class CommandBus:
         if command_type not in self.handlers:
             raise ValueError(f"No handler registered for {command_type}")
         handler = self.handlers[command_type]
-        handler.handle(command)
+        
+        # Return the result from the handler
+        return handler.handle(command)
+
 
 
 
