@@ -1,6 +1,6 @@
 from fastapi.responses import HTMLResponse
 import uvicorn
-from app.application.commands import RegisterVoterCommand
+from app.application.commands import CastVoteCommand, RegisterVoterCommand
 from app.application.handlers import CommandBus
 from app.application.query_bus import query_bus
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery
@@ -75,31 +75,24 @@ async def election_details(election_id: int, request: Request):
     # Pass the data to the template
     return templates.TemplateResponse("election.html", {"request": request, "election": election_data})
 
-@app.post("/voters/{voter_id}/vote/", response_class=HTMLResponse)
-async def cast_vote(voter_id: int, request: Request, db: Session = Depends(get_db)):
+@app.post("/voters/{voter_id}/elections/{election_id}/vote/", response_class=HTMLResponse)
+async def cast_vote(voter_id: int, election_id: int, request: Request):
     form_data = await request.form()
     candidate = form_data["candidate"]
 
-    voter_repo = VoterRepository(db)
-    election_repo = ElectionRepository(db)
+    # Dispatch the command with both voter_id and election_id
+    command = CastVoteCommand(voter_id=voter_id, election_id=election_id, candidate=candidate)
+    try:
+        result = CommandBus.handle(command)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
-    voter = voter_repo.get_voter_by_id(voter_id)
-    if not voter:
-        raise HTTPException(status_code=404, detail="Voter not found")
-    if voter.has_voted:
-        raise HTTPException(status_code=400, detail="Voter has already voted")
-
-    election = election_repo.get_election_by_id(1)  # Assuming election_id is 1
-    if not election:
-        raise HTTPException(status_code=404, detail="Election not found")
-
-    election.increment_vote(candidate)
-    voter.has_voted = True
-    db.commit()
-
+    # Render the confirmation template
     return templates.TemplateResponse(
         "confirmation.html",
-        {"request": request, "candidate": candidate, "election_name": election.name},
+        {"request": request, "candidate": result["candidate"], "election_name": result["election_name"]},
     )
 
 @app.post("/register/", response_class=HTMLResponse)
