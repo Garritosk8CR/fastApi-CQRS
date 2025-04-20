@@ -17,7 +17,8 @@ class CheckVoterExistsHandler:
 class GetAllElectionsHandler:
     def handle(self, query: GetAllElectionsQuery):
         with SessionLocal() as db:
-            elections = db.query(Election).all()
+            repo = ElectionRepository(db)
+            elections = repo.get_all_elections()
 
             if not elections:  # No elections in the database
                 return []  # Return an empty list instead of None
@@ -32,6 +33,7 @@ class GetAllElectionsHandler:
                 }
                 for election in elections
             ]
+
 
 
 class GetElectionDetailsHandler:
