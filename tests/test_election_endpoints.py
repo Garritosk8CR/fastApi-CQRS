@@ -18,7 +18,7 @@ client = TestClient(app)
 
 def test_create_election():
     response = client.post(
-        "/elections/elections",
+        "/elections/elections/new",
         json={
             "name": "Presidential Election",
             "candidates": ["Alice", "Bob", "Charlie"]
@@ -31,7 +31,7 @@ def test_create_election():
 def test_get_election_details():
     # First, create an election
     create_response = client.post(
-        "/elections/elections",
+        "/elections/elections/new",
         json={
             "name": "Presidential Election",
             "candidates": ["Alice", "Bob", "Charlie"]
@@ -51,14 +51,14 @@ def test_get_election_details():
 def test_list_all_elections():
     # Create multiple elections
     client.post(
-        "/elections/elections",
+        "/elections/elections/new",
         json={
             "name": "Election 1",
             "candidates": ["Candidate 1", "Candidate 2"]
         },
     )
     client.post(
-        "/elections/elections",
+        "/elections/elections/new",
         json={
             "name": "Election 2",
             "candidates": ["Candidate A", "Candidate B"]
@@ -66,7 +66,8 @@ def test_list_all_elections():
     )
 
     # List all elections
-    response = client.get("/elections/elections")
+    response = client.get("/elections/elections/")
+    print("Response JSON:", response.json())
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 2
@@ -76,7 +77,7 @@ def test_list_all_elections():
 def test_end_election():
     # Create an election
     create_response = client.post(
-        "/elections/elections",
+        "/elections/elections/new",
         json={
             "name": "Election to End",
             "candidates": ["Ender", "Closer"]
@@ -96,7 +97,7 @@ def test_end_election():
 def test_get_election_results():
     # Create an election
     create_response = client.post(
-        "/elections/elections",
+        "/elections/elections/new",
         json={
             "name": "Presidential Election",
             "candidates": ["Alice", "Bob", "Charlie"]

@@ -22,7 +22,7 @@
         const candidates = document.getElementById('candidates').value.split(',');
 
         // Send JSON payload using Fetch API
-        const response = await fetch('/elections/elections', {
+        const response = await fetch('/elections/elections/new', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

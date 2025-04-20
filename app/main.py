@@ -4,8 +4,7 @@ from app.application.commands import RegisterVoterCommand
 from app.application.handlers import CommandBus
 from app.application.query_bus import query_bus
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery
-from app.infrastructure.database import SessionLocal, engine, Base, get_db
-import sqlalchemy
+from app.infrastructure.database import engine, Base, get_db
 from sqlalchemy.orm import Session
 from fastapi import Depends, FastAPI, HTTPException, Request
 from app.infrastructure.election_repo import ElectionRepository
@@ -22,8 +21,9 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
 # Include the voter router
-app.include_router(voter_router, prefix="/voters", tags=["Voters"])
 app.include_router(election_router, prefix="/elections", tags=["Elections"])
+app.include_router(voter_router, prefix="/voters", tags=["Voters"])
+
 
 # Create tables in the database
 Base.metadata.create_all(bind=engine)
@@ -35,6 +35,32 @@ async def home(request: Request):
     
     # Pass elections to the template
     return templates.TemplateResponse("home.html", {"request": request, "elections": elections})
+
+@app.get("/register", response_class=HTMLResponse)
+async def register_voter_page(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+@app.get("/voters/register", response_class=HTMLResponse)
+async def register_voter_page(request: Request):
+    return templates.TemplateResponse("register_voter.html", {"request": request})
+
+@app.get("/elections/create", response_class=HTMLResponse)
+async def create_election_page(request: Request):
+    return templates.TemplateResponse("create_election.html", {"request": request})
+
+@app.get("/results", response_class=HTMLResponse)
+async def get_results(request: Request):
+    query = GetElectionResultsQuery(election_id=1)  # Assuming election ID = 1
+    try:
+        results = query_bus.handle(query)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
+    # Pass the results to the template
+    return templates.TemplateResponse("results.html", {"request": request, "results": results})
+
 
 @app.get("/elections/{election_id}", response_class=HTMLResponse)
 async def election_details(election_id: int, request: Request):
@@ -76,27 +102,6 @@ async def cast_vote(voter_id: int, request: Request, db: Session = Depends(get_d
         {"request": request, "candidate": candidate, "election_name": election.name},
     )
 
-@app.get("/results", response_class=HTMLResponse)
-async def get_results(request: Request):
-    query = GetElectionResultsQuery(election_id=1)  # Assuming election ID = 1
-    try:
-        results = query_bus.handle(query)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="An unexpected error occurred")
-
-    # Pass the results to the template
-    return templates.TemplateResponse("results.html", {"request": request, "results": results})
-
-@app.get("/register", response_class=HTMLResponse)
-async def register_voter_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
-
-@app.get("/voters/register", response_class=HTMLResponse)
-async def register_voter_page(request: Request):
-    return templates.TemplateResponse("register_voter.html", {"request": request})
-
 @app.post("/register/", response_class=HTMLResponse)
 async def register_voter(request: Request):
     form_data = await request.form()
@@ -116,9 +121,6 @@ async def register_voter(request: Request):
         {"request": request, "candidate": name, "election_name": "Registration", "voter": new_voter},
     )
 
-@app.get("/elections/create", response_class=HTMLResponse)
-async def create_election_page(request: Request):
-    return templates.TemplateResponse("create_election.html", {"request": request})
 
 
 

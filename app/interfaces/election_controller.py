@@ -11,7 +11,9 @@ from app.application.handlers import command_bus
 
 router = APIRouter()  # Define the router object
 
-@router.post("/elections/", response_model=ElectionResponse)
+
+
+@router.post("/elections/new", response_model=ElectionResponse)
 def create_election(command: CreateElectionCommand):
     try:
         # Dispatch the command and get the election object
@@ -24,6 +26,11 @@ def create_election(command: CreateElectionCommand):
     print(election)
     # Return the election object as JSON
     return election  # Return the created election as a JSON response
+@router.get("/elections/")
+def list_all_elections():
+    query = GetAllElectionsQuery()
+    elections = query_bus.handle(query)  # Delegate the query to the bus
+    return elections
 
 @router.get("/elections/{election_id}/")
 def get_election_details(election_id: int):
@@ -37,11 +44,6 @@ def get_election_details(election_id: int):
 
     return election
 
-@router.get("/elections/")
-def list_all_elections():
-    query = GetAllElectionsQuery()
-    elections = query_bus.handle(query)  # Delegate the query to the bus
-    return elections
 
 @router.put("/elections/{election_id}/end/")
 def end_election(election_id: int, db: Session = Depends(get_db)):

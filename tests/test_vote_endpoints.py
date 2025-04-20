@@ -18,7 +18,7 @@ client = TestClient(app)
 def test_cast_vote():
     # Step 1: Create an election
     create_response = client.post(
-        "/elections/elections",
+        "/elections/elections/new",
         json={
             "name": "Presidential Election",
             "candidates": ["Alice", "Bob", "Charlie"]
@@ -48,7 +48,7 @@ def test_cast_vote():
 def test_cast_vote_voter_already_voted():
     # Step 1: Create an election
     create_response = client.post(
-        "/elections/elections",
+        "/elections/elections/new",
         json={
             "name": "Presidential Election",
             "candidates": ["Alice", "Bob", "Charlie"]
@@ -82,7 +82,7 @@ def test_cast_vote_voter_already_voted():
 def test_cast_vote_invalid_candidate():
     # Step 1: Create an election
     create_response = client.post(
-        "/elections/elections",
+        "/elections/elections/new",
         json={
             "name": "Presidential Election",
             "candidates": ["Alice", "Bob", "Charlie"]
@@ -110,7 +110,7 @@ def test_cast_vote_invalid_candidate():
 def test_vote_results():
     # Step 1: Create an election
     create_response = client.post(
-        "/elections/elections",
+        "/elections/elections/new",
         json={
             "name": "Presidential Election",
             "candidates": ["Alice", "Bob", "Charlie"]
