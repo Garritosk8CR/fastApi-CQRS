@@ -16,3 +16,6 @@ class VoterRepository:
     
     def get_all_voters(self):
         return self.db.query(Voter).all()
+    
+    def voter_exists(self, voter_id: int) -> bool:
+        return self.db.query(Voter).filter(Voter.id == voter_id).first() is not None
