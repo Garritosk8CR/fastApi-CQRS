@@ -160,6 +160,7 @@ class CommandBus:
 command_bus = CommandBus()
 command_bus.register_handler(CreateElectionCommand, CreateElectionHandler())
 command_bus.register_handler(RegisterVoterCommand, RegisterVoterHandler())
+command_bus.register_handler(CastVoteCommand, CastVoteHandler())
 
 # Create and register the query handler
 query_bus.register_handler(CheckVoterExistsQuery, CheckVoterExistsHandler())
