@@ -13,13 +13,13 @@ router = APIRouter()
 @router.post("/voters/")
 def register_voter(command: RegisterVoterCommand):
     try:
-        command_bus.handle(command)  # Dispatch the command to the handler
+        new_voter = command_bus.handle(command)  # Dispatch the command to the handler
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail="An unexpected error occurred!")
 
-    return {"message": "Voter registered successfully"}
+    return {"message": "Voter registered successfully", "voter": new_voter}
 
 @router.post("/voters/{voter_id}/vote/")
 def cast_vote(voter_id: int, command: CastVoteCommand, db: Session = Depends(get_db)):
