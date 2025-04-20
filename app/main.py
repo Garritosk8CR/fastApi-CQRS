@@ -3,7 +3,7 @@ import uvicorn
 from app.application.commands import CastVoteCommand, RegisterVoterCommand
 from app.application.handlers import command_bus
 from app.application.query_bus import query_bus
-from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetVotingPageDataQuery
 from app.infrastructure.database import engine, Base, get_db
 from sqlalchemy.orm import Session
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -38,12 +38,17 @@ async def home(request: Request):
 
 @app.get("/vote", response_class=HTMLResponse)
 async def cast_vote_page(request: Request):
-    voters = voter_repo.get_all_voters()
-    elections = election_repo.get_all_elections()
+    query = GetVotingPageDataQuery()
+    try:
+        page_data = query_bus.handle(query)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
     return templates.TemplateResponse(
-        "vote.html", {"request": request, "voters": voters, "elections": elections}
+        "vote.html",
+        {"request": request, "voters": page_data["voters"], "elections": page_data["elections"]}
     )
+
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_voter_page(request: Request):
