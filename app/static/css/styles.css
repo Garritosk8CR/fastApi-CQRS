@@ -142,6 +142,8 @@ a {
     font-weight: bold;
 }
 
-a:hover {
-    color: #0056b3;
+p {
+    text-align: center;  /* Ensures the title is centered */
+    margin-bottom: 20px; /* Adds spacing between title and form */
 }
+
