@@ -120,7 +120,27 @@ class GetVotingPageDataHandler:
             voters = voter_repo.get_all_voters()
             elections = election_repo.get_all_elections()
 
-            return {"voters": voters, "elections": elections}
+            # Convert election objects to dictionaries
+            election_data = [
+                {
+                    "election_id": election.id,
+                    "name": election.name,
+                    "candidates": election.candidates.split(",")  # Ensure candidates are in a list
+                }
+                for election in elections
+            ]
+
+            # Convert voter objects to dictionaries
+            voter_data = [
+                {
+                    "voter_id": voter.id,
+                    "name": voter.name,
+                    "has_voted": voter.has_voted
+                }
+                for voter in voters if voter.has_voted == False # Only include unvoted voters
+            ]
+            return {"voters": voter_data, "elections": election_data}  # Return JSON-serializable data
+
 
 
 class CastVoteHandler:

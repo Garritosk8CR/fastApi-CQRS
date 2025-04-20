@@ -5,25 +5,22 @@
 {% block content %}
 <h2>Cast Your Vote</h2>
 
-<form method="post" action="/voters/{voter_id}/elections/{election_id}/vote/">
-    
-    <!-- Select Voter -->
+<form method="post" id="voteForm" action="" onsubmit="formatJson(event)">
+
     <label for="voter">Select Your Voter ID:</label>
-    <select name="voter_id" id="voter">
+    <select name="voter_id" id="voter" onchange="updateFormAction()">
         {% for voter in voters %}
-        <option value="{{ voter.id }}">{{ voter.name }}</option>
+        <option value="{{ voter.voter_id }}">{{ voter.name }}</option>
         {% endfor %}
     </select>
 
-    <!-- Select Election -->
     <label for="election">Select Election:</label>
-    <select name="election_id" id="election" onchange="updateCandidates()">
+    <select name="election_id" id="election" onchange="updateCandidates(); updateFormAction();">
         {% for election in elections %}
-        <option value="{{ election.id }}">{{ election.name }}</option>
+        <option value="{{ election.election_id }}">{{ election.name }}</option>
         {% endfor %}
     </select>
 
-    <!-- Select Candidate -->
     <label for="candidate">Select Candidate:</label>
     <select name="candidate" id="candidate">
         {% for candidate in elections[0].candidates %}
@@ -35,7 +32,28 @@
 </form>
 
 <script>
-    var electionData = JSON.parse('{{ elections | tojson | safe }}');  // Ensure proper JSON formatting
+    var electionData = JSON.parse('{{ elections | tojson | safe }}'); 
+
+    
+    function formatJson(event) {
+        event.preventDefault();
+
+        var voterId = document.getElementById("voter").value;
+        var electionId = document.getElementById("election").value;
+        var candidate = document.getElementById("candidate").value;
+
+        fetch(`/voters/voters/${voterId}/elections/${electionId}/cast_vote/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                voter_id: voterId,
+                election_id: electionId, 
+                candidate: candidate 
+            })
+        }).then(response => response.json())
+        .then(data => alert(data.message))
+        .catch(error => console.error("Error:", error));
+    }
 
     function updateCandidates() {
         var electionId = document.getElementById("election").value;
@@ -43,7 +61,7 @@
         candidatesDropdown.innerHTML = "";
 
         electionData.forEach(function(election) {
-            if (election.id == electionId) {
+            if (election.election_id == electionId) {
                 election.candidates.forEach(function(candidate) {
                     var option = document.createElement("option");
                     option.value = candidate;
@@ -53,7 +71,17 @@
             }
         });
     }
+
+    function updateFormAction() {
+        var voterId = document.getElementById("voter").value;
+        var electionId = document.getElementById("election").value;
+        var form = document.getElementById("voteForm");
+
+        // Update form action dynamically
+        form.action = `/voters/${voterId}/elections/${electionId}/cast_vote/`;
+    }
 </script>
+
 
 
 {% endblock %}
