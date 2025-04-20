@@ -1,6 +1,6 @@
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetVotingPageDataQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, RegisterVoterCommand
+from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EndElectionCommand, RegisterVoterCommand
 from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election
 from app.infrastructure.database import SessionLocal
@@ -170,6 +170,21 @@ class CastVoteHandler:
                 "candidate": command.candidate,
                 "election_name": election.name,
             }
+
+class EndElectionHandler:
+    def handle(self, command: EndElectionCommand):
+        with SessionLocal() as db:
+            repo = ElectionRepository(db)
+            election = repo.get_election_by_id(command.election_id)
+
+            if not election:
+                raise ValueError("Election not found")
+
+            election.status = "completed"
+            db.commit()
+
+            return {"message": f"Election {command.election_id} has been ended successfully."}
+
 
 
 class CommandBus:
