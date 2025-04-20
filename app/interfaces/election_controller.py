@@ -1,11 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException
 from app.application.query_bus import query_bus
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery
-from app.infrastructure.database import get_db
 from app.application.commands import CreateElectionCommand, EndElectionCommand
-from app.infrastructure.models import Election, ElectionResponse
-from app.infrastructure.election_repo import ElectionRepository
+from app.infrastructure.models import ElectionResponse
 from app.application.commands import CreateElectionCommand
 from app.application.handlers import command_bus
 
