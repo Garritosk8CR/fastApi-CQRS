@@ -1,7 +1,7 @@
 from fastapi.responses import HTMLResponse
 import uvicorn
 from app.application.commands import CastVoteCommand, RegisterVoterCommand
-from app.application.handlers import CommandBus
+from app.application.handlers import command_bus
 from app.application.query_bus import query_bus
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery
 from app.infrastructure.database import engine, Base, get_db
@@ -83,7 +83,7 @@ async def cast_vote(voter_id: int, election_id: int, request: Request):
     # Dispatch the command with both voter_id and election_id
     command = CastVoteCommand(voter_id=voter_id, election_id=election_id, candidate=candidate)
     try:
-        result = CommandBus.handle(command)
+        result = command_bus.handle(command)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -97,13 +97,13 @@ async def cast_vote(voter_id: int, election_id: int, request: Request):
 
 @app.post("/register/", response_class=HTMLResponse)
 async def register_voter(request: Request):
-    form_data = await request.form()
-    voter_id = int(form_data["voter_id"])
-    name = form_data["name"]
+    request_data = await request.json()  # Expect JSON input
+    voter_id = int(request_data["voter_id"])  # Extract values from JSON
+    name = request_data["name"]
 
     command = RegisterVoterCommand(voter_id=voter_id, name=name)
     try:
-       new_voter = CommandBus.handle(command)
+        new_voter = command_bus.handle(command)
     except ValueError as e:
         return templates.TemplateResponse(
             "register.html", {"request": request, "error": str(e)}
