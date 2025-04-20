@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.infrastructure.models import Voter
+from app.infrastructure.models import User, Voter
 
 class VoterRepository:
     def __init__(self, db: Session):
@@ -15,10 +15,19 @@ class VoterRepository:
         return self.db.query(Voter).filter(Voter.id == voter_id).first()
     
     def get_all_voters(self):
-        return self.db.query(Voter).all()
+        return (
+            self.db.query(User, Voter)
+            .join(Voter, User.id == Voter.user_id)
+            .filter(User.role == "voter")
+            .all()
+        )
     
     def voter_exists(self, voter_id: int) -> bool:
-        return self.db.query(Voter).filter(Voter.id == voter_id).first() is not None
+        return (
+            self.db.query(User)
+            .filter(User.id == voter_id, User.role == "voter")
+            .first() is not None
+        )
     
     def add_voter(self, voter_id: int, name: str):
         new_voter = Voter(id=voter_id, name=name, has_voted=False)

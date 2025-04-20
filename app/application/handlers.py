@@ -2,16 +2,22 @@ from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuer
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EndElectionCommand, RegisterVoterCommand
 from app.infrastructure.election_repo import ElectionRepository
-from app.infrastructure.models import Election
+from app.infrastructure.models import Election, User
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import Voter
 from app.infrastructure.voter_repo import VoterRepository
+from app.utils.password_utils import hash_password
 
 class CheckVoterExistsHandler:
     def handle(self, query: CheckVoterExistsQuery):
         with SessionLocal() as db:
-            repo = VoterRepository(db)
-            return repo.voter_exists(query.voter_id)
+            voter_exists = (
+                db.query(User)
+                .filter(User.id == query.voter_id, User.role == "voter")
+                .first() is not None
+            )
+            return voter_exists
+
 
        
 class GetAllElectionsHandler:
@@ -89,10 +95,19 @@ class RegisterVoterHandler:
             raise ValueError("Voter ID already exists!")
 
         with SessionLocal() as db:
-            repo = VoterRepository(db)
-            new_voter = repo.add_voter(command.voter_id, command.name)
+            # Create a new user with the voter role
+            new_user = User(id=command.voter_id, name=command.name, role="voter", password=hash_password(command.password))
+            db.add(new_user)
+            db.commit()
+            
+            # Create a voter linked to the user
+            new_voter = Voter(user_id=new_user.id, has_voted=False)
+            db.add(new_voter)
+            db.commit()
 
-        return new_voter  # Optionally return the voter object
+        print(f"Voter registered: {new_user}")
+        return new_user
+
 
 class GetElectionResultsHandler:
     def handle(self, query: GetElectionResultsQuery):
@@ -117,7 +132,8 @@ class GetVotingPageDataHandler:
             voter_repo = VoterRepository(db)
             election_repo = ElectionRepository(db)
 
-            voters = voter_repo.get_all_voters()
+            # Fetch voters (joining User and Voter tables)
+            voters = voter_repo.get_all_voters()  # Returns a list of (User, Voter) tuples
             elections = election_repo.get_all_elections()
 
             # Convert election objects to dictionaries
@@ -130,17 +146,17 @@ class GetVotingPageDataHandler:
                 for election in elections
             ]
 
-            # Convert voter objects to dictionaries
+            # Convert voter tuples to dictionaries
             voter_data = [
                 {
-                    "voter_id": voter.id,
-                    "name": voter.name,
+                    "voter_id": user.id,
+                    "name": user.name,
                     "has_voted": voter.has_voted
                 }
-                for voter in voters if voter.has_voted == False # Only include unvoted voters
+                for user, voter in voters if not voter.has_voted  # Only include unvoted voters
             ]
-            return {"voters": voter_data, "elections": election_data}  # Return JSON-serializable data
 
+            return {"voters": voter_data, "elections": election_data}
 
 
 class CastVoteHandler:

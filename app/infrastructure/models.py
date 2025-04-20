@@ -5,12 +5,6 @@ from sqlalchemy.orm import relationship
 from app.infrastructure.database import Base
 import enum
 
-class Voter(Base):
-    __tablename__ = "voters"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    has_voted = Column(Boolean, default=False)
-
 class ElectionStatus(str, enum.Enum):
     ACTIVE = "active"
     COMPLETED = "completed"
@@ -42,8 +36,18 @@ class ElectionResponse(BaseModel):
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
-    password = Column(String)
+    id = Column(Integer, primary_key=True)
+    voter_id = Column(Integer, unique=True, nullable=True)  # Null for non-voter users
     name = Column(String)
+    email = Column(String, unique=True)
+    password = Column(String)
     role = Column(String, default="voter")
+
+class Voter(Base):
+    __tablename__ = "voters"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    has_voted = Column(Boolean, default=False)
+
+    user = relationship("User", back_populates="voter")
+

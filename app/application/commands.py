@@ -1,9 +1,14 @@
 from pydantic import BaseModel
 from typing import List
 
+from pydantic import BaseModel
+
 class RegisterVoterCommand(BaseModel):
     voter_id: int
     name: str
+    email: str
+    password: str
+
 
 class CastVoteCommand(BaseModel):
     voter_id: int
