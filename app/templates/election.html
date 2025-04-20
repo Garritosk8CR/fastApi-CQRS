@@ -11,4 +11,23 @@
     <li>{{ candidate }}</li>
     {% endfor %}
 </ul>
+{% if election.status != "completed" %}
+<!-- End Election Button -->
+<button onclick="endElection({{ election.election_id }})">End Election</button>
+{% else %}
+<p>This election has already ended.</p>
+{% endif %}
+
+
+<script>
+    function endElection(electionId) {
+        fetch(`/elections/elections/${electionId}/end`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ election_id: electionId })
+        }).then(response => response.json())
+          .then(data => alert(data.message))
+          .catch(error => console.error("Error:", error));
+    }
+</script>
 {% endblock %}
