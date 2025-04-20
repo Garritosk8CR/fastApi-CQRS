@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.application.query_bus import query_bus
-from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery
 from app.infrastructure.database import get_db
 from app.application.commands import CreateElectionCommand, EndElectionCommand
 from app.infrastructure.models import Election, ElectionResponse
@@ -57,12 +57,14 @@ def end_election(election_id: int):
 
 
 @router.get("/elections/{election_id}/results/")
-def get_election_results(election_id: int, db: Session = Depends(get_db)):
-    repo = ElectionRepository(db)
-    election = repo.get_election_by_id(election_id)
-    if not election:
-        raise HTTPException(status_code=404, detail="Election not found")
-    
-    return {
-        "results": {candidate: vote for candidate, vote in zip(election.candidates.split(","), election.votes.split(","))}
-    }
+def get_election_results(election_id: int):
+    query = GetElectionResultsQuery(election_id)
+
+    try:
+        result = query_bus.handle(query)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
