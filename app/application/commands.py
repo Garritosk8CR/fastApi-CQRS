@@ -18,3 +18,7 @@ class CreateElectionCommand(BaseModel):
 class CheckVoterExistsQuery:
     def __init__(self, voter_id: int):
         self.voter_id = voter_id
+
+class EndElectionCommand(BaseModel):
+    election_id: int
+

@@ -22,10 +22,8 @@ def create_election(command: CreateElectionCommand):
             print("Election creation failed")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-    print(election)
-    # Return the election object as JSON
-    return election  # Return the created election as a JSON response
+    
+    return election  
 @router.get("/elections/")
 def list_all_elections():
     query = GetAllElectionsQuery()
