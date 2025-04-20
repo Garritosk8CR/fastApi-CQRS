@@ -11,4 +11,17 @@
     </li>
     {% endfor %}
 </ul>
+
+<h2>Past Election Results</h2>
+<ul>
+    {% for election in elections %}
+        {% if election.status == "completed" %}
+            <li>
+                <a href="/results/{{ election.election_id }}">
+                    {{ election.name }} - View Results
+                </a>
+            </li>
+        {% endif %}
+    {% endfor %}
+</ul>
 {% endblock %}

@@ -58,9 +58,9 @@ async def register_voter_page(request: Request):
 async def create_election_page(request: Request):
     return templates.TemplateResponse("create_election.html", {"request": request})
 
-@app.get("/results", response_class=HTMLResponse)
-async def get_results(request: Request):
-    query = GetElectionResultsQuery(election_id=1)  # Assuming election ID = 1
+@app.get("/results/{election_id}", response_class=HTMLResponse)
+async def get_results(request: Request, election_id: int):
+    query = GetElectionResultsQuery(election_id=election_id)  # Now using dynamic election_id
     try:
         results = query_bus.handle(query)
     except ValueError as e:
@@ -70,6 +70,7 @@ async def get_results(request: Request):
 
     # Pass the results to the template
     return templates.TemplateResponse("results.html", {"request": request, "results": results})
+
 
 
 @app.get("/elections/{election_id}", response_class=HTMLResponse)
