@@ -1,10 +1,11 @@
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CheckVoterExistsQuery, CreateElectionCommand, RegisterVoterCommand
+from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, RegisterVoterCommand
 from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import Voter
+from app.infrastructure.voter_repo import VoterRepository
 
 class CheckVoterExistsHandler:
     def handle(self, query: CheckVoterExistsQuery):
@@ -106,6 +107,34 @@ class GetElectionResultsHandler:
             }
 
             return results
+
+class CastVoteHandler:
+    def handle(self, command: CastVoteCommand):
+        with SessionLocal() as db:
+            voter_repo = VoterRepository(db)
+            election_repo = ElectionRepository(db)
+
+            # Fetch the voter
+            voter = voter_repo.get_voter_by_id(command.voter_id)
+            if not voter:
+                raise ValueError("Voter not found")
+            if voter.has_voted:
+                raise ValueError("Voter has already voted")
+
+            # Fetch the election dynamically using election_id
+            election = election_repo.get_election_by_id(command.election_id)
+            if not election:
+                raise ValueError("Election not found")
+
+            # Cast the vote
+            election.increment_vote(command.candidate)
+            voter.has_voted = True
+            db.commit()
+
+            return {
+                "candidate": command.candidate,
+                "election_name": election.name,
+            }
 
 
 class CommandBus:
