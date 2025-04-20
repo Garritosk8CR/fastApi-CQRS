@@ -97,8 +97,8 @@ class RegisterVoterHandler:
 class GetElectionResultsHandler:
     def handle(self, query: GetElectionResultsQuery):
         with SessionLocal() as db:
-            # Fetch the election by ID
-            election = db.query(Election).filter(Election.id == query.election_id).first()
+            repo = ElectionRepository(db)
+            election = repo.get_election_by_id(query.election_id)
 
             if not election:
                 raise ValueError("Election not found")
