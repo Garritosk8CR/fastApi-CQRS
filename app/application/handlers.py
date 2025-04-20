@@ -10,7 +10,8 @@ from app.infrastructure.voter_repo import VoterRepository
 class CheckVoterExistsHandler:
     def handle(self, query: CheckVoterExistsQuery):
         with SessionLocal() as db:
-            return db.query(Voter).filter(Voter.id == query.voter_id).first() is not None
+            repo = VoterRepository(db)
+            return repo.voter_exists(query.voter_id)
 
        
 class GetAllElectionsHandler:
