@@ -21,8 +21,8 @@ def register_voter(command: RegisterVoterCommand):
 
     return {"message": "Voter registered successfully", "voter": new_voter}
 
-@router.post("/voters/{voter_id}/vote/")
-def cast_vote(voter_id: int, command: CastVoteCommand, db: Session = Depends(get_db)):
+@router.post("/voters/{voter_id}/elections/{election_id}/vote/")
+def cast_vote(voter_id: int, election_id: int, command: CastVoteCommand, db: Session = Depends(get_db)):
     voter_repo = VoterRepository(db)
     election_repo = ElectionRepository(db)
 
@@ -34,7 +34,7 @@ def cast_vote(voter_id: int, command: CastVoteCommand, db: Session = Depends(get
         raise HTTPException(status_code=400, detail="Voter has already voted")
 
     # Retrieve election by ID
-    election = election_repo.get_election_by_id(1)  # Assuming election_id is always 1 for simplicity
+    election = election_repo.get_election_by_id(election_id)  # Assuming election_id is always 1 for simplicity
     if not election:
         raise HTTPException(status_code=404, detail="Election not found")
 
