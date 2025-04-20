@@ -36,6 +36,15 @@ async def home(request: Request):
     # Pass elections to the template
     return templates.TemplateResponse("home.html", {"request": request, "elections": elections})
 
+@app.get("/vote", response_class=HTMLResponse)
+async def cast_vote_page(request: Request):
+    voters = voter_repo.get_all_voters()
+    elections = election_repo.get_all_elections()
+
+    return templates.TemplateResponse(
+        "vote.html", {"request": request, "voters": voters, "elections": elections}
+    )
+
 @app.get("/register", response_class=HTMLResponse)
 async def register_voter_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})

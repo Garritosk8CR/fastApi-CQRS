@@ -4,19 +4,11 @@
 
 {% block content %}
 <h2>{{ election.name }}</h2>
+<p><strong>Election ID:</strong> {{ election.election_id }}</p>
 <p><strong>Candidates:</strong></p>
 <ul>
     {% for candidate in election.candidates %}
     <li>{{ candidate }}</li>
     {% endfor %}
 </ul>
-<form method="post" action="/voters/{{ voter_id }}/elections/{{ election.election_id }}/vote/">
-    <label for="candidate">Select Candidate:</label>
-    <select name="candidate" id="candidate">
-        {% for candidate in election.candidates %}
-        <option value="{{ candidate }}">{{ candidate }}</option>
-        {% endfor %}
-    </select>
-    <button type="submit">Vote</button>
-</form>
 {% endblock %}

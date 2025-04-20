@@ -16,3 +16,6 @@ class GetAllElectionsQuery:
 class GetElectionDetailsQuery:
     def __init__(self, election_id: int):
         self.election_id = election_id
+
+class GetVotingPageDataQuery:
+    pass  # No parameters needed since we fetch all voters and elections

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Cast Your Vote{% endblock %}
+
+{% block content %}
+<h2>Cast Your Vote</h2>
+
+<form method="post" action="/voters/{voter_id}/elections/{election_id}/vote/">
+    
+    <!-- Select Voter -->
+    <label for="voter">Select Your Voter ID:</label>
+    <select name="voter_id" id="voter">
+        {% for voter in voters %}
+        <option value="{{ voter.id }}">{{ voter.name }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Select Election -->
+    <label for="election">Select Election:</label>
+    <select name="election_id" id="election" onchange="updateCandidates()">
+        {% for election in elections %}
+        <option value="{{ election.id }}">{{ election.name }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Select Candidate -->
+    <label for="candidate">Select Candidate:</label>
+    <select name="candidate" id="candidate">
+        {% for candidate in elections[0].candidates %}
+        <option value="{{ candidate }}">{{ candidate }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Vote</button>
+</form>
+
+<script>
+    var electionData = JSON.parse('{{ elections | tojson | safe }}');  // Ensure proper JSON formatting
+
+    function updateCandidates() {
+        var electionId = document.getElementById("election").value;
+        var candidatesDropdown = document.getElementById("candidate");
+        candidatesDropdown.innerHTML = "";
+
+        electionData.forEach(function(election) {
+            if (election.id == electionId) {
+                election.candidates.forEach(function(candidate) {
+                    var option = document.createElement("option");
+                    option.value = candidate;
+                    option.textContent = candidate;
+                    candidatesDropdown.appendChild(option);
+                });
+            }
+        });
+    }
+</script>
+
+
+{% endblock %}
