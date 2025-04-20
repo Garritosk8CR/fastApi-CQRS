@@ -13,3 +13,6 @@ class VoterRepository:
 
     def get_voter_by_id(self, voter_id: int):
         return self.db.query(Voter).filter(Voter.id == voter_id).first()
+    
+    def get_all_voters(self):
+        return self.db.query(Voter).all()
