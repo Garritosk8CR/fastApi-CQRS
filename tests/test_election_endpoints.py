@@ -110,6 +110,4 @@ def test_get_election_results():
     assert response.status_code == 200
     data = response.json()
     print(data)
-    assert "results" in data
-
-    assert data["results"] == {'Alice': '0', 'Bob': '0', 'Charlie': '0'}
+    assert data == {'Alice': 0, 'Bob': 0, 'Charlie': 0} 

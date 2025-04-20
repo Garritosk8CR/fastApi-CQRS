@@ -166,5 +166,5 @@ def test_vote_results():
     # Step 3: Fetch election results
     results_response = client.get(f"/elections/elections/{election_id}/results/")
     assert results_response.status_code == 200
-    results = results_response.json()["results"]
-    assert results == {"Alice": '1', "Bob": '1', "Charlie": '0'}
+    results = results_response.json()
+    assert results == {"Alice": 1, "Bob": 1, "Charlie": 0}
