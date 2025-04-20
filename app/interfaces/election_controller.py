@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.application.query_bus import query_bus
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery
 from app.infrastructure.database import get_db
-from app.application.commands import CreateElectionCommand
+from app.application.commands import CreateElectionCommand, EndElectionCommand
 from app.infrastructure.models import Election, ElectionResponse
 from app.infrastructure.election_repo import ElectionRepository
 from app.application.commands import CreateElectionCommand
@@ -44,15 +44,17 @@ def get_election_details(election_id: int):
 
 
 @router.put("/elections/{election_id}/end/")
-def end_election(election_id: int, db: Session = Depends(get_db)):
-    repo = ElectionRepository(db)
-    election = repo.get_election_by_id(election_id)
-    if not election:
-        raise HTTPException(status_code=404, detail="Election not found")
+def end_election(election_id: int):
+    command = EndElectionCommand(election_id=election_id)
     
-    election.status = "completed"
-    db.commit()
-    return {"message": f"Election {election_id} has been ended successfully."}
+    try:
+        result = command_bus.handle(command)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
 
 @router.get("/elections/{election_id}/results/")
 def get_election_results(election_id: int, db: Session = Depends(get_db)):
