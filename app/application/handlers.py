@@ -89,12 +89,8 @@ class RegisterVoterHandler:
             raise ValueError("Voter ID already exists!")
 
         with SessionLocal() as db:
-            new_voter = Voter(id=command.voter_id, name=command.name, has_voted=False)
-            db.add(new_voter)
-            db.commit()
-            db.refresh(new_voter)
-
-        print(f"Voter registered: {new_voter}")
+            repo = VoterRepository(db)
+            new_voter = repo.add_voter(command.voter_id, command.name)
 
         return new_voter  # Optionally return the voter object
 
