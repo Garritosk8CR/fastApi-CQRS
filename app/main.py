@@ -4,12 +4,8 @@ from app.application.commands import CastVoteCommand, RegisterVoterCommand
 from app.application.handlers import command_bus
 from app.application.query_bus import query_bus
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetVotingPageDataQuery
-from app.infrastructure.database import engine, Base, get_db
-from sqlalchemy.orm import Session
-from fastapi import Depends, FastAPI, HTTPException, Request
-from app.infrastructure.election_repo import ElectionRepository
-from app.infrastructure.models import Election
-from app.infrastructure.voter_repo import VoterRepository
+from app.infrastructure.database import engine, Base
+from fastapi import FastAPI, HTTPException, Request
 from app.interfaces.voter_controller import router as voter_router
 from app.interfaces.election_controller import router as election_router
 from fastapi.staticfiles import StaticFiles
