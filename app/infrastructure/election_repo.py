@@ -13,3 +13,6 @@ class ElectionRepository:
 
     def get_election_by_id(self, election_id: int):
         return self.db.query(Election).filter(Election.id == election_id).first()
+    
+    def get_all_elections(self):
+        return self.db.query(Election).all()
