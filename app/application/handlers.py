@@ -1,4 +1,4 @@
-from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetVotingPageDataQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, RegisterVoterCommand
 from app.infrastructure.election_repo import ElectionRepository
@@ -110,6 +110,18 @@ class GetElectionResultsHandler:
             }
 
             return results
+        
+class GetVotingPageDataHandler:
+    def handle(self, query: GetVotingPageDataQuery):
+        with SessionLocal() as db:
+            voter_repo = VoterRepository(db)
+            election_repo = ElectionRepository(db)
+
+            voters = voter_repo.get_all_voters()
+            elections = election_repo.get_all_elections()
+
+            return {"voters": voters, "elections": elections}
+
 
 class CastVoteHandler:
     def handle(self, command: CastVoteCommand):
@@ -170,3 +182,5 @@ query_bus.register_handler(CheckVoterExistsQuery, CheckVoterExistsHandler())
 query_bus.register_handler(GetAllElectionsQuery, GetAllElectionsHandler())
 query_bus.register_handler(GetElectionDetailsQuery, GetElectionDetailsHandler())
 query_bus.register_handler(GetElectionResultsQuery, GetElectionResultsHandler())
+query_bus.register_handler(GetVotingPageDataQuery, GetVotingPageDataHandler())
+
