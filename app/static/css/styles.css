@@ -32,27 +32,43 @@ main {
 }
 
 form {
-    margin: 20px 0;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    width: 100%;
-    max-width: 400px;
+    max-width: 400px;  /* Limit form width */
+    width: 100%;  /* Ensure it expands fully */
+    margin: 0 auto;    
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column; /* Stack elements properly */
 }
 
-form label {
+label {
     display: block;
-    margin-bottom: 5px;
+    margin-top: 10px;
     font-weight: bold;
 }
 
-form select, form input, form button {
-    width: 100%;
+input, select, button {
+    width: 100%;  /* Ensure they don't overflow */
     padding: 10px;
-    margin-bottom: 15px;
+    margin-top: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    box-sizing: border-box;  /* Prevent width issues */
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #0056b3;
 }
 
 form button {
@@ -75,4 +91,57 @@ form button:hover {
     form {
         width: 90%;
     }
+}
+
+input, select, button {
+    max-width: 100%;  /* Prevent fields from exceeding the form's width */
+    width: 100%;       /* Make inputs fit the container */
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Ensure padding & border don't increase width */
+}
+input, select {
+    max-width: 100%;  /* Stop inputs from stretching beyond container */
+    width: 100%;
+    box-sizing: border-box; /* Prevent width from growing beyond boundaries */
+}
+
+form::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+input[type="text"], select {
+    width: 100%;        /* Make sure all fields take up the same width */
+    max-width: 100%;    /* Prevent overflow */
+    box-sizing: border-box;  /* Ensure padding/borders don’t affect total width */
+}
+
+h2 {
+    text-align: center;  /* Ensures the title is centered */
+    margin-bottom: 20px; /* Adds spacing between title and form */
+}
+
+ul {
+    list-style: none;  /* Remove default bullet points */
+    padding: 0;
+    text-align: center;  /* Center align the text */
+}
+
+li {
+    margin: 10px 0;  /* Add spacing between list items */
+    font-size: 18px;
+}
+
+a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+}
+
+a:hover {
+    color: #0056b3;
 }
