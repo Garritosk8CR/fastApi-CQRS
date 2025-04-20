@@ -16,3 +16,7 @@ class ElectionRepository:
     
     def get_all_elections(self):
         return self.db.query(Election).all()
+    
+    def get_completed_elections(self):
+        return self.db.query(Election).filter(Election.status == "completed").all()
+

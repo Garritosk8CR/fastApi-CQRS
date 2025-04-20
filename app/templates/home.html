@@ -6,9 +6,11 @@
 <h2>Available Elections</h2>
 <ul>
     {% for election in elections %}
-    <li>
-        <a href="/elections/{{ election.election_id }}">{{ election.name }}</a>
-    </li>
+        {% if election.status != "completed" %}
+            <li>
+                <a href="/elections/{{ election.election_id }}">{{ election.name }}</a>
+            </li>
+        {% endif %}
     {% endfor %}
 </ul>
 

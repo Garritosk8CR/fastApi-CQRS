@@ -26,7 +26,8 @@ class GetAllElectionsHandler:
                     "election_id": election.id,
                     "name": election.name,
                     "candidates": election.candidates.split(","),
-                    "votes": list(map(int, election.votes.split(",")))
+                    "votes": list(map(int, election.votes.split(","))),
+                    "status": election.status
                 }
                 for election in elections
             ]
