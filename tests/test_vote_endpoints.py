@@ -36,11 +36,15 @@ def test_cast_vote():
         },
     )
     assert register_response.status_code == 200
-
+    print(f"Voter registered: {register_response.json()} \n\n")
     # Step 3: Cast a vote
     vote_response = client.post(
-        f"/voters/voters/1/vote/",
-        json={"candidate": "Alice"}
+        f"/voters/voters/1/elections/1/cast_vote/",
+        json={         
+            "voter_id": 1,
+            "election_id": 1,
+            "candidate": "Alice"          
+            }
     )
     assert vote_response.status_code == 200
     assert vote_response.json()["message"] == "Vote cast successfully for Alice"
@@ -67,14 +71,22 @@ def test_cast_vote_voter_already_voted():
 
     # Step 3: Cast the first vote
     client.post(
-        f"/voters/voters/1/vote/",
-        json={"candidate": "Alice"}
+        f"/voters/voters/1/elections/{create_response.json()['election_id']}/cast_vote/",
+        json={
+            "voter_id": 1,
+            "election_id": create_response.json()['election_id'],
+            "candidate": "Alice"
+            }
     )
 
     # Step 4: Attempt to cast another vote for the same voter
     vote_response = client.post(
-        f"/voters/voters/1/vote/",
-        json={"candidate": "Bob"}
+        f"/voters/voters/1/elections/{create_response.json()['election_id']}/cast_vote/",
+        json={
+            "voter_id": 1,
+            "election_id": create_response.json()['election_id'],
+            "candidate": "Bob"
+            }
     )
     assert vote_response.status_code == 400
     assert vote_response.json()["detail"] == "Voter has already voted"
@@ -101,8 +113,12 @@ def test_cast_vote_invalid_candidate():
 
     # Step 3: Attempt to cast a vote for an invalid candidate
     vote_response = client.post(
-        f"/voters/voters/1/vote/",
-        json={"candidate": "InvalidCandidate"}
+        f"/voters/voters/1/elections/{create_response.json()['election_id']}/cast_vote/",
+        json={
+            "voter_id": 1,
+            "election_id": create_response.json()['election_id'],
+            "candidate": "InvalidCandidate"
+            }
     )
     assert vote_response.status_code == 400
     assert vote_response.json()["detail"] == "Candidate not found"
@@ -131,12 +147,20 @@ def test_vote_results():
         json={"voter_id": 2, "name": "Jane Smith"}
     )
     client.post(
-        f"/voters/voters/1/vote/",
-        json={"candidate": "Alice"}
+        f"/voters/voters/1/elections/{election_id}/cast_vote/",
+        json={
+            "voter_id": 1,
+            "election_id": election_id,
+            "candidate": "Alice"
+        }
     )
     client.post(
-        f"/voters/voters/2/vote/",
-        json={"candidate": "Bob"}
+        f"/voters/voters/2/elections/{election_id}/cast_vote/",
+        json={
+            "voter_id": 2,
+            "election_id": election_id,
+            "candidate": "Bob"
+        }
     )
 
     # Step 3: Fetch election results

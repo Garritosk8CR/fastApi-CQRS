@@ -21,7 +21,7 @@ def register_voter(command: RegisterVoterCommand):
 
     return {"message": "Voter registered successfully", "voter": new_voter}
 
-@router.post("/voters/{voter_id}/elections/{election_id}/vote/")
+@router.post("/voters/{voter_id}/elections/{election_id}/cast_vote/")
 def cast_vote(voter_id: int, election_id: int, command: CastVoteCommand):
     try:
         # Dispatch the command

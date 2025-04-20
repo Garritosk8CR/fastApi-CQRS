@@ -88,6 +88,9 @@ class RegisterVoterHandler:
             new_voter = Voter(id=command.voter_id, name=command.name, has_voted=False)
             db.add(new_voter)
             db.commit()
+            db.refresh(new_voter)
+
+        print(f"Voter registered: {new_voter}")
 
         return new_voter  # Optionally return the voter object
 
