@@ -4,8 +4,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.queries import GetUserByEmailQuery
 from app.infrastructure.database import get_db
-from app.application.handlers import AuthCommandHandler, RegisterUserHandler, UserQueryHandler
-from app.application.commands import LoginUserCommand
+from app.application.handlers import AuthCommandHandler, EditUserHandler, RegisterUserHandler, UserQueryHandler
+from app.application.commands import EditUserCommand, LoginUserCommand
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -70,3 +70,13 @@ async def logout():
     response = RedirectResponse(url="/users/login", status_code=302)
     response.delete_cookie(key="access_token")  # Remove the token
     return response
+
+@router.put("/users/{user_id}")
+async def edit_user(
+    user_id: int,
+    update_data: EditUserCommand
+):
+    # Pass the request to the handler
+    handler = EditUserHandler()
+    updated_user = handler.handle(user_id, update_data)
+    return {"message": "User updated successfully!", "user": updated_user}
