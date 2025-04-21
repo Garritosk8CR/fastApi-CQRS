@@ -43,27 +43,29 @@ async def sign_up(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-@router.post("/login", status_code=200)
+@router.post("/login")
 async def login(
     email: str = Form(...),
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
+    print(f"Logging in user with email: {email}")
     # Retrieve user by email
     user = db.query(User).filter(User.email == email).first()
+
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     # Verify the password
     if not verify_password(password, user.password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-
+    print("User authenticated")
     # Create the JWT token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-
+    print("Token created")
     response = RedirectResponse(url="/", status_code=302)
     response.set_cookie(
         key="access_token",

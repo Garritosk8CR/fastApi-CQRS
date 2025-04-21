@@ -19,3 +19,7 @@ class GetElectionDetailsQuery:
 
 class GetVotingPageDataQuery:
     pass  # No parameters needed since we fetch all voters and elections
+
+class GetUserByEmailQuery:
+    def __init__(self, email: str):
+        self.email = email

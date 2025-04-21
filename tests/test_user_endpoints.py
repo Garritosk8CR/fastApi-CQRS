@@ -77,8 +77,8 @@ def test_missing_fields_sign_up(test_db):
     assert response.status_code == 422  # Unprocessable Entity
 
 
-def test_successful_login(test_db):
-    # Pre-create a user in the test database
+def test_login_sets_cookie(test_db):
+    # Step 1: Create a user in the test database
     user = User(
         name="Test User",
         email="testuser@example.com",
@@ -87,20 +87,18 @@ def test_successful_login(test_db):
     test_db.add(user)
     test_db.commit()
 
-    # Send a login request
+    # Step 2: Send a login request
     response = client.post(
         "/users/login",
-        data={
-            "email": "testuser@example.com",
-            "password": "securepassword"
-        }
+        data={"email": "testuser@example.com", "password": "securepassword"}
     )
 
-    # Verify the response
-    assert response.status_code == 200
-    json_response = response.json()
-    assert "access_token" in json_response
-    assert json_response["token_type"] == "bearer"
+    # Step 3: Assert the cookie contains the token
+    assert client.cookies.get("access_token") is not None
+
+
+
+
 
 def test_invalid_email_login(test_db):
     response = client.post(
