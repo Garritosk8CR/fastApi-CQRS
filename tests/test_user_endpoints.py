@@ -27,3 +27,26 @@ def test_successful_sign_up(test_db):
     )
     assert response.status_code == 201
     assert response.json() == {"message": "User Test User registered successfully as a voter!"}
+
+
+def test_duplicate_email_sign_up(test_db):
+    # First registration
+    client.post(
+        "/users/sign-up",
+        json={
+            "name": "Test User",
+            "email": "testuser@example.com",
+            "password": "securepassword"
+        }
+    )
+    # Attempt second registration with the same email
+    response = client.post(
+        "/users/sign-up",
+        json={
+            "name": "Another User",
+            "email": "testuser@example.com",
+            "password": "anotherpassword"
+        }
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Email already exists!"}
