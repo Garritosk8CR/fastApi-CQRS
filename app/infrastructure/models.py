@@ -1,5 +1,5 @@
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table, Enum
 from sqlalchemy.orm import relationship
 from app.infrastructure.database import Base
@@ -53,5 +53,10 @@ class Voter(Base):
 
     # Relationship with User
     user = relationship("User", back_populates="voter")
+
+class UserSignUp(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
 
 
