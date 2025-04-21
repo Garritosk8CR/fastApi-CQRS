@@ -50,12 +50,17 @@ label {
 }
 
 input, select, button {
-    width: 100%;  /* Ensure they don't overflow */
+    max-width: 100%;  /* Prevent fields from exceeding container width */
+    width: 100%;       /* Suitable for forms only */
     padding: 10px;
     margin-top: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
-    box-sizing: border-box;  /* Prevent width issues */
+    box-sizing: border-box;
+}
+
+.navbar .btn-logout {
+    width: auto; /* Override the default button width */
 }
 
 button {
@@ -147,3 +152,50 @@ p {
     margin-bottom: 20px; /* Adds spacing between title and form */
 }
 
+.navbar {
+    display: flex; /* Flexbox for horizontal alignment */
+    flex-wrap: nowrap; /* Prevent stacking or wrapping to a new row */
+    justify-content: space-between; /* Push left and right sections apart */
+    align-items: center; /* Ensure vertical alignment */
+    padding: 10px 20px;
+    background-color: #333;
+    color: white;
+}
+
+.navbar-left, .navbar-right {
+    flex: 0; /* Sections take only the space they need */
+    display: inline-flex; /* Align items within each section horizontally */
+    align-items: center; /* Center items vertically */
+}
+
+.navbar-left a {
+    color: white;
+    text-decoration: none;
+    margin-right: 20px; /* Add spacing between links */
+    line-height: 20px; /* Match logout button height */
+}
+
+.navbar-right form {
+    display: inline; /* Prevent block-level stretching */
+    margin: 0;
+    padding: 0;
+    background: none;
+    width: auto; /* Restrict form size */
+    height: auto; /* Prevent extra height */
+}
+
+.navbar-right .btn-logout {
+    padding: 5px 10px;
+    background-color: #ff4d4d;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 20px; /* Ensure consistent height with links */
+    vertical-align: middle;
+}
+
+.navbar-right .btn-logout:hover {
+    background-color: #e60000;
+}

@@ -10,15 +10,26 @@
     <header>
         <h1>Voting System</h1>
         <nav>
-            {% if is_logged_in %}
-                <a href="/">Home</a>
-                <a href="/vote">Cast Your Vote</a>
-                <a href="/elections/create">Create Election</a>
-                <a href="/voters/register">Register Voter</a>
-            {% else %}
-                <a href="users/login">Login</a>
-                <a href="users/sign-up">Register</a>
-            {% endif %}
+                <div class="navbar-left">
+                {% if is_logged_in %}
+                
+                    <a href="/">Home</a>
+                    <a href="/vote">Cast Your Vote</a>
+                    <a href="/elections/create">Create Election</a>
+                    <a href="/voters/register">Register Voter</a>
+                        
+                {% else %}
+                    <a href="users/login">Login</a>
+                    <a href="users/sign-up">Register</a>
+                {% endif %}
+                </div>
+                <div class="navbar-right">
+                    {% if is_logged_in %}
+                    <form action="users/logout" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-logout">Logout</button>
+                    </form>
+                    {% endif %}
+                </div>
         </nav>
     </header>
     <main>
