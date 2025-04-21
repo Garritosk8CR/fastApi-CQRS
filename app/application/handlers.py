@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetVotingPageDataQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserProfileQuery, GetVotingPageDataQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -272,7 +272,17 @@ class EditUserHandler:
             except ValueError as e:
                 raise HTTPException(status_code=400, detail=str(e))
         
+class GetUserProfileHandler:
+    def handle(self, query: GetUserProfileQuery):
+        with SessionLocal() as db:  # Initialize database session inside handler
+            user_repository = UserRepository(db)
 
+            # Fetch user details
+            user = user_repository.get_user_by_id(query.user_id)
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            return user  # Return full user object
 
 class CommandBus:
     def __init__(self):
