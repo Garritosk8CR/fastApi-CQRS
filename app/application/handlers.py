@@ -1,13 +1,18 @@
+from datetime import timedelta
+
+from fastapi import HTTPException
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetVotingPageDataQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EndElectionCommand, RegisterVoterCommand, UserSignUp
+from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UserSignUp
+from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election, User
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import Voter
 from app.infrastructure.user_repo import UserRepository
 from app.infrastructure.voter_repo import VoterRepository
-from app.utils.password_utils import hash_password
+from app.security import create_access_token
+from app.utils.password_utils import hash_password, verify_password
 
 class CheckVoterExistsHandler:
     def handle(self, query: CheckVoterExistsQuery):
@@ -226,6 +231,29 @@ class UserQueryHandler:
         with SessionLocal() as db:
             user_repository = UserRepository(db)
             return user_repository.get_user_by_email(query.email)
+        
+
+class AuthCommandHandler:
+    def handle(self, command: LoginUserCommand):
+        with SessionLocal() as db:
+            user_repository = UserRepository(db)
+
+            # Retrieve user by email
+            user = user_repository.get_user_by_email(command.email)
+            if not user:
+                raise HTTPException(status_code=401, detail="Invalid email or password")
+
+            # Verify password
+            if not verify_password(command.password, user.password):
+                raise HTTPException(status_code=401, detail="Invalid email or password")
+
+            # Generate JWT token
+            access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            access_token = create_access_token(
+                data={"sub": user.email}, expires_delta=access_token_expires
+            )
+
+        return access_token
 
 
 class CommandBus:
