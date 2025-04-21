@@ -2,9 +2,10 @@ from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuer
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EndElectionCommand, RegisterVoterCommand
 from app.infrastructure.election_repo import ElectionRepository
-from app.infrastructure.models import Election, User
+from app.infrastructure.models import Election, User, UserSignUp
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import Voter
+from app.infrastructure.user_repo import UserRepository
 from app.infrastructure.voter_repo import VoterRepository
 from app.utils.password_utils import hash_password
 
@@ -201,6 +202,24 @@ class EndElectionHandler:
 
             return {"message": f"Election {command.election_id} has been ended successfully."}
 
+class RegisterUserHandler:
+    def handle(self, command: UserSignUp):
+        with SessionLocal() as db:
+            user_repo = UserRepository(db)
+
+            # Check if user already exists
+            existing_user = user_repo.get_user_by_email(command.email)
+            if existing_user:
+                raise ValueError("Email already exists!")
+
+            # Use the repository to create a new user
+            new_user = user_repo.create_user(
+                name=command.name,
+                email=command.email,
+                password=command.password
+            )
+
+        return {"message": f"User {new_user.name} registered successfully as a voter!"}
 
 
 class CommandBus:
