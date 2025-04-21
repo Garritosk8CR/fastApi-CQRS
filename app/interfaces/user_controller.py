@@ -71,7 +71,7 @@ async def logout():
     response.delete_cookie(key="access_token")  # Remove the token
     return response
 
-@router.put("/users/{user_id}")
+@router.put("/{user_id}")
 async def edit_user(
     user_id: int,
     update_data: EditUserCommand

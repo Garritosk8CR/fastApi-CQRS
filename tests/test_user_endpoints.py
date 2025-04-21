@@ -76,7 +76,6 @@ def test_missing_fields_sign_up(test_db):
     )
     assert response.status_code == 422  # Unprocessable Entity
 
-
 def test_login_sets_cookie(test_db):
     # Step 1: Create a user in the test database
     user = User(
@@ -96,10 +95,6 @@ def test_login_sets_cookie(test_db):
     # Step 3: Assert the cookie contains the token
     assert client.cookies.get("access_token") is not None
 
-
-
-
-
 def test_invalid_email_login(test_db):
     response = client.post(
         "/users/login",
@@ -110,7 +105,6 @@ def test_invalid_email_login(test_db):
     )
     assert response.status_code == 401
     assert response.json() == {"detail": "Invalid email or password"}
-
 
 def test_wrong_password_login(test_db):
     response = client.post(
@@ -134,7 +128,6 @@ def test_missing_fields_login():
     assert response.status_code == 422
     assert "password" in str(response.json()["detail"])
 
-
 def test_invalid_form_data_login():
     response = client.post(
         "/users/login",
@@ -146,5 +139,26 @@ def test_invalid_form_data_login():
     assert response.status_code == 401
     assert response.json() == {"detail": "Invalid email or password"}
 
+def test_edit_user(test_db):
+    # Create a test user
+    user = User(name="Old Name", email="oldemail@example.com", password="oldpassword")
+    test_db.add(user)
+    test_db.commit()
+
+    # Prepare the update data
+    update_data = {
+        "name": "New Name",
+        "email": "newemail@example.com",
+        "password": "newpassword"
+    }
+
+    # Send the request
+    response = client.put(f"/users/{user.id}", json=update_data)
+
+    # Verify the response
+    assert response.status_code == 200
+    assert response.json()["message"] == "User updated successfully!"
+    assert response.json()["user"]["name"] == "New Name"
+    assert response.json()["user"]["email"] == "newemail@example.com"
 
 
