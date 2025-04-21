@@ -40,23 +40,19 @@ async def sign_up(
         raise HTTPException(status_code=400, detail=str(e))
     
 @router.post("/login")
-async def login(email: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+async def login(email: str = Form(...), password: str = Form(...)):
     print(f"Logging in user with email: {email}")
 
-    # Step 1: Retrieve the user via the query handler
-    user_query_handler = UserQueryHandler()
-    print(f"Querying user with email: {email}")
-    user = user_query_handler.handle(GetUserByEmailQuery(email))
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+    # Dispatch the command via the handler
+    try:
+        auth_command_handler = AuthCommandHandler()
+        command = LoginUserCommand(email=email, password=password)  # Create the command correctly
+        access_token = auth_command_handler.handle(command)
+        print("Token created")
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail='Invalid email or password')
 
-    # Step 2: Authenticate and create token via the command handler
-    auth_command_handler = AuthCommandHandler()
-    access_token = auth_command_handler.handle(LoginUserCommand(email=email, password=password))
-
-    print("Token created")
-
-    # Step 3: Set cookie and redirect
+    # Set cookie and redirect
     response = RedirectResponse(url="/", status_code=302)
     response.set_cookie(
         key="access_token",
