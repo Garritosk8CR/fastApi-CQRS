@@ -126,4 +126,16 @@ def test_wrong_password_login(test_db):
     assert response.status_code == 401
     assert response.json() == {"detail": "Invalid email or password"}
 
+def test_missing_fields_login():
+    response = client.post(
+        "/users/login",
+        data={
+            "email": "testuser@example.com"
+            # Missing password
+        }
+    )
+    assert response.status_code == 422
+    assert "password" in str(response.json()["detail"])
+
+
 
