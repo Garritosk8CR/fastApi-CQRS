@@ -235,6 +235,7 @@ class UserQueryHandler:
 
 class AuthCommandHandler:
     def handle(self, command: LoginUserCommand):
+        print(f"Command in AuthCommandHandler: {command.email}, {command.password}")
         with SessionLocal() as db:
             user_repository = UserRepository(db)
 
