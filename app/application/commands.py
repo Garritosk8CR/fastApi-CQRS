@@ -35,3 +35,8 @@ class LoginUserCommand(BaseModel):
     email: EmailStr
     password: str
 
+class EditUserCommand(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+
