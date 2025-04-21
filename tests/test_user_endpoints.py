@@ -189,3 +189,19 @@ def test_edit_user_invalid_email(test_db):
     response = client.put(f"/users/{user.id}", json=update_data)
     assert response.status_code == 422  # Unprocessable Entity
     assert "value is not a valid email address" in response.json()["detail"][0]["msg"]
+
+def test_edit_user_missing_fields(test_db):
+    # Create a test user
+    user = User(name="Older Name", email="olderemail@example.com", password="oldpassword")
+    test_db.add(user)
+    test_db.commit()
+
+    # Attempt to edit user with missing name field
+    update_data = {
+        "email": "newemail@example.com",
+        "password": "newpassword"
+    }
+
+    response = client.put(f"/users/{user.id}", json=update_data)
+    assert response.status_code == 422  # Unprocessable Entity
+    assert "Field required" in response.json()["detail"][0]["msg"]
