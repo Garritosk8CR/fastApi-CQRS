@@ -29,8 +29,7 @@ def test_successful_sign_up(test_db):
             "password": "securepassword"
         }
     )
-    print(response.json())
-    assert response.status_code == 405
+    assert response.status_code == 200
 
 
 def test_duplicate_email_sign_up(test_db):

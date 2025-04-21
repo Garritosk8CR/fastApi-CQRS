@@ -6,7 +6,7 @@ from jose import JWTError, jwt
 from app.config import SECRET_KEY, ALGORITHM
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)

@@ -5,12 +5,14 @@ from app.application.handlers import command_bus
 from app.application.query_bus import query_bus
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetVotingPageDataQuery
 from app.infrastructure.database import engine, Base
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from app.interfaces.voter_controller import router as voter_router
 from app.interfaces.election_controller import router as election_router
 from app.interfaces.user_controller import router as user_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+
+from app.security import get_current_user
 
 app = FastAPI()
 
@@ -27,7 +29,7 @@ app.include_router(user_router)
 Base.metadata.create_all(bind=engine)
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
+async def home(request: Request, current_user: str = Depends(get_current_user)):
     query = GetAllElectionsQuery()
     elections = query_bus.handle(query)  # Dispatch the query to the handler
     
@@ -35,7 +37,7 @@ async def home(request: Request):
     return templates.TemplateResponse("home.html", {"request": request, "elections": elections})
 
 @app.get("/vote", response_class=HTMLResponse)
-async def cast_vote_page(request: Request):
+async def cast_vote_page(request: Request, current_user: str = Depends(get_current_user)):
     query = GetVotingPageDataQuery()
     try:
         page_data = query_bus.handle(query)
@@ -57,11 +59,11 @@ async def register_voter_page(request: Request):
     return templates.TemplateResponse("register_voter.html", {"request": request})
 
 @app.get("/elections/create", response_class=HTMLResponse)
-async def create_election_page(request: Request):
+async def create_election_page(request: Request, current_user: str = Depends(get_current_user)):
     return templates.TemplateResponse("create_election.html", {"request": request})
 
 @app.get("/results/{election_id}", response_class=HTMLResponse)
-async def get_results(request: Request, election_id: int):
+async def get_results(request: Request, election_id: int, current_user: str = Depends(get_current_user)):
     query = GetElectionResultsQuery(election_id=election_id)  # Now using dynamic election_id
     try:
         results = query_bus.handle(query)
@@ -76,7 +78,7 @@ async def get_results(request: Request, election_id: int):
 
 
 @app.get("/elections/{election_id}", response_class=HTMLResponse)
-async def election_details(election_id: int, request: Request):
+async def election_details(election_id: int, request: Request, current_user: str = Depends(get_current_user)):
     query = GetElectionDetailsQuery(election_id)
     try:
         election_data = query_bus.handle(query)  # Dispatch the query to the handler
