@@ -16,3 +16,15 @@ class UserRepository:
 
     def get_user_by_email(self, email: str) -> User:
         return self.db.query(User).filter(User.email == email).first()
+    
+    def update_user(self, user_id: int, updated_data: dict) -> User:
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return None
+
+        for key, value in updated_data.items():
+            setattr(user, key, value)
+        
+        self.db.commit()
+        self.db.refresh(user)
+        return user
