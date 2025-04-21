@@ -115,3 +115,15 @@ def test_invalid_email_login(test_db):
     assert response.json() == {"detail": "Invalid email or password"}
 
 
+def test_wrong_password_login(test_db):
+    response = client.post(
+        "/users/login",
+        data={
+            "email": "testuser@example.com",
+            "password": "wrongpassword"
+        }
+    )
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Invalid email or password"}
+
+
