@@ -3,7 +3,7 @@ from datetime import timedelta
 from fastapi import HTTPException
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetVotingPageDataQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UserSignUp
+from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election, User
@@ -255,6 +255,19 @@ class AuthCommandHandler:
             )
 
         return access_token
+    
+class EditUserHandler:
+    def handle(self, user_id: int, update_data: EditUserCommand):
+
+        with SessionLocal() as db:
+            user_repository = UserRepository(db)               
+        # Validate the user exists
+            existing_user = user_repository.get_user_by_id(user_id)
+            if not existing_user:
+                raise HTTPException(status_code=404, detail="User not found")
+            # Update the user
+            updated_user = user_repository.update_user(user_id, update_data.model_dump())
+        return updated_user
 
 
 class CommandBus:
