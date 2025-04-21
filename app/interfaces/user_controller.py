@@ -62,5 +62,15 @@ async def login(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    response = RedirectResponse(url="/", status_code=302)
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        secure=True,  # Send only over HTTPS
+        samesite="strict",  # Prevent CSRF in most cases
+        max_age=1800  # Token expiration in seconds
+    )
+    return response
+
 
