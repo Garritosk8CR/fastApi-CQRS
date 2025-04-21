@@ -1,7 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app  # Import the FastAPI instance from main.py
-from app.infrastructure.database import Base, engine
+from app.infrastructure.database import Base, SessionLocal, engine
+from app.infrastructure.models import User
+from app.security import hash_password
 
 # Create a TestClient for the FastAPI app
 client = TestClient(app)
@@ -11,8 +13,10 @@ client = TestClient(app)
 def test_db():
     # Ensure the database schema is created
     Base.metadata.create_all(bind=engine)
-    yield
-    # Clean up the database after tests
+    db = SessionLocal()
+    yield db
+    # Tear down the database after tests
+    db.close()
     Base.metadata.drop_all(bind=engine)
 
 
@@ -74,3 +78,30 @@ def test_missing_fields_sign_up(test_db):
     assert response.status_code == 422  # Unprocessable Entity
     assert response.json()["detail"][0]["loc"] == ["body", "email"]
     assert response.json()["detail"][1]["loc"] == ["body", "password"]
+
+
+def test_successful_login(test_db):
+    # Pre-create a user in the test database
+    user = User(
+        name="Test User",
+        email="testuser@example.com",
+        password=hash_password("securepassword")
+    )
+    test_db.add(user)
+    test_db.commit()
+
+    # Send a login request
+    response = client.post(
+        "/users/login",
+        data={
+            "email": "testuser@example.com",
+            "password": "securepassword"
+        }
+    )
+
+    # Verify the response
+    assert response.status_code == 200
+    json_response = response.json()
+    assert "access_token" in json_response
+    assert json_response["token_type"] == "bearer"
+
