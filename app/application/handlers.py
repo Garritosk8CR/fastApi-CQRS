@@ -266,8 +266,12 @@ class EditUserHandler:
             if not existing_user:
                 raise HTTPException(status_code=404, detail="User not found")
             # Update the user
-            updated_user = user_repository.update_user(user_id, update_data.model_dump())
-        return updated_user
+            try:
+                updated_user = user_repository.update_user(user_id, update_data.model_dump())
+                return updated_user
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+        
 
 
 class CommandBus:

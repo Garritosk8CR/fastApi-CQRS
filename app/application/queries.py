@@ -1,3 +1,6 @@
+from pydantic import BaseModel
+
+
 class GetElectionResultsQuery:
     def __init__(self, election_id: int):
         self.election_id = election_id
@@ -23,3 +26,6 @@ class GetVotingPageDataQuery:
 class GetUserByEmailQuery:
     def __init__(self, email: str):
         self.email = email
+
+class GetUserProfileQuery(BaseModel):
+    user_id: int

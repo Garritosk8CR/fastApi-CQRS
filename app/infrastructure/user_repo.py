@@ -1,3 +1,4 @@
+from sqlalchemy.exc import IntegrityError
 from app.infrastructure.models import User
 from app.utils.password_utils import hash_password
 
@@ -28,6 +29,10 @@ class UserRepository:
         for key, value in updated_data.items():
             setattr(user, key, value)
         
-        self.db.commit()
-        self.db.refresh(user)
-        return user
+        try:
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except IntegrityError as e:
+            self.db.rollback()  # Rollback the session to prevent partial updates
+            raise ValueError("Email already exists!") from e

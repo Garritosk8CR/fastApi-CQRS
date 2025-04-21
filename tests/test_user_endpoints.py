@@ -225,3 +225,21 @@ def test_edit_user_no_changes(test_db):
     assert response.json()["user"]["name"] == "Oldy Name"
     assert response.json()["user"]["email"] == "oldyemail@example.com"
     assert response.json()["user"]["password"] == "oldpassword"
+
+def test_edit_user_duplicate_email(test_db):
+    # Create two test users
+    user1 = User(name="User1", email="user1@example.com", password="password1")
+    user2 = User(name="User2", email="user2@example.com", password="password2")
+    test_db.add_all([user1, user2])
+    test_db.commit()
+
+    # Attempt to update user1's email to user2's email
+    update_data = {
+        "name": "User1 Updated",
+        "email": "user2@example.com",
+        "password": "password1"
+    }
+
+    response = client.put(f"/users/{user1.id}", json=update_data)
+    assert response.status_code == 400  # Bad Request
+    assert response.json()["detail"] == "Email already exists!"
