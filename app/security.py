@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timezone,timedelta
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
@@ -17,9 +17,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(data: dict, expires_delta=None):
     to_encode = data.copy()
     if expires_delta:
-        to_encode.update({"exp": datetime.now(datetime.timezone.utc) + expires_delta})
+        to_encode.update({"exp": datetime.now(timezone.utc) + expires_delta})
+
     else:
-        to_encode.update({"exp": datetime.now(datetime.timezone.utc) + timedelta(minutes=15)})
+        to_encode.update({"exp": datetime.now(timezone.utc) + timedelta(minutes=15)})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
