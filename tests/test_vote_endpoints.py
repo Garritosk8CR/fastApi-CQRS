@@ -32,9 +32,12 @@ def test_cast_vote():
         "/voters/voters",
         json={
             "voter_id": 1,
-            "name": "John Doe"
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "password": "password123"
         },
     )
+    print(f"Voter registered: {register_response.json()} \n\n")
     assert register_response.status_code == 200
     print(f"Voter registered: {register_response.json()} \n\n")
     # Step 3: Cast a vote
@@ -64,7 +67,9 @@ def test_cast_vote_voter_already_voted():
         "/voters/voters",
         json={
             "voter_id": 1,
-            "name": "John Doe"
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "password": "password123"
         },
     )
     assert register_response.status_code == 200
@@ -106,7 +111,9 @@ def test_cast_vote_invalid_candidate():
         "/voters/voters",
         json={
             "voter_id": 1,
-            "name": "John Doe"
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "password": "password123"
         },
     )
     assert register_response.status_code == 200
@@ -140,11 +147,11 @@ def test_vote_results():
     # Step 2: Register voters and cast votes
     client.post(
         "/voters/voters",
-        json={"voter_id": 1, "name": "John Doe"}
+        json={"voter_id": 1, "name": "John Doe", "email": "john.doe@example.com", "password": "password123"  },
     )
     client.post(
         "/voters/voters",
-        json={"voter_id": 2, "name": "Jane Smith"}
+        json={"voter_id": 2, "name": "Jane Smith", "email": "jane.smith@example.com", "password": "password456"  },
     )
     client.post(
         f"/voters/voters/1/elections/{election_id}/cast_vote/",
