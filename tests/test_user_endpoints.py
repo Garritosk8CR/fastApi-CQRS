@@ -173,3 +173,19 @@ def test_edit_user_not_found(test_db):
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"
 
+def test_edit_user_invalid_email(test_db):
+    # Create a test user
+    user = User(name="Old Name", email="oldemail@example.com", password="oldpassword")
+    test_db.add(user)
+    test_db.commit()
+
+    # Attempt to edit user with an invalid email
+    update_data = {
+        "name": "New Name",
+        "email": "not-an-email",
+        "password": "newpassword"
+    }
+
+    response = client.put(f"/users/{user.id}", json=update_data)
+    assert response.status_code == 422  # Unprocessable Entity
+    assert "value is not a valid email address" in response.json()["detail"][0]["msg"]
