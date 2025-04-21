@@ -205,3 +205,23 @@ def test_edit_user_missing_fields(test_db):
     response = client.put(f"/users/{user.id}", json=update_data)
     assert response.status_code == 422  # Unprocessable Entity
     assert "Field required" in response.json()["detail"][0]["msg"]
+
+def test_edit_user_no_changes(test_db):
+    # Create a test user
+    user = User(name="Oldy Name", email="oldyemail@example.com", password="oldpassword")
+    test_db.add(user)
+    test_db.commit()
+
+    # Attempt to edit user with the same data
+    update_data = {
+        "name": "Oldy Name",
+        "email": "oldyemail@example.com",
+        "password": "oldpassword"
+    }
+
+    response = client.put(f"/users/{user.id}", json=update_data)
+    assert response.status_code == 200
+    assert response.json()["message"] == "User updated successfully!"
+    assert response.json()["user"]["name"] == "Oldy Name"
+    assert response.json()["user"]["email"] == "oldyemail@example.com"
+    assert response.json()["user"]["password"] == "oldpassword"
