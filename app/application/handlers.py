@@ -247,6 +247,7 @@ command_bus.register_handler(CreateElectionCommand, CreateElectionHandler())
 command_bus.register_handler(RegisterVoterCommand, RegisterVoterHandler())
 command_bus.register_handler(CastVoteCommand, CastVoteHandler())
 command_bus.register_handler(EndElectionCommand, EndElectionHandler())
+command_bus.register_handler(UserSignUp, RegisterUserHandler())
 
 
 # Create and register the query handler
