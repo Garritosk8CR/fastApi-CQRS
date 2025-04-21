@@ -161,4 +161,15 @@ def test_edit_user(test_db):
     assert response.json()["user"]["name"] == "New Name"
     assert response.json()["user"]["email"] == "newemail@example.com"
 
+def test_edit_user_not_found(test_db):
+    # Attempt to edit a non-existent user
+    update_data = {
+        "name": "New Name",
+        "email": "newemail@example.com",
+        "password": "newpassword"
+    }
+
+    response = client.put("/users/999", json=update_data)  # Assume user ID 999 does not exist
+    assert response.status_code == 404
+    assert response.json()["detail"] == "User not found"
 
