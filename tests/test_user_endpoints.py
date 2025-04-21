@@ -63,3 +63,14 @@ def test_invalid_email_format(test_db):
     assert response.status_code == 422  # Unprocessable Entity
     assert "value is not a valid email address" in response.json()["detail"][0]["msg"]
 
+def test_missing_fields_sign_up(test_db):
+    response = client.post(
+        "/users/sign-up",
+        json={
+            "name": "Test User"
+            # Missing email and password
+        }
+    )
+    assert response.status_code == 422  # Unprocessable Entity
+    assert response.json()["detail"][0]["loc"] == ["body", "email"]
+    assert response.json()["detail"][1]["loc"] == ["body", "password"]
