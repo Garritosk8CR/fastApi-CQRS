@@ -19,6 +19,10 @@ templates = Jinja2Templates(directory="app/templates")  # Path to your templates
 async def render_sign_up_form(request: Request):
     return templates.TemplateResponse("sign_up.html", {"request": request})
 
+@router.get("/login", response_class=HTMLResponse)
+async def render_login_form(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
 from fastapi import Form
 
 @router.post("/sign-up", status_code=201)
