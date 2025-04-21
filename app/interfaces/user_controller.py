@@ -1,18 +1,13 @@
-from datetime import timedelta
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.database import get_db
 from app.application.handlers import AuthCommandHandler, RegisterUserHandler
-from app.application.commands import LoginUserCommand, UserSignUp
-from app.infrastructure.models import User
-from app.security import create_access_token, verify_password
+from app.application.commands import LoginUserCommand
+
 
 router = APIRouter(prefix="/users", tags=["Users"])
-
-
 templates = Jinja2Templates(directory="app/templates")  # Path to your templates folder
 
 @router.get("/sign-up", response_class=HTMLResponse)
