@@ -14,5 +14,5 @@ class UserRepository:
         self.db.refresh(new_user)
         return new_user
 
-    def get_user_by_email(self, email: str):
+    def get_user_by_email(self, email: str) -> User:
         return self.db.query(User).filter(User.email == email).first()
