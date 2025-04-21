@@ -8,6 +8,7 @@ from app.infrastructure.database import engine, Base
 from fastapi import FastAPI, HTTPException, Request
 from app.interfaces.voter_controller import router as voter_router
 from app.interfaces.election_controller import router as election_router
+from app.interfaces.user_controller import router as user_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -19,6 +20,7 @@ templates = Jinja2Templates(directory="app/templates")
 # Include the voter router
 app.include_router(election_router, prefix="/elections", tags=["Elections"])
 app.include_router(voter_router, prefix="/voters", tags=["Voters"])
+app.include_router(user_router)
 
 
 # Create tables in the database
