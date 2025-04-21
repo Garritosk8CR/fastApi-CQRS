@@ -206,17 +206,17 @@ class RegisterUserHandler:
     def handle(self, command: UserSignUp):
         with SessionLocal() as db:
             user_repo = UserRepository(db)
-
+            print(f"Command: {command["name"]}, {command["email"]}, {command["password"]}")
             # Check if user already exists
-            existing_user = user_repo.get_user_by_email(command.email)
+            existing_user = user_repo.get_user_by_email(command["email"])
             if existing_user:
                 raise ValueError("Email already exists!")
 
             # Use the repository to create a new user
             new_user = user_repo.create_user(
-                name=command.name,
-                email=command.email,
-                password=command.password
+                name=command["name"],
+                email=command["email"],
+                password=command["password"]
             )
 
         return {"message": f"User {new_user.name} registered successfully as a voter!"}
