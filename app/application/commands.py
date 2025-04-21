@@ -31,3 +31,7 @@ class UserSignUp(BaseModel):
     email: EmailStr
     password: str
 
+class loginUserCommand(BaseModel):
+    email: EmailStr
+    password: str
+
