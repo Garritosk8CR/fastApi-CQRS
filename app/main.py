@@ -32,9 +32,9 @@ Base.metadata.create_all(bind=engine)
 async def home(request: Request, current_user: str = Depends(get_current_user)):
     query = GetAllElectionsQuery()
     elections = query_bus.handle(query)  # Dispatch the query to the handler
-    
+    is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
     # Pass elections to the template
-    return templates.TemplateResponse("home.html", {"request": request, "elections": elections})
+    return templates.TemplateResponse("home.html", {"request": request, "elections": elections, "is_logged_in": is_logged_in})
 
 @app.get("/vote", response_class=HTMLResponse)
 async def cast_vote_page(request: Request, current_user: str = Depends(get_current_user)):
@@ -43,27 +43,31 @@ async def cast_vote_page(request: Request, current_user: str = Depends(get_curre
         page_data = query_bus.handle(query)
     except Exception as e:
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
-
+    is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
     return templates.TemplateResponse(
         "vote.html",
-        {"request": request, "voters": page_data["voters"], "elections": page_data["elections"]}
+        {"request": request, "voters": page_data["voters"], "elections": page_data["elections"], "is_logged_in": is_logged_in},
     )
 
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_voter_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+    is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
+    return templates.TemplateResponse("register.html", {"request": request, "is_logged_in": is_logged_in})
 
 @app.get("/voters/register", response_class=HTMLResponse)
 async def register_voter_page(request: Request):
-    return templates.TemplateResponse("register_voter.html", {"request": request})
+    is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
+    return templates.TemplateResponse("register_voter.html", {"request": request, "is_logged_in": is_logged_in})
 
 @app.get("/elections/create", response_class=HTMLResponse)
 async def create_election_page(request: Request, current_user: str = Depends(get_current_user)):
-    return templates.TemplateResponse("create_election.html", {"request": request})
+    is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
+    return templates.TemplateResponse("create_election.html", {"request": request, "is_logged_in": is_logged_in})
 
 @app.get("/results/{election_id}", response_class=HTMLResponse)
 async def get_results(request: Request, election_id: int, current_user: str = Depends(get_current_user)):
+    is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
     query = GetElectionResultsQuery(election_id=election_id)  # Now using dynamic election_id
     try:
         results = query_bus.handle(query)
@@ -73,7 +77,7 @@ async def get_results(request: Request, election_id: int, current_user: str = De
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
     # Pass the results to the template
-    return templates.TemplateResponse("results.html", {"request": request, "results": results})
+    return templates.TemplateResponse("results.html", {"request": request, "results": results, "is_logged_in": is_logged_in})
 
 
 
@@ -87,8 +91,9 @@ async def election_details(election_id: int, request: Request, current_user: str
     except Exception as e:
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
+    is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
     # Pass the data to the template
-    return templates.TemplateResponse("election.html", {"request": request, "election": election_data})
+    return templates.TemplateResponse("election.html", {"request": request, "election": election_data, "is_logged_in": is_logged_in})
 
 @app.post("/voters/{voter_id}/elections/{election_id}/vote/", response_class=HTMLResponse)
 async def cast_vote(voter_id: int, election_id: int, request: Request):
