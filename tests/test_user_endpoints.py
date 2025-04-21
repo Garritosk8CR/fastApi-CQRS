@@ -103,3 +103,15 @@ def test_successful_login(test_db):
     assert "access_token" in json_response
     assert json_response["token_type"] == "bearer"
 
+def test_invalid_email_login(test_db):
+    response = client.post(
+        "/users/login",
+        data={
+            "email": "nonexistent@example.com",
+            "password": "securepassword"
+        }
+    )
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Invalid email or password"}
+
+
