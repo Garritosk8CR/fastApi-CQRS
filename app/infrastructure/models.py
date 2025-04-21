@@ -54,9 +54,6 @@ class Voter(Base):
     # Relationship with User
     user = relationship("User", back_populates="voter")
 
-class UserSignUp(BaseModel):
-    name: str
-    email: EmailStr
-    password: str
+
 
 

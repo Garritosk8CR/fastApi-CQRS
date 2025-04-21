@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List
 from pydantic import BaseModel
 
@@ -25,4 +25,9 @@ class CheckVoterExistsQuery:
 
 class EndElectionCommand(BaseModel):
     election_id: int
+
+class UserSignUp(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
 

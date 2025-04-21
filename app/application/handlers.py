@@ -1,8 +1,8 @@
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetVotingPageDataQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EndElectionCommand, RegisterVoterCommand
+from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EndElectionCommand, RegisterVoterCommand, UserSignUp
 from app.infrastructure.election_repo import ElectionRepository
-from app.infrastructure.models import Election, User, UserSignUp
+from app.infrastructure.models import Election, User
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import Voter
 from app.infrastructure.user_repo import UserRepository
