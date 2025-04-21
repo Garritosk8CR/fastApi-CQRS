@@ -67,6 +67,6 @@ async def login(email: str = Form(...), password: str = Form(...)):
 
 @router.post("/logout")
 async def logout():
-    response = RedirectResponse(url="/", status_code=302)
+    response = RedirectResponse(url="/users/login", status_code=302)
     response.delete_cookie(key="access_token")  # Remove the token
     return response
