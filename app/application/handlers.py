@@ -282,6 +282,7 @@ command_bus.register_handler(RegisterVoterCommand, RegisterVoterHandler())
 command_bus.register_handler(CastVoteCommand, CastVoteHandler())
 command_bus.register_handler(EndElectionCommand, EndElectionHandler())
 command_bus.register_handler(UserSignUp, RegisterUserHandler())
+command_bus.register_handler(LoginUserCommand, AuthCommandHandler())
 
 
 # Create and register the query handler
@@ -290,5 +291,6 @@ query_bus.register_handler(GetAllElectionsQuery, GetAllElectionsHandler())
 query_bus.register_handler(GetElectionDetailsQuery, GetElectionDetailsHandler())
 query_bus.register_handler(GetElectionResultsQuery, GetElectionResultsHandler())
 query_bus.register_handler(GetVotingPageDataQuery, GetVotingPageDataHandler())
+query_bus.register_handler(GetUserByEmailQuery, UserQueryHandler())
 
 

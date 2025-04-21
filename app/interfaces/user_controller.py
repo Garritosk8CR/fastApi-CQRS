@@ -5,8 +5,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.database import get_db
-from app.application.handlers import RegisterUserHandler
-from app.application.commands import UserSignUp
+from app.application.handlers import AuthCommandHandler, RegisterUserHandler
+from app.application.commands import LoginUserCommand, UserSignUp
 from app.infrastructure.models import User
 from app.security import create_access_token, verify_password
 
@@ -44,36 +44,23 @@ async def sign_up(
         raise HTTPException(status_code=400, detail=str(e))
     
 @router.post("/login")
-async def login(
-    email: str = Form(...),
-    password: str = Form(...),
-    db: Session = Depends(get_db)
-):
-    print(f"Logging in user with email: {email}")
-    # Retrieve user by email
-    user = db.query(User).filter(User.email == email).first()
+async def login(command: LoginUserCommand):
+    print(f"Logging in user with email: {command.email}")
 
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-
-    # Verify the password
-    if not verify_password(password, user.password):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    print("User authenticated")
-    # Create the JWT token
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
+    # Dispatch the command to the handler
+    auth_command_handler = AuthCommandHandler()
+    access_token = auth_command_handler.handle(command)
     print("Token created")
+
+    # Set cookie and redirect
     response = RedirectResponse(url="/", status_code=302)
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
         httponly=True,
-        secure=True,  # Send only over HTTPS
-        samesite="strict",  # Prevent CSRF in most cases
-        max_age=1800  # Token expiration in seconds
+        secure=True,
+        samesite="strict",
+        max_age=1800
     )
     return response
 
