@@ -1,4 +1,4 @@
-from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetVotingPageDataQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetVotingPageDataQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EndElectionCommand, RegisterVoterCommand, UserSignUp
 from app.infrastructure.election_repo import ElectionRepository
@@ -220,6 +220,12 @@ class RegisterUserHandler:
             )
 
         return {"message": f"User {new_user.name} registered successfully as a voter!"}
+    
+class UserQueryHandler:
+    def handle(self, query: GetUserByEmailQuery):
+        with SessionLocal() as db:
+            user_repository = UserRepository(db)
+            return user_repository.get_user_by_email(query.email)
 
 
 class CommandBus:
@@ -256,4 +262,5 @@ query_bus.register_handler(GetAllElectionsQuery, GetAllElectionsHandler())
 query_bus.register_handler(GetElectionDetailsQuery, GetElectionDetailsHandler())
 query_bus.register_handler(GetElectionResultsQuery, GetElectionResultsHandler())
 query_bus.register_handler(GetVotingPageDataQuery, GetVotingPageDataHandler())
+
 
