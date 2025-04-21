@@ -50,3 +50,16 @@ def test_duplicate_email_sign_up(test_db):
     )
     assert response.status_code == 400
     assert response.json() == {"detail": "Email already exists!"}
+
+def test_invalid_email_format(test_db):
+    response = client.post(
+        "/users/sign-up",
+        json={
+            "name": "Test User",
+            "email": "not-an-email",
+            "password": "securepassword"
+        }
+    )
+    assert response.status_code == 422  # Unprocessable Entity
+    assert "value is not a valid email address" in response.json()["detail"][0]["msg"]
+
