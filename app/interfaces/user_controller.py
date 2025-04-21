@@ -17,11 +17,13 @@ templates = Jinja2Templates(directory="app/templates")  # Path to your templates
 
 @router.get("/sign-up", response_class=HTMLResponse)
 async def render_sign_up_form(request: Request):
-    return templates.TemplateResponse("sign_up.html", {"request": request})
+    is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
+    return templates.TemplateResponse("sign_up.html", {"request": request, "is_logged_in": is_logged_in})
 
 @router.get("/login", response_class=HTMLResponse)
 async def render_login_form(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
+    return templates.TemplateResponse("login.html", {"request": request, "is_logged_in": is_logged_in})
 
 from fastapi import Form
 
