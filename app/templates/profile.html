@@ -9,15 +9,15 @@
 
     <!-- Profile Content -->
     <div class="profile-details">
+        <p><strong>User ID:</strong> {{ user.id }}</p>
         <p><strong>Name:</strong> {{ user.name }}</p>
         <p><strong>Email:</strong> {{ user.email }}</p>
         <p><strong>Role:</strong> {{ user.role }}</p>
-        <p><strong>Has Voted:</strong> {% if user.has_voted %}Yes{% else %}No{% endif %}</p>
     </div>
 
     <!-- Optional Actions -->
     <div class="profile-actions">
-        <a href="/edit-profile" class="btn">Edit Profile</a>
+        <!-- <a href="/edit-profile" class="btn">Edit Profile</a> -->
         <a href="/logout" class="btn btn-logout">Logout</a>
     </div>
 </div>

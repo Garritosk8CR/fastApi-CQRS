@@ -272,7 +272,8 @@ def test_get_user_profile(test_db):
         cookies=cookies
     )
     # Step 4: Validate response
+    print(f"Profile response: {profile_response.json()}")
     assert profile_response.status_code == 200
     assert profile_response.json()["user"]["name"] == "Test User"
     assert profile_response.json()["user"]["email"] == "testuser555@example.com"
-
+    
