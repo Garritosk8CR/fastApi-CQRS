@@ -266,7 +266,11 @@ def test_get_user_profile(test_db):
     cookies = {"access_token": client.cookies.get("access_token")}
     access_token = client.cookies.get("access_token")
     # Step 3: Make the request using the cookie
-    profile_response = client.get("users/users/profile", headers={"Authorization": f"Bearer {access_token}"}, cookies=cookies)
+    profile_response = client.get(
+        "users/users/profile", 
+        headers={"Authorization": f"Bearer {access_token}"}, 
+        cookies=cookies
+    )
     # Step 4: Validate response
     assert profile_response.status_code == 200
     assert profile_response.json()["user"]["name"] == "Test User"

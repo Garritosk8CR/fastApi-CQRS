@@ -23,6 +23,11 @@ async def render_login_form(request: Request):
     is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
     return templates.TemplateResponse("login.html", {"request": request, "is_logged_in": is_logged_in})
 
+@router.get("/profile", response_class=HTMLResponse)
+async def render_login_form(request: Request):
+    is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
+    return templates.TemplateResponse("profile.html", {"request": request, "is_logged_in": is_logged_in})
+
 from fastapi import Form
 
 @router.post("/sign-up", status_code=201)
