@@ -3,6 +3,22 @@
 {% block title %}Profile{% endblock %}
 
 {% block content %}
-<h2>Profile</h2>
+<div class="profile-container">
+    <!-- Profile Header -->
+    <h1 class="profile-header">User Profile</h1>
 
+    <!-- Profile Content -->
+    <div class="profile-details">
+        <p><strong>Name:</strong> {{ user.name }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Role:</strong> {{ user.role }}</p>
+        <p><strong>Has Voted:</strong> {% if user.has_voted %}Yes{% else %}No{% endif %}</p>
+    </div>
+
+    <!-- Optional Actions -->
+    <div class="profile-actions">
+        <a href="/edit-profile" class="btn">Edit Profile</a>
+        <a href="/logout" class="btn btn-logout">Logout</a>
+    </div>
+</div>
 {% endblock %}
