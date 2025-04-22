@@ -252,11 +252,15 @@ p {
     background-color: #dc3545;
 }
 
+.profile-actions .btn-edit {
+    background-color: #007bff;
+}
+
 .profile-actions .btn:hover {
     opacity: 0.9;
 }
 
-.btn-logout {
+.btn-logout .btn-edit {
     width: auto; /* or a specific width like: width: 120px; */
     display: inline-block; /* To allow width: auto to work as expected */
 }
