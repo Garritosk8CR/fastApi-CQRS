@@ -46,10 +46,13 @@ def get_current_complete_user( request: Request,token: str = Depends(oauth2_sche
     with SessionLocal() as db:
         try:
             # Check if the token is present in cookies
+            print("Cookies received:", request.cookies)
             cookie_token = request.cookies.get("access_token")
+            print(f"Cookie token: {cookie_token}")
             auth_header_token = token if token else None 
-
+            print(f"Auth header token: {auth_header_token}")
             final_token = cookie_token or auth_header_token
+            print(f"Final token: {final_token}")
             if not final_token:
                 raise HTTPException(status_code=401, detail="Authentication required")
 

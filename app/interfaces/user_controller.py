@@ -24,9 +24,21 @@ async def render_login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request, "is_logged_in": is_logged_in})
 
 @router.get("/profile", response_class=HTMLResponse)
-async def render_login_form(request: Request):
+async def render_login_form(request: Request, current_user: User = Depends(get_current_user)):
     is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
-    return templates.TemplateResponse("profile.html", {"request": request, "is_logged_in": is_logged_in})
+    handler = UserQueryHandler()
+    print(f"Current user: {current_user}")
+    # Create query command instance
+    query = GetUserByEmailQuery(email=current_user)
+    try:
+        user_profile = handler.handle(query)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return templates.TemplateResponse("profile.html", {
+        "request": request, 
+        "is_logged_in": is_logged_in, 
+        "user": user_profile
+    })
 
 from fastapi import Form
 
