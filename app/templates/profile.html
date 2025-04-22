@@ -14,10 +14,8 @@
         <p><strong>Email:</strong> {{ user.email }}</p>
         <p><strong>Role:</strong> {{ user.role }}</p>
     </div>
-
-    <!-- Optional Actions -->
+  
     <div class="profile-actions">
-        <!-- <a href="/edit-profile" class="btn">Edit Profile</a> -->
         <form action="/users/edit" method="get">
             <button type="submit" class="btn btn-edit">Edit Profile</button>
         </form>
