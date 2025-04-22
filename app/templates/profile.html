@@ -18,7 +18,9 @@
     <!-- Optional Actions -->
     <div class="profile-actions">
         <!-- <a href="/edit-profile" class="btn">Edit Profile</a> -->
-        <a href="/logout" class="btn btn-logout">Logout</a>
+        <form action="/users/logout" method="post">
+            <button type="submit" class="btn btn-logout">Logout</button>
+        </form>
     </div>
 </div>
 {% endblock %}
