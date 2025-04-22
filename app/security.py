@@ -4,6 +4,8 @@ from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from app.config import SECRET_KEY, ALGORITHM
+from app.infrastructure.database import SessionLocal
+from app.infrastructure.user_repo import UserRepository
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
@@ -39,3 +41,28 @@ def get_current_user(request: Request):
         return email
     except (JWTError, IndexError):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+def get_current_complete_user( request: Request,token: str = Depends(oauth2_scheme)):
+    with SessionLocal() as db:
+        try:
+            # Check if the token is present in cookies
+            cookie_token = request.cookies.get("access_token")
+            auth_header_token = token if token else None 
+
+            final_token = cookie_token or auth_header_token
+            if not final_token:
+                raise HTTPException(status_code=401, detail="Authentication required")
+
+            # Decode the token
+            payload = jwt.decode(final_token.split(" ")[1], SECRET_KEY, algorithms=[ALGORITHM])
+            email = payload.get("sub")
+            user_repository = UserRepository(db)
+
+            # Retrieve user by email
+            
+            if email is None:
+                raise HTTPException(status_code=401, detail="Invalid token")
+            user = user_repository.get_user_by_email(email)
+            return user
+        except (JWTError, IndexError):
+            raise HTTPException(status_code=401, detail="Invalid or expired token")

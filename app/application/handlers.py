@@ -321,5 +321,6 @@ query_bus.register_handler(GetElectionDetailsQuery, GetElectionDetailsHandler())
 query_bus.register_handler(GetElectionResultsQuery, GetElectionResultsHandler())
 query_bus.register_handler(GetVotingPageDataQuery, GetVotingPageDataHandler())
 query_bus.register_handler(GetUserByEmailQuery, UserQueryHandler())
+query_bus.register_handler(GetUserProfileQuery, GetUserProfileHandler())
 
 

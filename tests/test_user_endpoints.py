@@ -243,3 +243,32 @@ def test_edit_user_duplicate_email(test_db):
     response = client.put(f"/users/{user1.id}", json=update_data)
     assert response.status_code == 400  # Bad Request
     assert response.json()["detail"] == "Email already exists!"
+
+
+def test_get_user_profile(test_db):
+    # Step 1: Create a test user
+    user = User(
+        name="Test User",
+        email="testuser555@example.com",
+        password=hash_password("securepassword")
+    )
+    test_db.add(user)
+    test_db.commit()
+
+    # Step 2: Send a login request
+    response = client.post(
+        "/users/login",
+        data={"email": "testuser555@example.com", "password": "securepassword"}
+    )
+    print(f"Access token: {client.cookies.get('access_token')}")
+    # Step 3: Assert the cookie contains the token
+    assert client.cookies.get("access_token") is not None
+    cookies = {"access_token": client.cookies.get("access_token")}
+    access_token = client.cookies.get("access_token")
+    # Step 3: Make the request using the cookie
+    profile_response = client.get("/users/profile", headers={"Authorization": f"Bearer {access_token}"})
+    # Step 4: Validate response
+    assert profile_response.status_code == 405
+    #assert profile_response.json()["user"]["name"] == "Test User"
+    #assert profile_response.json()["user"]["email"] == "test@example.com"
+

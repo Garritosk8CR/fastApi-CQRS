@@ -2,10 +2,12 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.application.queries import GetUserByEmailQuery
+from app.application.queries import GetUserByEmailQuery, GetUserProfileQuery
 from app.infrastructure.database import get_db
-from app.application.handlers import AuthCommandHandler, EditUserHandler, RegisterUserHandler, UserQueryHandler
+from app.application.handlers import AuthCommandHandler, EditUserHandler, GetUserProfileHandler, RegisterUserHandler, UserQueryHandler
 from app.application.commands import EditUserCommand, LoginUserCommand
+from app.infrastructure.models import User
+from app.security import get_current_complete_user, get_current_user
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -80,3 +82,16 @@ async def edit_user(
     handler = EditUserHandler()
     updated_user = handler.handle(user_id, update_data)
     return {"message": "User updated successfully!", "user": updated_user}
+
+@router.get("/users/profile")
+async def get_user_profile(current_user: User = Depends(get_current_complete_user)):
+    print(f"Getting user profile for user: {current_user.id}")
+    handler = GetUserProfileHandler()
+    
+    # Create query command instance
+    query = GetUserProfileQuery(user_id=current_user.id)
+    try:
+        user_profile = handler.handle(query)
+        return {"user": user_profile}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
