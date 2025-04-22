@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Edit User</h2>
+    <form action="/users/update/{{ user.id }}" method="post">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" value="{{ user.name }}" required placeholder="Enter your name">
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="{{ user.email }}" required placeholder="Enter your email">
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your new password (leave blank to keep current)">
+
+        <button type="submit">Update</button>
+    </form>
+</div>
+{% endblock %}
