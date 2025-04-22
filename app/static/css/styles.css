@@ -199,3 +199,58 @@ p {
 .navbar-right .btn-logout:hover {
     background-color: #e60000;
 }
+
+
+.profile-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+}
+
+.profile-header {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.profile-details {
+    margin-bottom: 20px;
+    color: #555;
+}
+
+.profile-details p {
+    margin: 8px 0;
+    font-size: 16px;
+}
+
+.profile-actions {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.profile-actions .btn {
+    display: inline-block;
+    padding: 10px 15px;
+    margin: 5px;
+    text-decoration: none;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.profile-actions .btn-logout {
+    background-color: #dc3545;
+}
+
+.profile-actions .btn:hover {
+    opacity: 0.9;
+}
