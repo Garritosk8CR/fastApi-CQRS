@@ -8,7 +8,7 @@ from app.application.handlers import AuthCommandHandler, EditUserHandler, GetUse
 from app.application.commands import EditUserCommand, LoginUserCommand
 from app.infrastructure.models import User
 from app.security import get_current_complete_user, get_current_user
-
+from fastapi import Form
 
 router = APIRouter(prefix="/users", tags=["Users"])
 templates = Jinja2Templates(directory="app/templates")  # Path to your templates folder
@@ -40,7 +40,22 @@ async def render_login_form(request: Request, current_user: User = Depends(get_c
         "user": user_profile
     })
 
-from fastapi import Form
+@router.get("/edit", response_class=HTMLResponse)
+async def render_edit_form(request: Request, current_user: User = Depends(get_current_user)):
+    is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
+    handler = UserQueryHandler()
+    print(f"Current user: {current_user}")
+    # Create query command instance
+    query = GetUserByEmailQuery(email=current_user)
+    try:
+        user_edit = handler.handle(query)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return templates.TemplateResponse("edit_user.html", {
+        "request": request, 
+        "is_logged_in": is_logged_in, 
+        "user": user_edit
+    })
 
 @router.post("/sign-up", status_code=201)
 async def sign_up(
@@ -95,6 +110,19 @@ async def edit_user(
     user_id: int,
     update_data: EditUserCommand
 ):
+    # Pass the request to the handler
+    handler = EditUserHandler()
+    updated_user = handler.handle(user_id, update_data)
+    return {"message": "User updated successfully!", "user": updated_user}
+
+@router.post("update/{user_id}")
+async def edit_user(
+    user_id: int,
+    name: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...)
+):
+    update_data = EditUserCommand(name=name, email=email, password=password)
     # Pass the request to the handler
     handler = EditUserHandler()
     updated_user = handler.handle(user_id, update_data)
