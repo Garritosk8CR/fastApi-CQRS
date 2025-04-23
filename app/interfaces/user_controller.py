@@ -4,8 +4,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.queries import GetUserByEmailQuery, GetUserProfileQuery, ListUsersQuery
 from app.infrastructure.database import get_db
-from app.application.handlers import AuthCommandHandler, EditUserHandler, GetUserProfileHandler, ListUsersHandler, RegisterUserHandler, UserQueryHandler
-from app.application.commands import EditUserCommand, LoginUserCommand
+from app.application.handlers import AuthCommandHandler, EditUserHandler, GetUserProfileHandler, ListUsersHandler, RegisterUserHandler, UpdateUserRoleHandler, UserQueryHandler
+from app.application.commands import EditUserCommand, LoginUserCommand, UpdateUserRoleCommand
 from app.infrastructure.models import User
 from app.security import get_current_complete_user, get_current_user
 from fastapi import Form
@@ -162,3 +162,16 @@ async def get_user_profile(current_user: User = Depends(get_current_complete_use
         return {"user": user_profile}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    
+@router.put("/{user_id}/role")
+def update_user_role(
+    user_id: int,
+    command: UpdateUserRoleCommand,
+    db: Session = Depends(get_db)
+):
+    handler = UpdateUserRoleHandler(db)
+    try:
+        result = handler.handle(command)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
