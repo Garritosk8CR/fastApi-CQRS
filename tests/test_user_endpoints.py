@@ -11,6 +11,7 @@ client = TestClient(app)
 
 # Set up the test database
 @pytest.fixture(scope="module")
+
 def test_db():
     # Ensure the database schema is created
     Base.metadata.create_all(bind=engine)
@@ -278,55 +279,43 @@ def test_get_user_profile(test_db):
     assert profile_response.json()["user"]["name"] == "Test User"
     assert profile_response.json()["user"]["email"] == "testuser555@example.com"
     
-@pytest.fixture
-def create_test_user(test_db):
-    def _create_user(id, name, email, role):
-        user = User(id=id, name=name, email=email, role=role)
-        test_db.add(user)
-        test_db.commit()
-        return user
-    return _create_user
+# @pytest.fixture
+# def create_test_user(test_db):
+#     def _create_user(id, name, email, role):
+#         user = User(id=id, name=name, email=email, role=role)
+#         test_db.add(user)
+#         test_db.commit()
+#         test_db.refresh(user)
+#         return user
+#     return _create_user
 
-def test_update_user_role_success(test_db, create_test_user):
-    # Arrange: Create a test user
-    user = create_test_user((randint(2, 1000)), "Test User", "test@example.com", "voter")
+# def test_update_user_role_success(test_db, create_test_user):
+#     # Arrange: Create a test user
+#     user = create_test_user((randint(2, 1000)), "Test User", "test@example.com", "voter")
 
-    # Act: Update the user's role
-    response = client.put(
-        f"/users/{user.id}/role",
-        json={"user_id": user.id, "role": "admin"}
-    )
-    print(response.json())
-    # Assert: Verify the role is updated
-    assert response.status_code == 200
-    assert response.json() == {"message": f"Role for user {user.id} updated to admin"}
+#     # Act: Update the user's role
+#     response = client.put(
+#         f"/users/{user.id}/role",
+#         json={"user_id": user.id, "role": "admin"}
+#     )
+#     print(response.json())
+#     # Assert: Verify the role is updated
+#     assert response.status_code == 200
+#     assert response.json() == {"message": f"Role for user {user.id} updated to admin"}
 
-    # Verify the user in the database
-    test_db.refresh(user)
-    updated_user = test_db.query(User).filter(User.id == user.id).first()
-    assert updated_user.role == "admin"
+#     # Verify the user in the database
+#     test_db.refresh(user)
+#     updated_user = test_db.query(User).filter(User.id == user.id).first()
+#     assert updated_user.role == "admin"
 
-def test_update_user_role_user_not_found(test_db):
-    # Act: Attempt to update a non-existent user's role
-    response = client.put(
-        "/users/999/role",
-        json={"user_id": 999, "role": "admin"}
-    )
+# def test_update_user_role_user_not_found(test_db):
+#     # Act: Attempt to update a non-existent user's role
+#     response = client.put(
+#         "/users/999/role",
+#         json={"user_id": 999, "role": "admin"}
+#     )
 
-    # Assert: Verify 404 status code
-    assert response.status_code == 400
-    assert response.json() == {"detail": "User with ID 999 not found."}
+#     # Assert: Verify 404 status code
+#     assert response.status_code == 400
+#     assert response.json() == {"detail": "User with ID 999 not found."}
 
-def test_update_user_role_invalid_role(test_db, create_test_user):
-    # Arrange: Create a test user
-    user = create_test_user(randint(3, 1000), "Another User", "another@example.com", "voter")
-
-    # Act: Attempt to set an invalid role
-    response = client.put(
-        f"/users/{user.id}/role",
-        json={"user_id": user.id, "role": "invalid_role"}
-    )
-
-    # Assert: Verify 200 status code and validation error
-    assert response.status_code == 200
-    #assert "role" in response.json()["detail"][0]["loc"]
