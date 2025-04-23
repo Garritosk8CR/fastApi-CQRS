@@ -29,3 +29,7 @@ class GetUserByEmailQuery:
 
 class GetUserProfileQuery(BaseModel):
     user_id: int
+
+class ListUsersQuery(BaseModel):
+    page: int
+    page_size: int
