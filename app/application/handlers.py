@@ -3,7 +3,7 @@ from datetime import timedelta
 from fastapi import HTTPException
 from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserProfileQuery, GetVotingPageDataQuery, ListUsersQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UserSignUp
+from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election, User
@@ -291,6 +291,21 @@ class ListUsersHandler:
         # Call the repository method
         users = user_repository.get_users(query.page, query.page_size)
         return users
+    
+class UpdateUserRoleHandler:
+    def handle(self, command: UpdateUserRoleCommand):
+        with SessionLocal() as db:
+            user_repository = UserRepository(db)
+        
+        # Retrieve the user
+        user = user_repository.get_user_by_id(command.user_id)
+        if not user:
+            raise ValueError(f"User with ID {command.user_id} not found.")
+
+        # Update the role
+        user_repository.update_role(user, command.role)
+        return {"message": f"Role for user {command.user_id} updated to {command.role}"}
+
 
 class CommandBus:
     def __init__(self):
@@ -307,9 +322,6 @@ class CommandBus:
         
         # Return the result from the handler
         return handler.handle(command)
-
-
-
 
 # Create and register the command handler
 command_bus = CommandBus()
