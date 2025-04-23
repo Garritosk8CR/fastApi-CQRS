@@ -166,10 +166,9 @@ async def get_user_profile(current_user: User = Depends(get_current_complete_use
 @router.put("/{user_id}/role")
 def update_user_role(
     user_id: int,
-    command: UpdateUserRoleCommand,
-    db: Session = Depends(get_db)
+    command: UpdateUserRoleCommand
 ):
-    handler = UpdateUserRoleHandler(db)
+    handler = UpdateUserRoleHandler()
     try:
         result = handler.handle(command)
         return result
