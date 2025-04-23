@@ -40,3 +40,7 @@ class UserRepository:
     def get_users(self, page: int, page_size: int):
         offset = (page - 1) * page_size
         return self.db.query(User).offset(offset).limit(page_size).all()
+    
+    def update_role(self, user: User, new_role: str):
+        user.role = new_role
+        self.db.commit()
