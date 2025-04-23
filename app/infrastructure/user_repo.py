@@ -44,3 +44,7 @@ class UserRepository:
     def update_role(self, user: User, new_role: str):
         user.role = new_role
         self.db.commit()
+        self.db.refresh(user)
+        print(f"Role updated for user {user.id}: {user.role}")
+
+

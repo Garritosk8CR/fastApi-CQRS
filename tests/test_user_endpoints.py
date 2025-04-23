@@ -296,12 +296,13 @@ def test_update_user_role_success(test_db, create_test_user):
         f"/users/{user.id}/role",
         json={"user_id": user.id, "role": "admin"}
     )
-
+    print(response.json())
     # Assert: Verify the role is updated
     assert response.status_code == 200
     assert response.json() == {"message": f"Role for user {user.id} updated to admin"}
 
     # Verify the user in the database
+    test_db.refresh(user)
     updated_user = test_db.query(User).filter(User.id == user.id).first()
     assert updated_user.role == "admin"
 
