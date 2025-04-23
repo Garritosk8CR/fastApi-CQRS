@@ -1,6 +1,5 @@
 from pydantic import BaseModel, EmailStr
 from typing import List
-from pydantic import BaseModel
 
 class RegisterVoterCommand(BaseModel):
     voter_id: int
