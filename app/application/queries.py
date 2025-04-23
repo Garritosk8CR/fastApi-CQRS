@@ -33,3 +33,6 @@ class GetUserProfileQuery(BaseModel):
 class ListUsersQuery(BaseModel):
     page: int
     page_size: int
+
+class HasVotedQuery(BaseModel):
+    user_id: int
