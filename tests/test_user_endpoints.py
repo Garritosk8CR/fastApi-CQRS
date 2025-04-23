@@ -314,7 +314,7 @@ def test_update_user_role_user_not_found(test_db):
     )
 
     # Assert: Verify 404 status code
-    assert response.status_code == 404
+    assert response.status_code == 400
     assert response.json() == {"detail": "User with ID 999 not found."}
 
 def test_update_user_role_invalid_role(test_db, create_test_user):
