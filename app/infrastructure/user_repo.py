@@ -36,3 +36,7 @@ class UserRepository:
         except IntegrityError as e:
             self.db.rollback()  # Rollback the session to prevent partial updates
             raise ValueError("Email already exists!") from e
+    
+    def get_users(self, page: int, page_size: int):
+        offset = (page - 1) * page_size
+        return self.db.query(User).offset(offset).limit(page_size).all()
