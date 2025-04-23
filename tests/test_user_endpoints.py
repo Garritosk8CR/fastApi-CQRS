@@ -1,3 +1,4 @@
+from random import randint
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app  # Import the FastAPI instance from main.py
@@ -288,7 +289,7 @@ def create_test_user(test_db):
 
 def test_update_user_role_success(test_db, create_test_user):
     # Arrange: Create a test user
-    user = create_test_user(1, "Test User", "test@example.com", "voter")
+    user = create_test_user((randint(2, 1000)), "Test User", "test@example.com", "voter")
 
     # Act: Update the user's role
     response = client.put(
@@ -317,7 +318,7 @@ def test_update_user_role_user_not_found(test_db):
 
 def test_update_user_role_invalid_role(test_db, create_test_user):
     # Arrange: Create a test user
-    user = create_test_user(2, "Another User", "another@example.com", "voter")
+    user = create_test_user(randint(3, 1000), "Another User", "another@example.com", "voter")
 
     # Act: Attempt to set an invalid role
     response = client.put(
