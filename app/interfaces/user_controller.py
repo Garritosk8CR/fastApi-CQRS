@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.application.queries import GetUserByEmailQuery, GetUserProfileQuery
+from app.application.queries import GetUserByEmailQuery, GetUserProfileQuery, ListUsersQuery
 from app.infrastructure.database import get_db
-from app.application.handlers import AuthCommandHandler, EditUserHandler, GetUserProfileHandler, RegisterUserHandler, UserQueryHandler
+from app.application.handlers import AuthCommandHandler, EditUserHandler, GetUserProfileHandler, ListUsersHandler, RegisterUserHandler, UserQueryHandler
 from app.application.commands import EditUserCommand, LoginUserCommand
 from app.infrastructure.models import User
 from app.security import get_current_complete_user, get_current_user
@@ -22,6 +22,26 @@ async def render_sign_up_form(request: Request):
 async def render_login_form(request: Request):
     is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
     return templates.TemplateResponse("login.html", {"request": request, "is_logged_in": is_logged_in})
+
+@router.get("/users", response_class=HTMLResponse)
+def render_list_users(
+    request: Request,
+    page: int = Query(1, ge=1),  # Default to page 1
+    page_size: int = Query(10, ge=1, le=100),  # Default page size 10 
+    current_user: User = Depends(get_current_user)
+):
+    is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
+    # Create the query instance
+    query = ListUsersQuery(page=page, page_size=page_size)
+    # Pass the query to the handler
+    handler = ListUsersHandler()
+    users = handler.handle(query)
+    
+    return templates.TemplateResponse("list_users.html", {
+        "request": request, 
+        "is_logged_in": is_logged_in, 
+        "users": users
+    }) 
 
 @router.get("/profile", response_class=HTMLResponse)
 async def render_login_form(request: Request, current_user: User = Depends(get_current_user)):
