@@ -1,5 +1,10 @@
-<h1>User List</h1>
 
+{% extends "base.html" %}
+
+{% block title %}Election Results{% endblock %}
+
+{% block content %}
+<h1>User List</h1>
 <table class="user-table">
     <thead>
         <tr>
@@ -31,3 +36,4 @@
     <a href="/users?page={{ page + 1 }}&page_size={{ page_size }}" class="btn">Next</a>
     {% endif %}
 </div>
+{% endblock %}
