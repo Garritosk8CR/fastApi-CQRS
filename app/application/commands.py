@@ -39,3 +39,6 @@ class EditUserCommand(BaseModel):
     email: EmailStr
     password: str
 
+class UpdateUserRoleCommand(BaseModel):
+    user_id: int
+    role: str
