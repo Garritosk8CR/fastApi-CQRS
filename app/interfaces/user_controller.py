@@ -40,7 +40,9 @@ def render_list_users(
     return templates.TemplateResponse("list_users.html", {
         "request": request, 
         "is_logged_in": is_logged_in, 
-        "users": users
+        "users": users,
+        "page": page,
+        "page_size": page_size
     }) 
 
 @router.get("/profile", response_class=HTMLResponse)

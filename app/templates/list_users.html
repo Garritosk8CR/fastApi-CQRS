@@ -1,0 +1,33 @@
+<h1>User List</h1>
+
+<table class="user-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination Controls -->
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="/users?page={{ page - 1 }}&page_size={{ page_size }}" class="btn">Previous</a>
+    {% endif %}
+    <span>Page {{ page }}</span>
+    {% if users|length == page_size %}
+    <a href="/users?page={{ page + 1 }}&page_size={{ page_size }}" class="btn">Next</a>
+    {% endif %}
+</div>
