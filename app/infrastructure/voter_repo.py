@@ -35,3 +35,6 @@ class VoterRepository:
         self.db.commit()
         self.db.refresh(new_voter)
         return new_voter
+    
+    def get_voter_by_user_id(self, user_id: int):
+        return self.db.query(Voter).filter(Voter.user_id == user_id).first()
