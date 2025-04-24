@@ -10,6 +10,7 @@ from app.application.commands import EditUserCommand, LoginUserCommand, UpdateUs
 from app.infrastructure.models import User
 from app.security import get_current_complete_user, get_current_user
 from fastapi import Form
+from app.application.handlers import command_bus
 
 router = APIRouter(prefix="/users", tags=["Users"])
 templates = Jinja2Templates(directory="app/templates")  # Path to your templates folder
@@ -168,10 +169,9 @@ async def get_user_profile(current_user: User = Depends(get_current_complete_use
 def update_user_role(
     user_id: int,
     command: UpdateUserRoleCommand
-):
-    handler = UpdateUserRoleHandler()
+):    
     try:
-        result = handler.handle(command)
+        result = command_bus.handle(command)
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
