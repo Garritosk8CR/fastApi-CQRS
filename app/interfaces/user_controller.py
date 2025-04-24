@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.query_bus import query_bus
-from app.application.queries import GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, ListUsersQuery
+from app.application.queries import GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, ListAdminsQuery, ListUsersQuery
 from app.infrastructure.database import get_db
 from app.application.handlers import AuthCommandHandler, EditUserHandler, GetUserByIdHandler, GetUserProfileHandler, ListUsersHandler, RegisterUserHandler, UpdateUserRoleHandler, UserQueryHandler
 from app.application.commands import EditUserCommand, LoginUserCommand, UpdateUserRoleCommand
@@ -179,3 +179,12 @@ def get_user_by_id(user_id: int):
         return result
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+@router.get("/admins")
+def list_admins(
+    page: int = Query(1, ge=1),  # Default page number is 1
+    page_size: int = Query(10, ge=1, le=100)  # Default page size is 10
+):
+    query = ListAdminsQuery(page=page, page_size=page_size)
+    result = query_bus.handle(query)
+    return {"admins": result}
