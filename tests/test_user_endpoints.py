@@ -391,7 +391,42 @@ def test_list_admins_no_admins(test_db):
     test_db.rollback()
     gc.collect()
 
+def test_list_admins_pagination(test_db, create_test_admins):
+    # Arrange: Create multiple admin users
+    admins_data = [
+        {"id": 1, "name": "Admin User 1", "email": "admin1@example.com", "role": "admin"},
+        {"id": 2, "name": "Admin User 2", "email": "admin2@example.com", "role": "admin"},
+        {"id": 3, "name": "Admin User 3", "email": "admin3@example.com", "role": "admin"},
+    ]
+    create_test_admins(admins_data)
 
+    # Act: Call the endpoint with pagination parameters (page=1, page_size=2)
+    response = client.get("/users/admins/?page=1&page_size=2")
+
+    print(f"Admins response: {response.json()}")
+
+    # Assert: Verify the response for the first page
+    assert response.status_code == 200
+    assert response.json() == {
+        "admins": [
+            {"id": 1, "name": "Admin User 1", "email": "admin1@example.com"},
+            {"id": 2, "name": "Admin User 2", "email": "admin2@example.com"}
+        ]
+    }
+
+    # Act: Call the endpoint for the second page (page=2, page_size=2)
+    response = client.get("/users/admins/?page=2&page_size=2")
+
+    # Assert: Verify the response for the second page
+    assert response.status_code == 200
+    assert response.json() == {
+        "admins": [
+            {"id": 3, "name": "Admin User 3", "email": "admin3@example.com"}
+        ]
+    }
+
+    test_db.rollback()
+    gc.collect()
 
 
 
