@@ -50,12 +50,11 @@ def render_list_users(
 @router.get("/profile", response_class=HTMLResponse)
 async def render_login_form(request: Request, current_user: User = Depends(get_current_user)):
     is_logged_in = request.cookies.get("access_token") is not None  # Check if token exists
-    handler = UserQueryHandler()
     print(f"Current user: {current_user}")
     # Create query command instance
     query = GetUserByEmailQuery(email=current_user)
     try:
-        user_profile = handler.handle(query)
+        user_profile = query_bus.handle(query)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     return templates.TemplateResponse("profile.html", {
