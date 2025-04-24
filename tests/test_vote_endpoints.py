@@ -195,3 +195,15 @@ def create_test_user_and_voter(test_db):
 
         return user, voter
     return _create_user_and_voter
+
+def test_user_has_voted(test_db, create_test_user_and_voter):
+    # Arrange: Create a user who has voted
+    user, voter = create_test_user_and_voter(10, "Test User", "test10@example.com", True)
+
+    # Act: Call the has-voted endpoint
+    response = client.get(f"/voters/users/{user.id}/has-voted")
+
+    # Assert: Verify the response
+    print(response.json())
+    assert response.status_code == 200
+    assert response.json() == {"user_id": user.id, "has_voted": True}
