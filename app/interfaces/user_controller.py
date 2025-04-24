@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from app.application.query_bus import query_bus
 from app.application.queries import GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, ListUsersQuery
 from app.infrastructure.database import get_db
 from app.application.handlers import AuthCommandHandler, EditUserHandler, GetUserByIdHandler, GetUserProfileHandler, ListUsersHandler, RegisterUserHandler, UpdateUserRoleHandler, UserQueryHandler
@@ -179,10 +180,8 @@ def update_user_role(
 def get_user_by_id(user_id: int):
     # Create and process the query
     query = GetUserByIdQuery(user_id=user_id)
-    handler = GetUserByIdHandler()
-
     try:
-        result = handler.handle(query)
+        result = query_bus.handle(query)
         return result
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
