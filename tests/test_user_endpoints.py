@@ -380,6 +380,17 @@ def test_list_admins_success(test_db, create_test_admins):
     test_db.rollback()
     gc.collect()
 
+def test_list_admins_no_admins(test_db):
+    # Act: Call the endpoint when no admins exist
+    response = client.get("/users/admins/")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {"admins": []}
+
+    test_db.rollback()
+    gc.collect()
+
 
 
 
