@@ -36,8 +36,7 @@ def render_list_users(
     # Create the query instance
     query = ListUsersQuery(page=page, page_size=page_size)
     # Pass the query to the handler
-    handler = ListUsersHandler()
-    users = handler.handle(query)
+    users = query_bus.handle(query)
     
     return templates.TemplateResponse("list_users.html", {
         "request": request, 
