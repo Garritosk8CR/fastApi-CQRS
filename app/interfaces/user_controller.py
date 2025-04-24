@@ -155,12 +155,10 @@ async def edit_user(
 @router.get("/users/profile")
 async def get_user_profile(current_user: User = Depends(get_current_complete_user)):
     print(f"Getting user profile for user: {current_user.id}")
-    handler = GetUserProfileHandler()
-    
     # Create query command instance
     query = GetUserProfileQuery(user_id=current_user.id)
     try:
-        user_profile = handler.handle(query)
+        user_profile = query_bus.handle(query)
         return {"user": user_profile}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
