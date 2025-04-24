@@ -1,3 +1,4 @@
+import gc
 from random import randint
 import pytest
 from fastapi.testclient import TestClient
@@ -226,6 +227,8 @@ def test_edit_user_no_changes(test_db):
     assert response.json()["user"]["name"] == "Oldy Name"
     assert response.json()["user"]["email"] == "oldyemail@example.com"
     assert response.json()["user"]["password"] == "oldpassword"
+    test_db.rollback()
+    gc.collect()
 
 def test_edit_user_duplicate_email(test_db):
     # Create two test users
@@ -244,6 +247,8 @@ def test_edit_user_duplicate_email(test_db):
     response = client.put(f"/users/{user1.id}", json=update_data)
     assert response.status_code == 400  # Bad Request
     assert response.json()["detail"] == "Email already exists!"
+    test_db.rollback()
+    gc.collect()
 
 
 def test_get_user_profile(test_db):
@@ -277,35 +282,38 @@ def test_get_user_profile(test_db):
     assert profile_response.status_code == 200
     assert profile_response.json()["user"]["name"] == "Test User"
     assert profile_response.json()["user"]["email"] == "testuser555@example.com"
-    
-# @pytest.fixture
-# def create_test_user(test_db):
-#     def _create_user(id, name, email, role):
-#         user = User(id=id, name=name, email=email, role=role)
-#         test_db.add(user)
-#         test_db.commit()
-#         test_db.refresh(user)
-#         return user
-#     return _create_user
+    test_db.rollback()
+    gc.collect()
 
-# def test_update_user_role_success(test_db, create_test_user):
-#     # Arrange: Create a test user
-#     user = create_test_user((randint(2, 1000)), "Test User", "test@example.com", "voter")
+@pytest.fixture
+def create_test_user(test_db):
+    def _create_user(id, name, email, role):
+        user = User(id=id, name=name, email=email, role=role)
+        test_db.add(user)
+        test_db.commit()
+        test_db.refresh(user)
+        return user
+    return _create_user
 
-#     # Act: Update the user's role
-#     response = client.put(
-#         f"/users/{user.id}/role",
-#         json={"user_id": user.id, "role": "admin"}
-#     )
-#     print(response.json())
-#     # Assert: Verify the role is updated
-#     assert response.status_code == 200
-#     assert response.json() == {"message": f"Role for user {user.id} updated to admin"}
+def test_update_user_role_success(test_db, create_test_user):
+    # Arrange: Create a test user
+    user = create_test_user(1, "Test User", "test@example.com", "voter")
 
-#     # Verify the user in the database
-#     test_db.refresh(user)
-#     updated_user = test_db.query(User).filter(User.id == user.id).first()
-#     assert updated_user.role == "admin"
+    # Act: Update the user's role
+    response = client.put(
+        f"/users/{user.id}/role",
+        json={"user_id": user.id, "role": "admin"}
+    )
+    print(response.json())
+    # Assert: Verify the role is updated
+    assert response.status_code == 200
+    assert response.json() == {"message": f"Role for user {user.id} updated to admin"}
+
+    # Verify the user in the database
+    test_db.refresh(user)
+    updated_user = test_db.query(User).filter(User.id == user.id).first()
+    print(updated_user.dump())
+    assert updated_user.role == "admin"
 
 # def test_update_user_role_user_not_found(test_db):
 #     # Act: Attempt to update a non-existent user's role
