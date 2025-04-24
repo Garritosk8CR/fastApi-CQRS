@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListUsersQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListUsersQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -319,6 +319,24 @@ class HasVotedHandler:
 
             # Return the voting status
             return {"user_id": query.user_id, "has_voted": voter.has_voted}
+
+class GetUserByIdHandler:
+    def handle(self, query: GetUserByIdQuery):
+        with SessionLocal() as db:
+            user_repository = UserRepository(db)
+
+        # Fetch the user by ID
+            user = user_repository.get_user_by_id(query.user_id)
+            if not user:
+                raise ValueError(f"User with ID {query.user_id} not found.")
+
+            # Return user details as a dictionary
+            return {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "role": user.role,
+            }
 
 
 class CommandBus:
