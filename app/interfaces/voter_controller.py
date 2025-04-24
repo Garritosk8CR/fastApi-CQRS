@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.application.commands import RegisterVoterCommand, CastVoteCommand
-from app.application.handlers import command_bus
+from app.application.handlers import HasVotedHandler, command_bus
+from app.application.queries import HasVotedQuery
 
 
 router = APIRouter()
@@ -27,5 +28,19 @@ def cast_vote(voter_id: int, election_id: int, command: CastVoteCommand):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
+@router.get("/users/{user_id}/has-voted")
+def get_has_voted(
+    user_id: int
+):
+    # Create and process the query
+    query = HasVotedQuery(user_id=user_id)
+    handler = HasVotedHandler()
+
+    try:
+        result = handler.handle(query)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
