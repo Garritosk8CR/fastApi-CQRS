@@ -103,9 +103,8 @@ async def login(email: str = Form(...), password: str = Form(...)):
 
     # Dispatch the command via the handler
     try:
-        auth_command_handler = AuthCommandHandler()
         command = LoginUserCommand(email=email, password=password)  # Create the command correctly
-        access_token = auth_command_handler.handle(command)
+        access_token = command_bus.handle(command)
         print("Token created")
     except ValueError as e:
         raise HTTPException(status_code=401, detail='Invalid email or password')
