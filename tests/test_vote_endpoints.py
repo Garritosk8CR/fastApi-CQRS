@@ -233,3 +233,31 @@ def test_user_has_voted(test_db, create_test_user_and_voter, client):
     assert response.json() == {"user_id": user.id, "has_voted": True}
     test_db.rollback()
     gc.collect()
+
+def test_user_not_found(test_db, client):
+    # Act: Call the has-voted endpoint for a non-existent user
+    response = client.get("voters/users/999/has-voted")
+
+    # Assert: Verify the response
+    assert response.status_code == 400
+    assert response.json() == {"detail": "User with ID 999 not found."}
+
+    test_db.rollback()
+    gc.collect()
+
+def test_user_has_not_voted(test_db, create_test_user_and_voter, client):
+    # Arrange: Create a user who has not voted
+    # user = User(name="Test User", email="test10@example.com", role="voter")
+    # test_db.add(user)
+    # voter = Voter(user_id=user.id, has_voted=False)
+    # test_db.add(voter)
+    # test_db.commit()
+
+    # # Act: Call the has-voted endpoint
+    # response = client.get(f"/users/{user.id}/has-voted")
+
+    # # Assert: Verify the response
+    # assert response.status_code == 200
+    # assert response.json() == {"user_id": user.id, "has_voted": False}
+    test_db.rollback()
+    gc.collect()
