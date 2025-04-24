@@ -11,7 +11,6 @@ client = TestClient(app)
 
 # Set up the test database
 @pytest.fixture(scope="module")
-
 def test_db():
     # Ensure the database schema is created
     Base.metadata.create_all(bind=engine)

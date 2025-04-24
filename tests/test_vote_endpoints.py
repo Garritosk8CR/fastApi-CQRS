@@ -1,17 +1,20 @@
 import pytest
 from fastapi.testclient import TestClient
+from app.infrastructure.models import User, Voter
 from app.main import app  # Import the FastAPI instance from main.py
-from app.infrastructure.database import Base, engine
+from app.infrastructure.database import Base, SessionLocal, engine
 
 # Use a fresh test database
-@pytest.fixture(autouse=True)
-def setup_and_teardown_db():
-    # Create tables for the test database
-    Base.metadata.create_all(bind=engine)
-    yield
-    # Drop all tables after the test
-    Base.metadata.drop_all(bind=engine)
 
+@pytest.fixture(scope="module")
+def test_db():
+    # Ensure the database schema is created
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    yield db
+    # Tear down the database after tests
+    db.close()
+    Base.metadata.drop_all(bind=engine)
 # Initialize TestClient for the FastAPI app
 client = TestClient(app)
 
@@ -175,3 +178,20 @@ def test_vote_results():
     assert results_response.status_code == 200
     results = results_response.json()
     assert results == {"Alice": 1, "Bob": 1, "Charlie": 0}
+
+
+@pytest.fixture
+def create_test_user_and_voter(test_db):
+    def _create_user_and_voter(user_id, name, email, has_voted):
+        # Create a user
+        user = User(id=user_id, name=name, email=email, role="voter")
+        test_db.add(user)
+        test_db.flush()  # Ensure the user is added before creating a voter
+
+        # Create a voter
+        voter = Voter(user_id=user_id, has_voted=has_voted)
+        test_db.add(voter)
+        test_db.commit()
+
+        return user, voter
+    return _create_user_and_voter
