@@ -305,6 +305,33 @@ def test_get_user_profile(test_db):
     test_db.rollback()
     gc.collect()
 
+def test_get_user_by_id_success(test_db):
+    # Arrange: Create a test user
+    user = User(
+        name="Test User",
+        email="test@example.com",
+        password=hash_password("securepassword"),
+        role="admin"
+    )
+    test_db.add(user)
+    test_db.commit()
+    test_db.refresh(user)
+
+    # Act: Call the endpoint
+    response = client.get(f"/users/{user.id}")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": user.id,
+        "name": "Test User",
+        "email": "test@example.com",
+        "role": "admin"
+    }
+    
+    test_db.rollback()
+    gc.collect()
+
 # @pytest.fixture
 # def create_test_user(test_db):
 #     def _create_user(name, email, role):
