@@ -48,6 +48,7 @@ class UserRepository:
         print(f"Role updated for user {user.id}: {user.role}")
 
     def get_users_by_role(self, role: str, page: int, page_size: int):
+        print(f"Getting users with role '{role}'")
         offset = (page - 1) * page_size
         return self.db.query(User).filter(User.role == role).offset(offset).limit(page_size).all()
 

@@ -180,11 +180,20 @@ def get_user_by_id(user_id: int):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@router.get("/admins")
+@router.get("/admins/")
 def list_admins(
+      # Default page size is 10
     page: int = Query(1, ge=1),  # Default page number is 1
-    page_size: int = Query(10, ge=1, le=100)  # Default page size is 10
+    page_size: int = Query(10, ge=1, le=100)
 ):
-    query = ListAdminsQuery(page=page, page_size=page_size)
-    result = query_bus.handle(query)
-    return {"admins": result}
+    try:
+        
+        print(f"Listing admins, page: {page}, page_size: {page_size}")
+        query = ListAdminsQuery(page=page, page_size=page_size)
+        result = query_bus.handle(query)
+        return {"admins": result}
+    except ValueError as e:
+        print(f"Error listing admins: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -341,12 +341,14 @@ class ListAdminsHandler:
     def handle(self, query: ListAdminsQuery):
         with SessionLocal() as db:
             user_repository = UserRepository(db)
+            print(f"Command in ListAdminsHandler: {query.page}, {query.page_size}")
         # Fetch admins with pagination
             admins = user_repository.get_users_by_role(
-                "admin", 
-                query.page, 
-                query.page_size
+                role="admin", 
+                page=query.page, 
+                page_size=query.page_size
             )
+            print(f"admin list: {admins}")
             return [
                 {
                     "id": admin.id, 

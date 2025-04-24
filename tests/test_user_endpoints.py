@@ -356,6 +356,43 @@ def create_test_admins(test_db):
         return admins
     return _create_admins
 
+
+def test_list_admins_success(test_db, create_test_admins):
+    # Arrange: Create some admin users
+    admins_data = [
+        {"name": "Admin User 1", "email": "admin1@example.com", "role": "admin"},
+        {"name": "Admin User 2", "email": "admin2@example.com", "role": "admin"},
+    ]
+    create_test_admins(admins_data)
+
+    # Act: Call the endpoint
+    response = client.get("/users/admins/")
+
+    print(f"Admins response: {response.json()}")
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "admins": [
+            {"id": 1, "name": "Admin User 1", "email": "admin1@example.com"},
+            {"id": 2, "name": "Admin User 2", "email": "admin2@example.com"}
+        ]
+    }
+    test_db.rollback()
+    gc.collect()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # @pytest.fixture
 # def create_test_user(test_db):
 #     def _create_user(name, email, role):
