@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListUsersQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -307,7 +307,6 @@ class UpdateUserRoleHandler:
         return {"message": f"Role for user {command.user_id} updated to {command.role}"}
 
 class HasVotedHandler:
-
     def handle(self, query: HasVotedQuery):
         with SessionLocal() as db:
             voter_repository = VoterRepository(db)
@@ -338,7 +337,24 @@ class GetUserByIdHandler:
                 "role": user.role,
             }
 
-
+class ListAdminsHandler:
+    def handle(self, query: ListAdminsQuery):
+        with SessionLocal() as db:
+            user_repository = UserRepository(db)
+        # Fetch admins with pagination
+            admins = user_repository.get_users_by_role(
+                "admin", 
+                query.page, 
+                query.page_size
+            )
+            return [
+                {
+                    "id": admin.id, 
+                    "name": admin.name, 
+                    "email": admin.email
+                } for admin in admins
+            ]
+        
 class CommandBus:
     def __init__(self):
         self.handlers = {}
