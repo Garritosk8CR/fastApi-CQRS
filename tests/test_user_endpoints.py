@@ -343,6 +343,19 @@ def test_get_user_by_id_not_found(test_db):
     test_db.rollback()
     gc.collect()
 
+
+@pytest.fixture
+def create_test_admins(test_db):
+    def _create_admins(admins_data):
+        admins = []
+        for admin_data in admins_data:
+            admin = User(**admin_data)
+            test_db.add(admin)
+            admins.append(admin)
+        test_db.commit()
+        return admins
+    return _create_admins
+
 # @pytest.fixture
 # def create_test_user(test_db):
 #     def _create_user(name, email, role):
