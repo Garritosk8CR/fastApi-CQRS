@@ -39,3 +39,7 @@ class HasVotedQuery(BaseModel):
 
 class GetUserByIdQuery(BaseModel):
     user_id: int
+
+class ListAdminsQuery(BaseModel):
+    page: int = 1
+    page_size: int = 10
