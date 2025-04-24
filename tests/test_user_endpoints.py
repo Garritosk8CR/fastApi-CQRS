@@ -328,7 +328,18 @@ def test_get_user_by_id_success(test_db):
         "email": "test@example.com",
         "role": "admin"
     }
-    
+
+    test_db.rollback()
+    gc.collect()
+
+def test_get_user_by_id_not_found(test_db):
+    # Act: Call the endpoint with a non-existent user ID
+    response = client.get("/users/999")
+
+    # Assert: Verify the response
+    assert response.status_code == 404
+    assert response.json() == {"detail": "User with ID 999 not found."}
+
     test_db.rollback()
     gc.collect()
 
