@@ -36,3 +36,6 @@ class ListUsersQuery(BaseModel):
 
 class HasVotedQuery(BaseModel):
     user_id: int
+
+class GetUserByIdQuery(BaseModel):
+    user_id: int
