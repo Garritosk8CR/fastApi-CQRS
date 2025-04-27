@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from app.application.queries import CandidateSupportQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UsersByRoleQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -418,6 +418,28 @@ class ElectionTurnoutHandler:
                 "total_voters": total_voters,
                 "voted": total_participated,
                 "turnout_percentage": round(turnout_percentage, 2)
+            }
+        
+class VoterDetailsHandler:
+    def handle(self, query: VoterDetailsQuery):
+        with SessionLocal() as db:
+            voter_repository = VoterRepository(db)
+
+            # Fetch voter details
+            voter = voter_repository.get_voter_by_id(query.voter_id)
+            if not voter:
+                raise ValueError(f"Voter with ID {query.voter_id} not found.")
+
+            # Format the result
+            return {
+                "voter_id": voter.id,
+                "user": {
+                    "id": voter.user.id,
+                    "name": voter.user.name,
+                    "email": voter.user.email,
+                    "role": voter.user.role,
+                },
+                "has_voted": voter.has_voted
             }
         
 class CommandBus:
