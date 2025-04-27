@@ -43,3 +43,10 @@ class GetUserByIdQuery(BaseModel):
 class ListAdminsQuery(BaseModel):
     page: int = 1
     page_size: int = 10
+
+from pydantic import BaseModel
+
+class UsersByRoleQuery(BaseModel):
+    role: str
+    page: int = 1
+    page_size: int = 10
