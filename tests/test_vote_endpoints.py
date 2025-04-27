@@ -330,7 +330,7 @@ def test_voting_status_all_voted(test_db, create_test_users_and_voters, client):
     create_test_users_and_voters(users_data, voters_data)
 
     # Act: Call the endpoint
-    response = client.get("/users/voting-status")
+    response = client.get("voters/users/voting-status")
 
     # Assert: Verify the response
     assert response.status_code == 200
