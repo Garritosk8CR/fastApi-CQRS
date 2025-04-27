@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from app.application.query_bus import query_bus
 from app.application.commands import RegisterVoterCommand, CastVoteCommand
 from app.application.handlers import HasVotedHandler, command_bus
-from app.application.queries import HasVotedQuery
+from app.application.queries import HasVotedQuery, VotingStatusQuery
 
 
 router = APIRouter()
@@ -43,4 +43,10 @@ def get_has_voted(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@router.get("/users/voting-status")
+def voting_status():
+    # Create and process the query
+    query = VotingStatusQuery()
+    result = query_bus.handle(query)
+    return result
 
