@@ -474,7 +474,37 @@ def test_users_by_role_no_users(test_db):
     assert response.status_code == 200
     assert response.json() == {"users": []}
 
+def test_users_by_role_pagination(test_db, create_test_users):
+    # Arrange: Create multiple users with the same role
+    users_data = [
+        {"id": 1, "name": "Admin User 1", "email": "admin1@example.com", "role": "admin"},
+        {"id": 2, "name": "Admin User 2", "email": "admin2@example.com", "role": "admin"},
+        {"id": 3, "name": "Admin User 3", "email": "admin3@example.com", "role": "admin"},
+    ]
+    create_test_users(users_data)
 
+    # Act: Call the endpoint with pagination parameters (page=1, page_size=2)
+    response = client.get("/users/by-role/?role=admin&page=1&page_size=2")
+
+    # Assert: Verify the response for the first page
+    assert response.status_code == 200
+    assert response.json() == {
+        "users": [
+            {"id": 1, "name": "Admin User 1", "email": "admin1@example.com", "role": "admin"},
+            {"id": 2, "name": "Admin User 2", "email": "admin2@example.com", "role": "admin"},
+        ]
+    }
+
+    # Act: Call the endpoint for the second page (page=2, page_size=2)
+    response = client.get("/users/by-role/?role=admin&page=2&page_size=2")
+
+    # Assert: Verify the response for the second page
+    assert response.status_code == 200
+    assert response.json() == {
+        "users": [
+            {"id": 3, "name": "Admin User 3", "email": "admin3@example.com", "role": "admin"},
+        ]
+    }
 
 
 # @pytest.fixture
