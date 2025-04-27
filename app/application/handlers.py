@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UsersByRoleQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -356,6 +356,15 @@ class ListAdminsHandler:
                     "email": admin.email
                 } for admin in admins
             ]
+        
+class UsersByRoleHandler:
+
+    def handle(self, query: UsersByRoleQuery):
+        with SessionLocal() as db:
+            user_repository = UserRepository(db)
+            # Fetch users with the specified role and pagination
+            users = user_repository.get_users_by_role(query.role, query.page, query.page_size)
+            return [{"id": user.id, "name": user.name, "email": user.email, "role": user.role} for user in users]
         
 class CommandBus:
     def __init__(self):
