@@ -1,7 +1,7 @@
 import gc
 import pytest
 from fastapi.testclient import TestClient
-from app.infrastructure.models import Election
+from app.infrastructure.models import Election, User, Voter
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import SessionLocal, Base, engine
 
@@ -226,3 +226,32 @@ def create_test_voters(test_db):
         test_db.commit()
         return users, voters
     return _create_voters
+
+def test_turnout_calculation(test_db, create_test_voters):
+    # Arrange: Create users and voters
+    users_data = [
+        {"id": 1, "name": "User 1", "email": "user1@example.com", "role": "voter"},
+        {"id": 2, "name": "User 2", "email": "user2@example.com", "role": "voter"},
+        {"id": 3, "name": "User 3", "email": "user3@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": False},
+        {"user_id": 3, "has_voted": True},
+    ]
+    create_test_voters(users_data, voters_data)
+
+    # Act: Call the endpoint
+    response = client.get("/elections/1/turnout")
+
+    # Assert: Verify the turnout calculation
+    assert response.status_code == 200
+    assert response.json() == {
+        "election_id": 1,
+        "total_voters": 3,
+        "voted": 2,
+        "turnout_percentage": 66.67
+    }
+
+    test_db.rollback()
+    gc.collect()
