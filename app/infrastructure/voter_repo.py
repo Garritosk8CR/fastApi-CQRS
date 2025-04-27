@@ -38,3 +38,6 @@ class VoterRepository:
     
     def get_voter_by_user_id(self, user_id: int):
         return self.db.query(Voter).filter(Voter.user_id == user_id).first()
+    
+    def get_voters_by_status(self, has_voted: bool):
+        return self.db.query(Voter).filter(Voter.has_voted == has_voted).all()
