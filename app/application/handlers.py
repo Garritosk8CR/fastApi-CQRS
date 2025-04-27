@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from app.application.queries import CandidateSupportQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UsersByRoleQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UsersByRoleQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -392,6 +392,27 @@ class CandidateSupportHandler:
 
             # Format the result
             return candidate_support
+        
+class ElectionTurnoutHandler:
+    def handle(self, query: ElectionTurnoutQuery):
+        with SessionLocal() as db:
+            voter_repository = VoterRepository(db)
+
+            # Fetch all eligible voters
+            eligible_voters = voter_repository.get_all_voters_v2()
+            participated_voters = voter_repository.get_voters_who_voted()
+
+            # Calculate turnout
+            total_voters = len(eligible_voters)
+            total_participated = len(participated_voters)
+            turnout_percentage = (total_participated / total_voters * 100) if total_voters > 0 else 0
+
+            return {
+                "election_id": query.election_id,  # For consistency
+                "total_voters": total_voters,
+                "voted": total_participated,
+                "turnout_percentage": round(turnout_percentage, 2)
+            }
         
 class CommandBus:
     def __init__(self):
