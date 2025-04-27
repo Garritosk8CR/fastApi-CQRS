@@ -369,3 +369,20 @@ def test_voting_status_all_not_voted(test_db, create_test_users_and_voters, clie
             {"id": 2, "name": "User 2", "email": "user2@example.com"}
         ]
     }
+
+    test_db.rollback()
+    gc.collect()
+
+def test_voting_status_no_users(test_db, client):
+    # Act: Call the endpoint when no users exist
+    response = client.get("voters/users/voting-status")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "voted": [],
+        "not_voted": []
+    }
+
+    test_db.rollback()
+    gc.collect()

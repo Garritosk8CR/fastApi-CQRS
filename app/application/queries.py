@@ -53,3 +53,6 @@ class UsersByRoleQuery(BaseModel):
 
 class VotingStatusQuery(BaseModel):
     pass
+
+class CandidateSupportQuery(BaseModel):
+    election_id: int
