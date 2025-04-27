@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.query_bus import query_bus
-from app.application.queries import GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, ListAdminsQuery, ListUsersQuery
+from app.application.queries import GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, ListAdminsQuery, ListUsersQuery, UsersByRoleQuery
 from app.infrastructure.database import get_db
 from app.application.handlers import AuthCommandHandler, EditUserHandler, GetUserByIdHandler, GetUserProfileHandler, ListUsersHandler, RegisterUserHandler, UpdateUserRoleHandler, UserQueryHandler
 from app.application.commands import EditUserCommand, LoginUserCommand, UpdateUserRoleCommand
@@ -197,3 +197,13 @@ def list_admins(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/by-role")
+def users_by_role(
+    role: str = Query(..., description="Role to filter users by (e.g., admin, voter)"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100)
+):
+    query = UsersByRoleQuery(role=role, page=page, page_size=page_size)
+    result = query_bus.handle(query)
+    return {"users": result}
