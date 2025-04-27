@@ -174,3 +174,31 @@ def test_candidate_support_election_not_found(test_db):
 
     test_db.rollback()
     gc.collect()
+
+def test_candidate_support_no_votes(test_db, create_test_elections):
+    # Arrange: Create an election with candidates but no votes
+    elections_data = [
+        {
+            "id": 2,
+            "name": "Election 2",
+            "candidates": "Candidate X,Candidate Y,Candidate Z",
+            "votes": "0,0,0"
+        }
+    ]
+    create_test_elections(elections_data)
+
+    # Act: Call the endpoint for the election
+    response = client.get("/elections/2/candidate-support")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "candidates": [
+            {"candidate_name": "Candidate X", "votes": 0},
+            {"candidate_name": "Candidate Y", "votes": 0},
+            {"candidate_name": "Candidate Z", "votes": 0}
+        ]
+    }
+
+    test_db.rollback()
+    gc.collect()
