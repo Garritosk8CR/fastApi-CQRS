@@ -484,6 +484,7 @@ query_bus.register_handler(UsersByRoleQuery, UsersByRoleHandler())
 query_bus.register_handler(VotingStatusQuery, VotingStatusHandler())
 query_bus.register_handler(CandidateSupportQuery, CandidateSupportHandler())
 query_bus.register_handler(ElectionTurnoutQuery, ElectionTurnoutHandler())
+query_bus.register_handler(VoterDetailsQuery, VoterDetailsHandler())
 
 
 
