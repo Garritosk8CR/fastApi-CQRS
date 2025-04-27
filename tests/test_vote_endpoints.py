@@ -406,3 +406,24 @@ def test_voting_status_no_users(test_db, client):
     test_db.rollback()
     gc.collect()
 
+def test_voter_details_success(test_db, create_test_voter, client):
+    # Arrange: Create a voter with an associated user
+    user_data = {"id": 1, "name": "John Doe", "email": "john.doe@example.com", "role": "voter"}
+    voter_data = {"has_voted": True}
+    user, voter = create_test_voter(user_data, voter_data)
+
+    # Act: Call the endpoint
+    response = client.get(f"/voters/{voter.id}")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "voter_id": voter.id,
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "role": user.role,
+        },
+        "has_voted": voter.has_voted,
+    }
