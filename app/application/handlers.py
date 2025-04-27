@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UsersByRoleQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UsersByRoleQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -379,6 +379,19 @@ class VotingStatusHandler:
                 "voted": [{"id": voter.user.id, "name": voter.user.name, "email": voter.user.email} for voter in voted],
                 "not_voted": [{"id": voter.user.id, "name": voter.user.name, "email": voter.user.email} for voter in not_voted],
             }
+        
+
+
+class CandidateSupportHandler:
+    def handle(self, query: CandidateSupportQuery):
+        with SessionLocal() as db:
+            election_repository = ElectionRepository(db)
+
+            # Fetch candidate support data
+            candidate_support = election_repository.get_candidate_support(query.election_id)
+
+            # Format the result
+            return candidate_support
         
 class CommandBus:
     def __init__(self):
