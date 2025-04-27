@@ -41,3 +41,11 @@ class VoterRepository:
     
     def get_voters_by_status(self, has_voted: bool):
         return self.db.query(Voter).filter(Voter.has_voted == has_voted).all()
+    
+    def get_all_voters_v2(self):
+        """Retrieve all voters (eligible voters)."""
+        return self.db.query(Voter).all()
+
+    def get_voters_who_voted(self):
+        """Retrieve voters who have participated (voted)."""
+        return self.db.query(Voter).filter(Voter.has_voted == True).all()
