@@ -202,3 +202,27 @@ def test_candidate_support_no_votes(test_db, create_test_elections):
 
     test_db.rollback()
     gc.collect()
+
+@pytest.fixture
+def create_test_voters(test_db):
+    def _create_voters(users_data, voters_data):
+        users = []
+        voters = []
+
+        # Create users
+        for user_data in users_data:
+            user = User(**user_data)
+            test_db.add(user)
+            users.append(user)
+
+        test_db.flush()  # Ensure users are added before creating voters
+
+        # Create voters
+        for voter_data in voters_data:
+            voter = Voter(**voter_data)
+            test_db.add(voter)
+            voters.append(voter)
+
+        test_db.commit()
+        return users, voters
+    return _create_voters
