@@ -313,3 +313,34 @@ def test_voting_status_both_categories(test_db, create_test_users_and_voters, cl
             {"id": 2, "name": "User 2", "email": "user2@example.com"}
         ]
     }
+
+    test_db.rollback()
+    gc.collect()
+
+def test_voting_status_all_voted(test_db, create_test_users_and_voters, client):
+    # Arrange: Create users who have all voted
+    users_data = [
+        {"id": 1, "name": "User 1", "email": "user1@example.com", "role": "voter"},
+        {"id": 2, "name": "User 2", "email": "user2@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+    ]
+    create_test_users_and_voters(users_data, voters_data)
+
+    # Act: Call the endpoint
+    response = client.get("/users/voting-status")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "voted": [
+            {"id": 1, "name": "User 1", "email": "user1@example.com"},
+            {"id": 2, "name": "User 2", "email": "user2@example.com"}
+        ],
+        "not_voted": []
+    }
+
+    test_db.rollback()
+    gc.collect()
