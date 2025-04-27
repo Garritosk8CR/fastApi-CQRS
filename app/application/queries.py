@@ -50,3 +50,6 @@ class UsersByRoleQuery(BaseModel):
     role: str
     page: int = 1
     page_size: int = 10
+
+class VotingStatusQuery(BaseModel):
+    pass
