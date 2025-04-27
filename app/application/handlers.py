@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UsersByRoleQuery
+from app.application.queries import GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UsersByRoleQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -365,6 +365,20 @@ class UsersByRoleHandler:
             # Fetch users with the specified role and pagination
             users = user_repository.get_users_by_role(query.role, query.page, query.page_size)
             return [{"id": user.id, "name": user.name, "email": user.email, "role": user.role} for user in users]
+        
+class VotingStatusHandler:
+    def handle(self, query: VotingStatusQuery):
+        with SessionLocal() as db:
+            voter_repository = VoterRepository(db)
+
+            # Fetch users grouped by their voting status
+            voted = voter_repository.get_voters_by_status(has_voted=True)
+            not_voted = voter_repository.get_voters_by_status(has_voted=False)
+
+            return {
+                "voted": [{"id": voter.user.id, "name": voter.user.name, "email": voter.user.email} for voter in voted],
+                "not_voted": [{"id": voter.user.id, "name": voter.user.name, "email": voter.user.email} for voter in not_voted],
+            }
         
 class CommandBus:
     def __init__(self):
