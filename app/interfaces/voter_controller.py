@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from app.application.query_bus import query_bus
 from app.application.commands import RegisterVoterCommand, CastVoteCommand
 from app.application.handlers import HasVotedHandler, command_bus
-from app.application.queries import HasVotedQuery, VotingStatusQuery
+from app.application.queries import HasVotedQuery, VoterDetailsQuery, VotingStatusQuery
 
 
 router = APIRouter()
@@ -49,4 +49,16 @@ def voting_status():
     query = VotingStatusQuery()
     result = query_bus.handle(query)
     return result
+
+@router.get("{voter_id}")
+def voter_details(voter_id: int):
+    query = VoterDetailsQuery(voter_id=voter_id)
+
+    try:
+        result = query_bus.handle(query)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
 

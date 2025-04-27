@@ -32,6 +32,25 @@ def client():
         yield client
 
 @pytest.fixture
+def create_test_voter(test_db):
+    def _create_voter(user_data, voter_data):
+        # Create a user
+        if user_data:
+            user = User(**user_data)
+            test_db.add(user)
+            test_db.flush()  # Flush to generate the user ID
+            voter_data["user_id"] = user.id
+        else:
+            user = None
+
+        # Create a voter
+        voter = Voter(**voter_data)
+        test_db.add(voter)
+        test_db.commit()
+        return user, voter
+    return _create_voter
+
+@pytest.fixture
 def create_test_user_and_voter(test_db):
     def _create_user_and_voter(user_id, name, email, has_voted):
         # Create a user
@@ -386,3 +405,4 @@ def test_voting_status_no_users(test_db, client):
 
     test_db.rollback()
     gc.collect()
+
