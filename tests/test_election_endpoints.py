@@ -276,3 +276,26 @@ def test_turnout_election_not_found(test_db):
 
     test_db.rollback()
     gc.collect()
+
+def test_turnout_no_voters(test_db, create_test_elections):
+
+    elections_data = [
+        {
+            "id": 1,
+            "name": "Election 1",
+            "candidates": "Candidate X,Candidate Y,Candidate Z",
+            "votes": "0,0,0"
+        }
+    ]
+    create_test_elections(elections_data)
+    # Act: Call the endpoint when there are no voters
+    response = client.get("/elections/1/turnout")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "election_id": 1,
+        "total_voters": 0,
+        "voted": 0,
+        "turnout_percentage": 0.0
+    }
