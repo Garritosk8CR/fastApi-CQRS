@@ -1,9 +1,19 @@
 import pytest
 from fastapi.testclient import TestClient
+from app.infrastructure.models import Election
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import SessionLocal, Base, engine
 
 
+@pytest.fixture(scope="module")
+def test_db():
+    # Ensure the database schema is created
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    yield db
+    # Tear down the database after tests
+    db.close()
+    Base.metadata.drop_all(bind=engine)
 # Use a fresh test database
 @pytest.fixture(autouse=True)
 def setup_and_teardown_db():
@@ -124,3 +134,28 @@ def create_test_elections(test_db):
         test_db.commit()
         return elections
     return _create_elections
+
+def test_candidate_support_multiple_candidates(test_db, create_test_elections):
+    # Arrange: Create an election with multiple candidates and votes
+    elections_data = [
+        {
+            "id": 1,
+            "name": "Election 1",
+            "candidates": "Candidate A,Candidate B,Candidate C",
+            "votes": "150,200,120"
+        }
+    ]
+    create_test_elections(elections_data)
+
+    # Act: Call the endpoint for the election
+    response = client.get("/elections/1/candidate-support")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "candidates": [
+            {"candidate_name": "Candidate A", "votes": 150},
+            {"candidate_name": "Candidate B", "votes": 200},
+            {"candidate_name": "Candidate C", "votes": 120}
+        ]
+    }
