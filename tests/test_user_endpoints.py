@@ -429,7 +429,17 @@ def test_list_admins_pagination(test_db, create_test_admins):
     gc.collect()
 
 
-
+@pytest.fixture
+def create_test_users(test_db):
+    def _create_users(users_data):
+        users = []
+        for user_data in users_data:
+            user = User(**user_data)
+            test_db.add(user)
+            users.append(user)
+        test_db.commit()
+        return users
+    return _create_users
 
 
 
