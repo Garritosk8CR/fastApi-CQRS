@@ -441,7 +441,29 @@ def create_test_users(test_db):
         return users
     return _create_users
 
+def test_users_by_role_success(test_db, create_test_users):
+    # Arrange: Create some users with different roles
+    users_data = [
+        {"id": 1, "name": "Admin User", "email": "admin@example.com", "role": "admin"},
+        {"id": 2, "name": "Voter User 1", "email": "voter1@example.com", "role": "voter"},
+        {"id": 3, "name": "Voter User 2", "email": "voter2@example.com", "role": "voter"},
+    ]
+    create_test_users(users_data)
 
+    # Act: Call the endpoint to filter by role "voter"
+    response = client.get("/users/by-role?role=voter")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "users": [
+            {"id": 2, "name": "Voter User 1", "email": "voter1@example.com", "role": "voter"},
+            {"id": 3, "name": "Voter User 2", "email": "voter2@example.com", "role": "voter"},
+        ]
+    }
+
+    test_db.rollback()
+    gc.collect()
 
 
 
