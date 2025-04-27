@@ -261,3 +261,26 @@ def test_user_has_not_voted(test_db, create_test_user_and_voter, client):
     # assert response.json() == {"user_id": user.id, "has_voted": False}
     test_db.rollback()
     gc.collect()
+
+
+@pytest.fixture
+def create_test_users_and_voters(test_db):
+    def _create_users_and_voters(users_data, voters_data):
+        users = []
+        voters = []
+        
+        for user_data in users_data:
+            user = User(**user_data)
+            test_db.add(user)
+            users.append(user)
+
+        test_db.flush()  # Ensure users are added before creating voters
+        
+        for voter_data in voters_data:
+            voter = Voter(**voter_data)
+            test_db.add(voter)
+            voters.append(voter)
+        
+        test_db.commit()
+        return users, voters
+    return _create_users_and_voters
