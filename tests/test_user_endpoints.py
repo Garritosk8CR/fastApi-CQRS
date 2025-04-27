@@ -474,6 +474,9 @@ def test_users_by_role_no_users(test_db):
     assert response.status_code == 200
     assert response.json() == {"users": []}
 
+    test_db.rollback()
+    gc.collect()
+
 def test_users_by_role_pagination(test_db, create_test_users):
     # Arrange: Create multiple users with the same role
     users_data = [
@@ -505,6 +508,9 @@ def test_users_by_role_pagination(test_db, create_test_users):
             {"id": 3, "name": "Admin User 3", "email": "admin3@example.com", "role": "admin"},
         ]
     }
+
+    test_db.rollback()
+    gc.collect()
 
 
 # @pytest.fixture
