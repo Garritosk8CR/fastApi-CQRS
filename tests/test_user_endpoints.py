@@ -451,7 +451,7 @@ def test_users_by_role_success(test_db, create_test_users):
     create_test_users(users_data)
 
     # Act: Call the endpoint to filter by role "voter"
-    response = client.get("/users/by-role?role=voter")
+    response = client.get("/users/by-role/?role=voter")
 
     # Assert: Verify the response
     assert response.status_code == 200

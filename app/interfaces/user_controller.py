@@ -198,7 +198,7 @@ def list_admins(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@router.get("/by-role")
+@router.get("/by-role/")
 def users_by_role(
     role: str = Query(..., description="Role to filter users by (e.g., admin, voter)"),
     page: int = Query(1, ge=1),
