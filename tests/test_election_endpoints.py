@@ -1,3 +1,4 @@
+import gc
 import pytest
 from fastapi.testclient import TestClient
 from app.infrastructure.models import Election
@@ -159,3 +160,6 @@ def test_candidate_support_multiple_candidates(test_db, create_test_elections):
             {"candidate_name": "Candidate C", "votes": 120}
         ]
     }
+
+    test_db.rollback()
+    gc.collect()
