@@ -299,3 +299,6 @@ def test_turnout_no_voters(test_db, create_test_elections):
         "voted": 0,
         "turnout_percentage": 0.0
     }
+
+    test_db.rollback()
+    gc.collect()
