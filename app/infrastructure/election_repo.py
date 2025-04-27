@@ -19,4 +19,18 @@ class ElectionRepository:
     
     def get_completed_elections(self):
         return self.db.query(Election).filter(Election.status == "completed").all()
+    
+    def get_candidate_support(self, election_id: int):
+        # Fetch the election by ID
+        election = self.db.query(Election).filter(Election.id == election_id).first()
+
+        if not election:
+            raise ValueError(f"Election with ID {election_id} not found.")
+
+        # Parse candidates and votes
+        candidates = election.candidates.split(",")
+        votes = list(map(int, election.votes.split(",")))
+
+        # Pair candidates with their respective vote counts
+        return [{"candidate_name": candidates[i], "votes": votes[i]} for i in range(len(candidates))]
 
