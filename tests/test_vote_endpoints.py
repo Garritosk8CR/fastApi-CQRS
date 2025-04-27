@@ -285,7 +285,7 @@ def create_test_users_and_voters(test_db):
         return users, voters
     return _create_users_and_voters
 
-def test_voting_status_both_categories(test_db, create_test_users_and_voters):
+def test_voting_status_both_categories(test_db, create_test_users_and_voters, client):
     # Arrange: Create users and voters in both categories
     users_data = [
         {"id": 1, "name": "User 1", "email": "user1@example.com", "role": "voter"},
