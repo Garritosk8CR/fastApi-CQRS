@@ -397,10 +397,16 @@ class ElectionTurnoutHandler:
     def handle(self, query: ElectionTurnoutQuery):
         with SessionLocal() as db:
             voter_repository = VoterRepository(db)
+            election_repository = ElectionRepository(db)
 
             # Fetch all eligible voters
             eligible_voters = voter_repository.get_all_voters_v2()
             participated_voters = voter_repository.get_voters_who_voted()
+
+            # check if election exists
+            election = election_repository.get_election_by_id(query.election_id)
+            if not election:
+                raise ValueError(f"Election with ID {query.election_id} not found.")
 
             # Calculate turnout
             total_voters = len(eligible_voters)

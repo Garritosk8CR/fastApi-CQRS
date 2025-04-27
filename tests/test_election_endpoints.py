@@ -227,7 +227,17 @@ def create_test_voters(test_db):
         return users, voters
     return _create_voters
 
-def test_turnout_calculation(test_db, create_test_voters):
+def test_turnout_calculation(test_db, create_test_voters,create_test_elections):
+
+    elections_data = [
+        {
+            "id": 1,
+            "name": "Election 1",
+            "candidates": "Candidate X,Candidate Y,Candidate Z",
+            "votes": "0,0,0"
+        }
+    ]
+    create_test_elections(elections_data)
     # Arrange: Create users and voters
     users_data = [
         {"id": 1, "name": "User 1", "email": "user1@example.com", "role": "voter"},
