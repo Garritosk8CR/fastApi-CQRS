@@ -466,7 +466,13 @@ def test_users_by_role_success(test_db, create_test_users):
     gc.collect()
 
 
+def test_users_by_role_no_users(test_db):
+    # Act: Call the endpoint to filter by role "nonexistent_role"
+    response = client.get("/users/by-role/?role=nonexistent_role")
 
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {"users": []}
 
 
 
