@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.application.query_bus import query_bus
-from app.application.queries import CandidateSupportQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery
+from app.application.queries import CandidateSupportQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery
 from app.application.commands import CreateElectionCommand, EndElectionCommand
 from app.infrastructure.models import ElectionResponse
 from app.application.commands import CreateElectionCommand
@@ -74,6 +74,20 @@ def candidate_support(
     try:
         result = query_bus.handle(query)
         return {"candidates": result}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
+    
+@router.get("/{election_id}/turnout")
+def election_turnout(
+    election_id: int
+):
+    query = ElectionTurnoutQuery(election_id=election_id)
+
+    try:
+        result = query_bus.handle(query)
+        return result
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
