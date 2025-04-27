@@ -59,3 +59,6 @@ class CandidateSupportQuery(BaseModel):
 
 class ElectionTurnoutQuery(BaseModel):
     election_id: int
+
+class VoterDetailsQuery(BaseModel):
+    voter_id: int
