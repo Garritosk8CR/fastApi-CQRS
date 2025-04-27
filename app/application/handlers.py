@@ -419,6 +419,7 @@ query_bus.register_handler(HasVotedQuery, HasVotedHandler())
 query_bus.register_handler(GetUserByIdQuery, GetUserByIdHandler())
 query_bus.register_handler(ListAdminsQuery, ListAdminsHandler())
 query_bus.register_handler(UsersByRoleQuery, UsersByRoleHandler())
+query_bus.register_handler(VotingStatusQuery, VotingStatusHandler())
 
 
 
