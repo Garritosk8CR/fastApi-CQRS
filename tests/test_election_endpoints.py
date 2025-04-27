@@ -111,3 +111,16 @@ def test_get_election_results():
     data = response.json()
     print(data)
     assert data == {'Alice': 0, 'Bob': 0, 'Charlie': 0} 
+
+
+@pytest.fixture
+def create_test_elections(test_db):
+    def _create_elections(elections_data):
+        elections = []
+        for election_data in elections_data:
+            election = Election(**election_data)
+            test_db.add(election)
+            elections.append(election)
+        test_db.commit()
+        return elections
+    return _create_elections
