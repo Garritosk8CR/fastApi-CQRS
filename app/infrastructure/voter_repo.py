@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.infrastructure.models import User, Voter
 
@@ -49,3 +50,6 @@ class VoterRepository:
     def get_voters_who_voted(self):
         """Retrieve voters who have participated (voted)."""
         return self.db.query(Voter).filter(Voter.has_voted == True).all()
+    
+    def get_total_voters(self):
+        return self.db.query(func.count(Voter.id)).scalar()
