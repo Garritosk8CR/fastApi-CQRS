@@ -50,7 +50,7 @@ def voting_status():
     result = query_bus.handle(query)
     return result
 
-@router.get("{voter_id}")
+@router.get("/voter/{voter_id}")
 def voter_details(voter_id: int):
     query = VoterDetailsQuery(voter_id=voter_id)
 

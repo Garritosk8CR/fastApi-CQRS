@@ -412,10 +412,12 @@ def test_voter_details_success(test_db, create_test_voter, client):
     voter_data = {"has_voted": True}
     user, voter = create_test_voter(user_data, voter_data)
 
-    # Act: Call the endpoint
-    response = client.get(f"/voters/{voter.id}")
+    # # Act: Call the endpoint
+    response = client.get(f"/voters/voter/{voter.id}")
 
-    # Assert: Verify the response
+    print(response.json())
+
+    # # Assert: Verify the response
     assert response.status_code == 200
     assert response.json() == {
         "voter_id": voter.id,
@@ -427,3 +429,6 @@ def test_voter_details_success(test_db, create_test_voter, client):
         },
         "has_voted": voter.has_voted,
     }
+
+    test_db.rollback()
+    gc.collect()
