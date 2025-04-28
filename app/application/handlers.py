@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from app.application.queries import CandidateSupportQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -508,6 +508,7 @@ query_bus.register_handler(VotingStatusQuery, VotingStatusHandler())
 query_bus.register_handler(CandidateSupportQuery, CandidateSupportHandler())
 query_bus.register_handler(ElectionTurnoutQuery, ElectionTurnoutHandler())
 query_bus.register_handler(VoterDetailsQuery, VoterDetailsHandler())
+query_bus.register_handler(UserStatisticsQuery, UserStatisticsHandler())
 
 
 
