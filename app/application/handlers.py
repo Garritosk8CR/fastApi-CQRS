@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from app.application.queries import CandidateSupportQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -464,6 +464,31 @@ class UserStatisticsHandler:
                 "voting_percentage": round(voting_percentage, 2),
                 "roles": role_distribution,
             }
+        
+class ElectionSummaryHandler:
+    def handle(self, query: ElectionSummaryQuery):
+        with SessionLocal() as db:
+            election_repository = ElectionRepository(db)
+
+            # Fetch all elections
+            elections = election_repository.get_all_elections()
+
+            # Aggregate summary data for each election
+            summary = []
+            for election in elections:
+                candidates = election.candidates.split(",")
+                votes = list(map(int, election.votes.split(",")))
+                total_votes = sum(votes)
+                turnout_percentage = (total_votes / len(candidates) * 100) if candidates else 0
+
+                summary.append({
+                    "election_id": election.id,
+                    "name": election.name,
+                    "turnout_percentage": round(turnout_percentage, 2),
+                    "total_votes": total_votes,
+                })
+
+            return summary
         
 class CommandBus:
     def __init__(self):
