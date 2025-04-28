@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from app.infrastructure.models import User
 from app.utils.password_utils import hash_password
@@ -51,5 +52,8 @@ class UserRepository:
         print(f"Getting users with role '{role}'")
         offset = (page - 1) * page_size
         return self.db.query(User).filter(User.role == role).offset(offset).limit(page_size).all()
+    
+    def get_total_users(self):
+        return self.db.query(func.count(User.id)).scalar()
 
 
