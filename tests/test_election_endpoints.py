@@ -374,3 +374,13 @@ def test_election_summary_turnout(test_db, create_test_elections, create_test_us
     test_db.rollback()
     gc.collect()
 
+def test_election_summary_no_elections(test_db):
+    # Act: Call the endpoint when no elections exist
+    response = client.get("/elections/summary/")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {"elections": []}
+
+    test_db.rollback()
+    gc.collect()
