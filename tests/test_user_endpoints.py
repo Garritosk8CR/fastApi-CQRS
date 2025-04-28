@@ -561,3 +561,19 @@ def test_statistics_valid_calculation(test_db, create_test_data_statistics):
 
     test_db.rollback()
     gc.collect()
+
+def test_statistics_no_users(test_db):
+    # Act: Call the endpoint with no users in the database
+    response = client.get("/users/statistics/")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "total_users": 0,
+        "total_voters": 0,
+        "voting_percentage": 0.0,
+        "roles": [],
+    }
+
+    test_db.rollback()
+    gc.collect()
