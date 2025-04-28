@@ -53,3 +53,6 @@ class VoterRepository:
     
     def get_total_voters(self):
         return self.db.query(func.count(Voter.id)).scalar()
+    
+    def get_voters_who_voted_count(self):
+        return self.db.query(func.count(Voter.id)).filter(Voter.has_voted == True).scalar()
