@@ -62,3 +62,6 @@ class ElectionTurnoutQuery(BaseModel):
 
 class VoterDetailsQuery(BaseModel):
     voter_id: int
+
+class UserStatisticsQuery(BaseModel):
+    pass

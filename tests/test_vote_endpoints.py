@@ -443,3 +443,4 @@ def test_voter_details_not_found(test_db, client):
 
     test_db.rollback()
     gc.collect()
+
