@@ -55,5 +55,12 @@ class UserRepository:
     
     def get_total_users(self):
         return self.db.query(func.count(User.id)).scalar()
+    
+    def get_users_by_roles(self):
+        return (
+            self.db.query(User.role, func.count(User.id))
+            .group_by(User.role)
+            .all()
+        )
 
 
