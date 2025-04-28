@@ -216,4 +216,4 @@ def user_statistics():
         result = query_bus.handle(query)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
+        raise HTTPException(status_code=500, detail=f"Error getting user statistics: {str(e)}")

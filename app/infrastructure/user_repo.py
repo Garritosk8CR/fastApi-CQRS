@@ -57,10 +57,12 @@ class UserRepository:
         return self.db.query(func.count(User.id)).scalar()
     
     def get_users_by_roles(self):
-        return (
+        results = (
             self.db.query(User.role, func.count(User.id))
             .group_by(User.role)
             .all()
         )
+        # Convert tuples to dictionaries
+        return [{"role": role, "count": count} for role, count in results]
 
 

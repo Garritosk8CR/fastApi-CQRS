@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import Base, SessionLocal, engine
-from app.infrastructure.models import User
+from app.infrastructure.models import User, Voter
 from app.security import hash_password
 
 # Create a TestClient for the FastAPI app
@@ -29,6 +29,29 @@ def setup_and_teardown_db():
     # Drop all tables after the test
     Base.metadata.drop_all(bind=engine)
 
+@pytest.fixture
+def create_test_users(test_db):
+    def _create_users(users_data):
+        users = []
+        for user_data in users_data:
+            user = User(**user_data)
+            test_db.add(user)
+            users.append(user)
+        test_db.commit()
+        return users
+    return _create_users
+
+@pytest.fixture
+def create_test_admins(test_db):
+    def _create_admins(admins_data):
+        admins = []
+        for admin_data in admins_data:
+            admin = User(**admin_data)
+            test_db.add(admin)
+            admins.append(admin)
+        test_db.commit()
+        return admins
+    return _create_admins
 
 @pytest.fixture
 def create_test_data_statistics(test_db):
@@ -294,7 +317,6 @@ def test_edit_user_duplicate_email(test_db):
     test_db.rollback()
     gc.collect()
 
-
 def test_get_user_profile(test_db):
     # Step 1: Create a test user
     user = User(
@@ -367,20 +389,6 @@ def test_get_user_by_id_not_found(test_db):
     test_db.rollback()
     gc.collect()
 
-
-@pytest.fixture
-def create_test_admins(test_db):
-    def _create_admins(admins_data):
-        admins = []
-        for admin_data in admins_data:
-            admin = User(**admin_data)
-            test_db.add(admin)
-            admins.append(admin)
-        test_db.commit()
-        return admins
-    return _create_admins
-
-
 def test_list_admins_success(test_db, create_test_admins):
     # Arrange: Create some admin users
     admins_data = [
@@ -452,19 +460,6 @@ def test_list_admins_pagination(test_db, create_test_admins):
     test_db.rollback()
     gc.collect()
 
-
-@pytest.fixture
-def create_test_users(test_db):
-    def _create_users(users_data):
-        users = []
-        for user_data in users_data:
-            user = User(**user_data)
-            test_db.add(user)
-            users.append(user)
-        test_db.commit()
-        return users
-    return _create_users
-
 def test_users_by_role_success(test_db, create_test_users):
     # Arrange: Create some users with different roles
     users_data = [
@@ -488,7 +483,6 @@ def test_users_by_role_success(test_db, create_test_users):
 
     test_db.rollback()
     gc.collect()
-
 
 def test_users_by_role_no_users(test_db):
     # Act: Call the endpoint to filter by role "nonexistent_role"
@@ -536,53 +530,34 @@ def test_users_by_role_pagination(test_db, create_test_users):
     test_db.rollback()
     gc.collect()
 
+def test_statistics_valid_calculation(test_db, create_test_data_statistics):
+    # Arrange: Create users and voters
+    users_data = [
+        {"id": 1, "name": "Admin User", "email": "admin@example.com", "role": "admin"},
+        {"id": 2, "name": "Voter User 1", "email": "voter1@example.com", "role": "voter"},
+        {"id": 3, "name": "Voter User 2", "email": "voter2@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": False},
+    ]
+    create_test_data_statistics(users_data, voters_data)
 
-# @pytest.fixture
-# def create_test_user(test_db):
-#     def _create_user(name, email, role):
-        
-        
-        
-#         return user
-#     return _create_user
+    # Act: Call the endpoint
+    response = client.get("/users/statistics/")
 
-# def test_update_user_role_success(test_db ):
-#     # Arrange: Create a test user
-#     user = User(name="Test User", email="test@example.com", role="voter")
-#     test_db.add(user)
-#     test_db.commit()
-#     test_db.refresh(user)
-#     test_db.flush()
-#     # Act: Update the user's role
-#     response = client.put(
-#         f"/users/{user.id}/role",
-#         json={"user_id": user.id, "role": "admin"}
-#     )
-#     print(response.json())
-#     # Assert: Verify the role is updated
-#     assert response.status_code == 200
-#     assert response.json() == {"message": f"Role for user {user.id} updated to admin"}
-    
-#     #get user by id call to api to check the role
-#     # response2 = client.get(f"/users/{user.id}")
-#     # print(response2.json())
-#     # assert response2.status_code == 200
-#     # Verify the user in the databas
-#     gc.collect()
-#     updated_user = test_db.query(User).filter(User.id == user.id).first()
-#     assert updated_user is not None
-#     assert updated_user.role == "admin"
-#     test_db.rollback()
-#     gc.collect()
+    # Assert: Verify the response
+    print(f"Statistics response: {response.json()}")
+    assert response.status_code == 200
+    assert response.json() == {
+        "total_users": 3,
+        "total_voters": 2,
+        "voting_percentage": 50.0,
+        "roles": [
+            {"role": "admin", "count": 1},
+            {"role": "voter", "count": 2},
+        ],
+    }
 
-# def test_update_user_role_user_not_found(test_db):
-#     # Act: Attempt to update a non-existent user's role
-#     response = client.put(
-#         "/users/999/role",
-#         json={"user_id": 999, "role": "admin"}
-#     )
-
-#     # Assert: Verify 404 status code
-#     assert response.status_code == 400
-#     assert response.json() == {"detail": "User with ID 999 not found."}
-
+    test_db.rollback()
+    gc.collect()

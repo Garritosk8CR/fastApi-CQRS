@@ -443,7 +443,7 @@ class VoterDetailsHandler:
             }
         
 class UserStatisticsHandler:
-    def handle(self):
+    def handle(self, query: UserStatisticsQuery):
         with SessionLocal() as db:
             voter_repository = VoterRepository(db)
             user_repository = UserRepository(db)
