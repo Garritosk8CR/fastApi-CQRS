@@ -600,3 +600,29 @@ def test_statistics_no_voters(test_db, create_test_data_statistics):
             {"role": "admin", "count": 2},
         ],
     }
+
+def test_statistics_no_votes_cast(test_db, create_test_data_statistics):
+    # Arrange: Create users and voters, but none voted
+    users_data = [
+        {"id": 1, "name": "Voter User 1", "email": "voter1@example.com", "role": "voter"},
+        {"id": 2, "name": "Voter User 2", "email": "voter2@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": False},
+        {"user_id": 2, "has_voted": False},
+    ]
+    create_test_data_statistics(users_data, voters_data)
+
+    # Act: Call the endpoint
+    response = client.get("/users/statistics/")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "total_users": 2,
+        "total_voters": 2,
+        "voting_percentage": 0.0,
+        "roles": [
+            {"role": "voter", "count": 2},
+        ],
+    }
