@@ -420,3 +420,6 @@ def test_top_candidate_multiple_candidates(test_db, create_test_elections):
         "top_candidate": "B",
         "votes": 200
     }
+
+    test_db.rollback()
+    gc.collect()
