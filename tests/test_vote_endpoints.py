@@ -432,3 +432,14 @@ def test_voter_details_success(test_db, create_test_voter, client):
 
     test_db.rollback()
     gc.collect()
+
+def test_voter_details_not_found(test_db, client):
+    # Act: Call the endpoint for a non-existent voter
+    response = client.get("/voters/voter/999")
+
+    # Assert: Verify the response
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Voter with ID 999 not found."}
+
+    test_db.rollback()
+    gc.collect()
