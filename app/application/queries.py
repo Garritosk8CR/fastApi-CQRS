@@ -68,3 +68,6 @@ class UserStatisticsQuery(BaseModel):
 
 class ElectionSummaryQuery(BaseModel):
     pass
+
+class TopCandidateQuery(BaseModel):
+    election_id: int
