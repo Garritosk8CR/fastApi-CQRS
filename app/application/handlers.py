@@ -442,6 +442,29 @@ class VoterDetailsHandler:
                 "has_voted": voter.has_voted
             }
         
+class UserStatisticsHandler:
+    def handle(self):
+        with SessionLocal() as db:
+            voter_repository = VoterRepository(db)
+            user_repository = UserRepository(db)
+        
+            # Fetch data for statistics
+            total_users = user_repository.get_total_users()
+            voters_count = voter_repository.get_total_voters()
+            users_voted_count = voter_repository.get_voters_who_voted_count()
+            role_distribution = user_repository.get_users_by_roles()
+
+            # Calculate percentage of users who have voted
+            voting_percentage = (users_voted_count / voters_count * 100) if voters_count > 0 else 0
+
+            # Format the result
+            return {
+                "total_users": total_users,
+                "total_voters": voters_count,
+                "voting_percentage": round(voting_percentage, 2),
+                "roles": role_distribution,
+            }
+        
 class CommandBus:
     def __init__(self):
         self.handlers = {}
