@@ -577,3 +577,26 @@ def test_statistics_no_users(test_db):
 
     test_db.rollback()
     gc.collect()
+
+def test_statistics_no_voters(test_db, create_test_data_statistics):
+    # Arrange: Create users with no voters
+    users_data = [
+        {"id": 1, "name": "Admin User", "email": "admin@example.com", "role": "admin"},
+        {"id": 2, "name": "Non-Voter User", "email": "nonvoter@example.com", "role": "admin"},
+    ]
+    voters_data = []
+    create_test_data_statistics(users_data, voters_data)
+
+    # Act: Call the endpoint
+    response = client.get("/users/statistics/")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "total_users": 2,
+        "total_voters": 0,
+        "voting_percentage": 0.0,
+        "roles": [
+            {"role": "admin", "count": 2},
+        ],
+    }
