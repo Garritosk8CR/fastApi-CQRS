@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -492,6 +492,32 @@ class ElectionSummaryHandler:
                 })
 
             return summary
+
+class TopCandidateHandler:
+    def handle(self, query: TopCandidateQuery):
+        with SessionLocal() as db:
+            election_repository = ElectionRepository(db)
+
+            # Fetch the election data
+            election = election_repository.get_election_by_id(query.election_id)
+            if not election:
+                raise ValueError(f"Election with ID {query.election_id} not found.")
+
+            # Parse candidates and votes
+            candidates = election.candidates.split(",")
+            votes = list(map(int, election.votes.split(",")))
+
+            # Determine the top candidate
+            max_votes = max(votes)
+            max_index = votes.index(max_votes)
+            top_candidate = candidates[max_index]
+
+            # Return the result
+            return {
+                "election_id": election.id,
+                "top_candidate": top_candidate,
+                "votes": max_votes
+            }
         
 class CommandBus:
     def __init__(self):
