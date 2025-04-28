@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from app.infrastructure.models import Election, User, Voter
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import SessionLocal, Base, engine
+from tests.test_vote_endpoints import create_test_user_and_voter
 
 
 @pytest.fixture(scope="module")
@@ -341,25 +342,35 @@ def test_turnout_no_participation(test_db, create_test_voters, create_test_elect
     test_db.rollback()
     gc.collect()
 
-def test_election_summary_valid(test_db, create_test_elections):
-    # Arrange: Create multiple elections with valid data
+def test_election_summary_turnout(test_db, create_test_elections, create_test_user_and_voter):
+    # Arrange: Create an election with candidates but no votes
+    # First, create some voters
+    create_test_user_and_voter(user_id=1, name="Test User 1", email="test1@example.com", has_voted=True)
+    create_test_user_and_voter(user_id=2, name="Test User 2", email="test2@example.com", has_voted=False)
+
+
     elections_data = [
-        {"id": 1, "name": "Presidential Election", "candidates": "A,B,C", "votes": "100,200,150"},
-        {"id": 2, "name": "City Council Election", "candidates": "X,Y", "votes": "50,30"},
+        {
+            "id": 1,
+            "name": "Election 1",
+            "candidates": "Candidate A,Candidate B",
+            "votes": "1,1"
+        }
     ]
     create_test_elections(elections_data)
 
-    # Act: Call the endpoint
+    # Act: Call the endpoint for the election
     response = client.get("/elections/summary/")
 
-    # Assert: Verify the summary
+    # Assert: Verify the response
     assert response.status_code == 200
-    assert response.json() == {
-        "elections": [
-            {"election_id": 1, "name": "Presidential Election", "turnout_percentage": 150.0, "total_votes": 450},
-            {"election_id": 2, "name": "City Council Election", "turnout_percentage": 40.0, "total_votes": 80},
-        ]
-    }
+    summary = response.json()
+    assert len(summary) == 1
+    print(summary)
+    assert summary["elections"][0]["turnout_percentage"] == 50.0
+    assert summary["elections"][0]["total_votes"] == 2
+    assert summary["elections"][0]["name"] == "Election 1"
 
     test_db.rollback()
     gc.collect()
+

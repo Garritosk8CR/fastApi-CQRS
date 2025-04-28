@@ -476,15 +476,18 @@ class ElectionSummaryHandler:
             # Aggregate summary data for each election
             summary = []
             for election in elections:
-                candidates = election.candidates.split(",")
-                votes = list(map(int, election.votes.split(",")))
-                total_votes = sum(votes)
-                turnout_percentage = (total_votes / len(candidates) * 100) if candidates else 0
+                # Use ElectionTurnoutHandler to get the correct turnout percentage
+                turnout_query = ElectionTurnoutQuery(election_id=election.id)
+                turnout_data = ElectionTurnoutHandler().handle(turnout_query)
+                print(f"Turnout data for election {election.id}: {turnout_data}")
+                turnout_percentage = turnout_data["turnout_percentage"]
+
+                total_votes = sum(map(int, election.votes.split(","))) if election.votes else 0
 
                 summary.append({
                     "election_id": election.id,
                     "name": election.name,
-                    "turnout_percentage": round(turnout_percentage, 2),
+                    "turnout_percentage": turnout_percentage,
                     "total_votes": total_votes,
                 })
 
