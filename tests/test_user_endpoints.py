@@ -30,6 +30,30 @@ def setup_and_teardown_db():
     Base.metadata.drop_all(bind=engine)
 
 
+@pytest.fixture
+def create_test_data_statistics(test_db):
+    def _create_data(users_data, voters_data):
+        users = []
+        voters = []
+
+        # Create users
+        for user_data in users_data:
+            user = User(**user_data)
+            test_db.add(user)
+            users.append(user)
+
+        test_db.flush()  # Flush to generate IDs
+
+        # Create voters
+        for voter_data in voters_data:
+            voter = Voter(**voter_data)
+            test_db.add(voter)
+            voters.append(voter)
+
+        test_db.commit()
+        return users, voters
+    return _create_data
+
 def test_successful_sign_up(test_db):
     response = client.post(
         "/users/sign-up",
