@@ -103,7 +103,7 @@ def election_summary():
     except Exception as e:
         raise HTTPException(status_code=500, detail="An unexpected error occurred.")
     
-@router.get("/{election_id}/top-candidate")
+@router.get("/{election_id}/top-candidate/")
 def top_candidate(election_id: int):
     query = TopCandidateQuery(election_id=election_id)
     try:

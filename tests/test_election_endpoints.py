@@ -302,7 +302,6 @@ def test_turnout_no_voters(test_db, create_test_elections):
     test_db.rollback()
     gc.collect()
 
-
 def test_turnout_no_participation(test_db, create_test_voters, create_test_elections):
 
     elections_data = [
@@ -403,3 +402,21 @@ def test_election_summary_no_votes(test_db, create_test_elections):
 
     test_db.rollback()
     gc.collect()
+
+def test_top_candidate_multiple_candidates(test_db, create_test_elections):
+    # Arrange: Create an election with multiple candidates and votes
+    elections_data = [
+        {"id": 1, "name": "Presidential Election", "candidates": "A,B,C", "votes": "100,200,150"}
+    ]
+    create_test_elections(elections_data)
+
+    # Act: Call the endpoint
+    response = client.get("/elections/1/top-candidate/")
+
+    # Assert: Verify the top candidate
+    assert response.status_code == 200
+    assert response.json() == {
+        "election_id": 1,
+        "top_candidate": "B",
+        "votes": 200
+    }
