@@ -340,3 +340,26 @@ def test_turnout_no_participation(test_db, create_test_voters, create_test_elect
 
     test_db.rollback()
     gc.collect()
+
+def test_election_summary_valid(test_db, create_test_elections):
+    # Arrange: Create multiple elections with valid data
+    elections_data = [
+        {"id": 1, "name": "Presidential Election", "candidates": "A,B,C", "votes": "100,200,150"},
+        {"id": 2, "name": "City Council Election", "candidates": "X,Y", "votes": "50,30"},
+    ]
+    create_test_elections(elections_data)
+
+    # Act: Call the endpoint
+    response = client.get("/elections/summary/")
+
+    # Assert: Verify the summary
+    assert response.status_code == 200
+    assert response.json() == {
+        "elections": [
+            {"election_id": 1, "name": "Presidential Election", "turnout_percentage": 150.0, "total_votes": 450},
+            {"election_id": 2, "name": "City Council Election", "turnout_percentage": 40.0, "total_votes": 80},
+        ]
+    }
+
+    test_db.rollback()
+    gc.collect()
