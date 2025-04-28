@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.query_bus import query_bus
-from app.application.queries import GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, ListAdminsQuery, ListUsersQuery, UsersByRoleQuery
+from app.application.queries import GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, ListAdminsQuery, ListUsersQuery, UserStatisticsQuery, UsersByRoleQuery
 from app.infrastructure.database import get_db
 from app.application.handlers import AuthCommandHandler, EditUserHandler, GetUserByIdHandler, GetUserProfileHandler, ListUsersHandler, RegisterUserHandler, UpdateUserRoleHandler, UserQueryHandler
 from app.application.commands import EditUserCommand, LoginUserCommand, UpdateUserRoleCommand
@@ -207,3 +207,13 @@ def users_by_role(
     query = UsersByRoleQuery(role=role, page=page, page_size=page_size)
     result = query_bus.handle(query)
     return {"users": result}
+
+@router.get("/statistics/")
+def user_statistics():
+    query = UserStatisticsQuery()
+
+    try:
+        result = query_bus.handle(query)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
