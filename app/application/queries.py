@@ -65,3 +65,6 @@ class VoterDetailsQuery(BaseModel):
 
 class UserStatisticsQuery(BaseModel):
     pass
+
+class ElectionSummaryQuery(BaseModel):
+    pass
