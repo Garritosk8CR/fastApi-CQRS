@@ -564,6 +564,7 @@ query_bus.register_handler(ElectionTurnoutQuery, ElectionTurnoutHandler())
 query_bus.register_handler(VoterDetailsQuery, VoterDetailsHandler())
 query_bus.register_handler(UserStatisticsQuery, UserStatisticsHandler())
 query_bus.register_handler(ElectionSummaryQuery, ElectionSummaryHandler())
+query_bus.register_handler(TopCandidateQuery, TopCandidateHandler())
 
 
 
