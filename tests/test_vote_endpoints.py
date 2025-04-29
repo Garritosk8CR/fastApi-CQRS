@@ -66,6 +66,30 @@ def create_test_user_and_voter(test_db):
         return user, voter
     return _create_user_and_voter
 
+@pytest.fixture
+def create_test_voters(test_db):
+    def _create_voters(users_data, voters_data):
+        users = []
+        voters = []
+
+        # Create users
+        for user_data in users_data:
+            user = User(**user_data)
+            test_db.add(user)
+            users.append(user)
+
+        test_db.flush()  # Ensure users are added before creating voters
+
+        # Create voters
+        for voter_data in voters_data:
+            voter = Voter(**voter_data)
+            test_db.add(voter)
+            voters.append(voter)
+
+        test_db.commit()
+        return users, voters
+    return _create_voters
+
 def test_cast_vote(client, test_db):
     # Step 1: Create an election
     create_response = client.post(
@@ -444,3 +468,27 @@ def test_voter_details_not_found(test_db, client):
     test_db.rollback()
     gc.collect()
 
+def test_inactive_voters_present(test_db, create_test_voters, client):
+    # Arrange: Create users and voters
+    users_data = [
+        {"id": 1, "name": "John Doe", "email": "john.doe@example.com", "role": "voter"},
+        {"id": 2, "name": "Jane Smith", "email": "jane.smith@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": False},
+        {"user_id": 2, "has_voted": False},
+    ]
+    create_test_voters(users_data, voters_data)
+
+    # Act: Call the endpoint
+    response = client.get("/voters/inactive/")
+
+    # Assert: Verify the inactive voters
+    assert response.status_code == 200
+    assert response.json() == [
+        {"voter_id": 1, "user_id": 1},
+        {"voter_id": 2, "user_id": 2},
+    ]
+
+    test_db.rollback()
+    gc.collect()
