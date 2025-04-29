@@ -492,3 +492,14 @@ def test_inactive_voters_present(test_db, create_test_voters, client):
 
     test_db.rollback()
     gc.collect()
+
+def test_no_voters_in_database(test_db, client):
+    # Act: Call the endpoint when there are no voters
+    response = client.get("/voters/inactive/")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == []
+
+    test_db.rollback()
+    gc.collect()
