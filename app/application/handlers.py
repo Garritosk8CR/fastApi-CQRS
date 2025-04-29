@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -519,6 +519,34 @@ class TopCandidateHandler:
                 "votes": max_votes
             }
         
+class ParticipationByRoleHandler:
+    def handle(self, query: ParticipationByRoleQuery):
+        with SessionLocal() as db:
+            user_repository = UserRepository(db)
+            voter_repository = VoterRepository(db)
+
+            # Fetch voters and their roles
+            voters = voter_repository.get_all_voters()  # Get all voters, no election filter
+            user_roles = user_repository.get_users_by_roles()
+
+            # Prepare participation stats by role
+            participation = {}
+            for role, count in user_roles:
+                role_voters = [voter for voter in voters if voter.user.role == role]
+                total_role_voters = len(role_voters)
+                voted_role_voters = len([voter for voter in role_voters if voter.has_voted])
+
+                participation[role] = {
+                    "total": total_role_voters,
+                    "voted": voted_role_voters,
+                    "percentage": round((voted_role_voters / total_role_voters * 100), 2) if total_role_voters > 0 else 0
+                }
+
+            return {
+                "election_id": query.election_id,  # Placeholder for consistency
+                "participation": participation
+            }
+        
 class CommandBus:
     def __init__(self):
         self.handlers = {}
@@ -565,6 +593,7 @@ query_bus.register_handler(VoterDetailsQuery, VoterDetailsHandler())
 query_bus.register_handler(UserStatisticsQuery, UserStatisticsHandler())
 query_bus.register_handler(ElectionSummaryQuery, ElectionSummaryHandler())
 query_bus.register_handler(TopCandidateQuery, TopCandidateHandler())
+query_bus.register_handler(ParticipationByRoleQuery, ParticipationByRoleHandler())
 
 
 
