@@ -74,3 +74,6 @@ class TopCandidateQuery(BaseModel):
 
 class ParticipationByRoleQuery(BaseModel):
     election_id: int
+
+class InactiveVotersQuery(BaseModel):
+    pass
