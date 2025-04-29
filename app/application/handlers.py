@@ -652,6 +652,7 @@ query_bus.register_handler(ElectionSummaryQuery, ElectionSummaryHandler())
 query_bus.register_handler(TopCandidateQuery, TopCandidateHandler())
 query_bus.register_handler(ParticipationByRoleQuery, ParticipationByRoleHandler())
 query_bus.register_handler(InactiveVotersQuery, InactiveVotersHandler())
+query_bus.register_handler(ResultsBreakdownQuery, ResultsBreakdownHandler())
 
 
 
