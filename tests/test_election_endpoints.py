@@ -434,3 +434,24 @@ def test_top_candidate_election_not_found(test_db):
 
     test_db.rollback()
     gc.collect()
+
+def test_top_candidate_no_votes(test_db, create_test_elections):
+    # Arrange: Create an election with no votes recorded
+    elections_data = [
+        {"id": 2, "name": "Regional Election", "candidates": "D,E,F", "votes": "0,0,0"}
+    ]
+    create_test_elections(elections_data)
+
+    # Act: Call the endpoint
+    response = client.get("/elections/2/top-candidate/")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == {
+        "election_id": 2,
+        "top_candidate": "D",
+        "votes": 0
+    }
+
+    test_db.rollback()
+    gc.collect()
