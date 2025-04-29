@@ -455,3 +455,36 @@ def test_top_candidate_no_votes(test_db, create_test_elections):
 
     test_db.rollback()
     gc.collect()
+
+def test_participation_multiple_roles(test_db, create_test_voters):
+    # Arrange: Create users and voters
+    users_data = [
+        {"id": 1, "name": "Admin User 1", "email": "admin1@example.com", "role": "admin"},
+        {"id": 2, "name": "Admin User 2", "email": "admin2@example.com", "role": "admin"},
+        {"id": 3, "name": "Voter User 1", "email": "voter1@example.com", "role": "voter"},
+        {"id": 4, "name": "Voter User 2", "email": "voter2@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": False},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+    ]
+    create_test_voters(users_data, voters_data)
+
+    # Act: Call the endpoint
+    response = client.get("/elections/1/participation-by-role/")
+
+    # Assert: Verify the participation by role
+    print(response.json())
+    assert response.status_code == 200
+    # assert response.json() == {
+    #     "election_id": 1,
+    #     "participation": {
+    #         "admin": {"total": 2, "voted": 1, "percentage": 50.0},
+    #         "voter": {"total": 2, "voted": 2, "percentage": 100.0}
+    #     }
+    # }
+
+    test_db.rollback()
+    gc.collect()

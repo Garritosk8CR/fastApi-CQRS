@@ -1,4 +1,5 @@
 from datetime import timedelta
+import traceback
 
 from fastapi import HTTPException
 from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
@@ -528,19 +529,28 @@ class ParticipationByRoleHandler:
             # Fetch voters and their roles
             voters = voter_repository.get_all_voters()  # Get all voters, no election filter
             user_roles = user_repository.get_users_by_roles()
-
+            print(f"User roles: {user_roles}")
+            print(f"Voters: {voters}")
             # Prepare participation stats by role
             participation = {}
             for role, count in user_roles:
-                role_voters = [voter for voter in voters if voter.user.role == role]
-                total_role_voters = len(role_voters)
-                voted_role_voters = len([voter for voter in role_voters if voter.has_voted])
+                print(f"Processing role: {role}")
+                try:
+                    print(f"Voter objects: {voters} - Role: {role}")
+                    role_voters = [voter for voter in voters if voter[0].role == role]
+                    total_role_voters = len(role_voters)
+                    voted_role_voters = len([voter for voter in role_voters if voter[1].has_voted])
 
-                participation[role] = {
-                    "total": total_role_voters,
-                    "voted": voted_role_voters,
-                    "percentage": round((voted_role_voters / total_role_voters * 100), 2) if total_role_voters > 0 else 0
-                }
+                    print(f"Role: {role}, Total voters: {total_role_voters}, Voted voters: {voted_role_voters}")
+
+                    participation[role] = {
+                        "total": total_role_voters,
+                        "voted": voted_role_voters,
+                        "percentage": round((voted_role_voters / total_role_voters * 100), 2) if total_role_voters > 0 else 0
+                    }
+                except Exception as e:
+                    print(f"Error processing role {role}: {e}")
+                    
 
             return {
                 "election_id": query.election_id,  # Placeholder for consistency
