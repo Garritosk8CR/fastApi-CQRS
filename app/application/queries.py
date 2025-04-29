@@ -77,3 +77,6 @@ class ParticipationByRoleQuery(BaseModel):
 
 class InactiveVotersQuery(BaseModel):
     pass
+
+class ResultsBreakdownQuery(BaseModel):
+    election_id: int
