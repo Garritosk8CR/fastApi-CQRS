@@ -503,3 +503,25 @@ def test_no_voters_in_database(test_db, client):
 
     test_db.rollback()
     gc.collect()
+
+def test_all_voters_active(test_db, create_test_voters, client):
+    # Arrange: Create users and voters who have all voted
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+    ]
+    create_test_voters(users_data, voters_data)
+
+    # Act: Call the endpoint
+    response = client.get("/voters/inactive/")
+
+    # Assert: Verify the response
+    assert response.status_code == 200
+    assert response.json() == []
+
+    test_db.rollback()
+    gc.collect()
