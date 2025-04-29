@@ -557,6 +557,23 @@ class ParticipationByRoleHandler:
                 "participation": participation
             }
         
+class InactiveVotersHandler:
+    def handle(self):
+        with SessionLocal() as db:
+            voter_repository = VoterRepository(db)
+
+            # Fetch inactive voters
+            inactive_voters = voter_repository.get_inactive_voters()
+
+            # Format the result
+            return [
+                {
+                    "voter_id": voter.id,
+                    "user_id": voter.user_id    
+                }
+                for voter in inactive_voters
+            ]
+        
 class CommandBus:
     def __init__(self):
         self.handlers = {}
