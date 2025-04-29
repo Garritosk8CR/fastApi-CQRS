@@ -2,7 +2,7 @@ from datetime import timedelta
 import traceback
 
 from fastapi import HTTPException
-from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -573,6 +573,36 @@ class InactiveVotersHandler:
                 }
                 for voter in inactive_voters
             ]
+        
+class ResultsBreakdownHandler:
+    def handle(self, query: ResultsBreakdownQuery):
+        with SessionLocal() as db:
+            election_repository = ElectionRepository(db)
+
+            # Fetch the election data
+            election = election_repository.get_election_by_id(query.election_id)
+            if not election:
+                raise ValueError(f"Election with ID {query.election_id} not found.")
+
+            # Parse candidates and votes
+            candidates = election.candidates.split(",")
+            votes = list(map(int, election.votes.split(",")))
+
+            # Calculate percentage breakdown
+            total_votes = sum(votes)
+            results = [
+                {
+                    "candidate": candidate,
+                    "votes": vote,
+                    "percentage": round((vote / total_votes * 100), 2) if total_votes > 0 else 0
+                }
+                for candidate, vote in zip(candidates, votes)
+            ]
+
+            return {
+                "election_id": election.id,
+                "results": results
+            }
         
 class CommandBus:
     def __init__(self):
