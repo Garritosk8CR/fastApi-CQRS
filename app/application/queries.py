@@ -71,3 +71,6 @@ class ElectionSummaryQuery(BaseModel):
 
 class TopCandidateQuery(BaseModel):
     election_id: int
+
+class ParticipationByRoleQuery(BaseModel):
+    election_id: int
