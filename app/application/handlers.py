@@ -637,6 +637,7 @@ command_bus.register_handler(EndElectionCommand, EndElectionHandler())
 command_bus.register_handler(UserSignUp, RegisterUserHandler())
 command_bus.register_handler(LoginUserCommand, AuthCommandHandler())
 command_bus.register_handler(EditUserCommand, EditUserHandler())
+command_bus.register_handler(CreatePollingStationCommand, CreatePollingStationHandler())
 
 
 # Create and register the query handler
