@@ -80,3 +80,6 @@ class InactiveVotersQuery(BaseModel):
 
 class ResultsBreakdownQuery(BaseModel):
     election_id: int
+
+class GetPollingStationQuery(BaseModel):
+    station_id: int
