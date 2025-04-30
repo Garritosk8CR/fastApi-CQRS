@@ -520,3 +520,30 @@ def test_results_breakdown_election_not_found(test_db):
     # Assert: Verify the response
     assert response.status_code == 404
     assert response.json() == {"detail": "Election with ID 999 not found."}
+
+    test_db.rollback()
+    gc.collect()
+
+def test_results_breakdown_no_votes(test_db, create_test_elections):
+    # Arrange: Create an election where all votes are `0`
+    elections_data = [
+        {"id": 2, "name": "Regional Election", "candidates": "D,E,F", "votes": "0,0,0"}
+    ]
+    create_test_elections(elections_data)
+
+    # Act: Call the endpoint
+    response = client.get("/elections/2/results-breakdown/")
+
+    # Assert: Verify the breakdown
+    assert response.status_code == 200
+    assert response.json() == {
+        "election_id": 2,
+        "results": [
+            {"candidate": "D", "votes": 0, "percentage": 0.0},
+            {"candidate": "E", "votes": 0, "percentage": 0.0},
+            {"candidate": "F", "votes": 0, "percentage": 0.0}
+        ]
+    }
+
+    test_db.rollback()
+    gc.collect()
