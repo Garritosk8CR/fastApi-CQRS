@@ -5,12 +5,13 @@ import traceback
 from fastapi import HTTPException
 from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
+from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, CreatePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election, User
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import Voter
+from app.infrastructure.polling_station_repo import PollingStationRepository
 from app.infrastructure.user_repo import UserRepository
 from app.infrastructure.voter_repo import VoterRepository
 from app.security import create_access_token
@@ -604,6 +605,12 @@ class ResultsBreakdownHandler:
                 "election_id": election.id,
                 "results": results
             }
+        
+class CreatePollingStationHandler:
+    def handle(self, command: CreatePollingStationCommand):
+        with SessionLocal() as db:
+            repository = PollingStationRepository(db)
+        return repository.create_polling_station(command.name, command.location, command.election_id, command.capacity)
         
 class CommandBus:
     def __init__(self):
