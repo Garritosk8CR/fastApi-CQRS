@@ -54,6 +54,17 @@ class Voter(Base):
     # Relationship with User
     user = relationship("User", back_populates="voter")
 
+class PollingStation(Base):
+    __tablename__ = "polling_stations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    location = Column(String, nullable=False)
+    election_id = Column(Integer, ForeignKey("elections.id"), nullable=False)
+    capacity = Column(Integer, nullable=False)
+
+    election = relationship("Election", back_populates="polling_stations")
+
 
 
 
