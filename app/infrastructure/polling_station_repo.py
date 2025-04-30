@@ -31,3 +31,11 @@ class PollingStationRepository:
 
         self.db.commit()
         return polling_station
+    
+    def delete_polling_station(self, station_id: int):
+        polling_station = self.get_polling_station_by_id(station_id)
+        if polling_station:
+            self.db.delete(polling_station)
+            self.db.commit()
+            return True
+        return False
