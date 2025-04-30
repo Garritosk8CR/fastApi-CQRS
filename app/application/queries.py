@@ -83,3 +83,6 @@ class ResultsBreakdownQuery(BaseModel):
 
 class GetPollingStationQuery(BaseModel):
     station_id: int
+
+class GetPollingStationsByElectionQuery(BaseModel):
+    election_id: int
