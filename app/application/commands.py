@@ -54,3 +54,6 @@ class UpdatePollingStationCommand(BaseModel):
     name: str = None
     location: str = None
     capacity: int = None
+
+class DeletePollingStationCommand(BaseModel):
+    station_id: int
