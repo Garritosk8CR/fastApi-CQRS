@@ -13,3 +13,6 @@ class PollingStationRepository:
     
     def get_polling_station_by_id(self, station_id: int):
         return self.db.query(PollingStation).filter(PollingStation.id == station_id).first()
+    
+    def get_polling_stations_by_election(self, election_id: int):
+        return self.db.query(PollingStation).filter(PollingStation.election_id == election_id).all()
