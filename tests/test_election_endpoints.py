@@ -512,3 +512,11 @@ def test_results_breakdown_valid(test_db, create_test_elections):
 
     test_db.rollback()
     gc.collect()
+
+def test_results_breakdown_election_not_found(test_db):
+    # Act: Call the endpoint for a non-existent election
+    response = client.get("/elections/999/results-breakdown/")
+
+    # Assert: Verify the response
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Election with ID 999 not found."}
