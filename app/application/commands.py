@@ -42,3 +42,9 @@ class EditUserCommand(BaseModel):
 class UpdateUserRoleCommand(BaseModel):
     user_id: int
     role: str
+
+class CreatePollingStationCommand(BaseModel):
+    name: str
+    location: str
+    election_id: int
+    capacity: int
