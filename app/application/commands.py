@@ -48,3 +48,9 @@ class CreatePollingStationCommand(BaseModel):
     location: str
     election_id: int
     capacity: int
+
+class UpdatePollingStationCommand(BaseModel):
+    station_id: int
+    name: str = None
+    location: str = None
+    capacity: int = None
