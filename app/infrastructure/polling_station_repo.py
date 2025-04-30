@@ -10,3 +10,6 @@ class PollingStationRepository:
         self.db.commit()
         self.db.refresh(polling_station)
         return polling_station
+    
+    def get_polling_station_by_id(self, station_id: int):
+        return self.db.query(PollingStation).filter(PollingStation.id == station_id).first()
