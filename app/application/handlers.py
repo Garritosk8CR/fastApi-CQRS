@@ -3,7 +3,7 @@ import math
 import traceback
 
 from fastapi import HTTPException
-from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetPollingStationQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, CreatePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -620,6 +620,12 @@ class GetPollingStationHandler:
             if not station:
                 raise ValueError(f"Polling station with ID {query.station_id} not found.")
             return station
+        
+class GetPollingStationsByElectionHandler:
+    def handle(self, query: GetPollingStationsByElectionQuery):
+        with SessionLocal() as db:
+            repository = PollingStationRepository(db)
+            return repository.get_polling_stations_by_election(query.election_id)
         
 class CommandBus:
     def __init__(self):
