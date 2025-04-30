@@ -5,7 +5,7 @@ import traceback
 from fastapi import HTTPException
 from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, CreatePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
+from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, CreatePollingStationCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election, User
@@ -635,6 +635,15 @@ class UpdatePollingStationHandler:
             if not station:
                 raise ValueError(f"Polling station with ID {command.station_id} not found.")
             return station
+        
+class DeletePollingStationHandler:
+    def handle(self, command: DeletePollingStationCommand):
+        with SessionLocal() as db:
+            repository = PollingStationRepository(db)
+            success = repository.delete_polling_station(command.station_id)
+            if not success:
+                raise ValueError(f"Polling station with ID {command.station_id} not found.")
+            return {"message": "Polling station deleted successfully"}
         
 class CommandBus:
     def __init__(self):
