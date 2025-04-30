@@ -488,3 +488,27 @@ def test_participation_multiple_roles(test_db, create_test_voters):
 
     test_db.rollback()
     gc.collect()
+
+def test_results_breakdown_valid(test_db, create_test_elections):
+    # Arrange: Create an election with candidates and votes
+    elections_data = [
+        {"id": 1, "name": "Presidential Election", "candidates": "A,B,C", "votes": "100,200,150"}
+    ]
+    create_test_elections(elections_data)
+
+    # Act: Call the endpoint
+    response = client.get("/elections/1/results-breakdown/")
+
+    # Assert: Verify the breakdown
+    assert response.status_code == 200
+    assert response.json() == {
+        "election_id": 1,
+        "results": [
+            {"candidate": "A", "votes": 100, "percentage": 22},
+            {"candidate": "B", "votes": 200, "percentage": 44},
+            {"candidate": "C", "votes": 150, "percentage": 33}
+        ]
+    }
+
+    test_db.rollback()
+    gc.collect()

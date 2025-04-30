@@ -1,4 +1,5 @@
 from datetime import timedelta
+import math
 import traceback
 
 from fastapi import HTTPException
@@ -594,7 +595,7 @@ class ResultsBreakdownHandler:
                 {
                     "candidate": candidate,
                     "votes": vote,
-                    "percentage": round((vote / total_votes * 100), 2) if total_votes > 0 else 0
+                    "percentage": math.floor(vote / total_votes * 100) if total_votes > 0 else 0
                 }
                 for candidate, vote in zip(candidates, votes)
             ]
