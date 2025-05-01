@@ -1,0 +1,20 @@
+from fastapi import APIRouter, HTTPException, Depends, Query, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+from app.application.commands import CreatePollingStationCommand
+from app.application.query_bus import query_bus
+from app.infrastructure.database import get_db
+from app.security import get_current_complete_user, get_current_user
+from fastapi import Form
+from app.application.handlers import command_bus
+
+router = APIRouter(prefix="/polling-stations", tags=["Polling Stations"])
+templates = Jinja2Templates(directory="app/templates")
+
+@router.post("/")
+def create_polling_station(query: CreatePollingStationCommand):
+    try:
+        return command_bus.handle(query)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
