@@ -78,11 +78,15 @@ def test_create_polling_station(test_db, create_test_elections, client):
     test_db.rollback()
     gc.collect()
 
-def test_get_polling_station_by_id(test_db, create_test_polling_stations, client):
+def test_get_polling_station_by_id(test_db, create_test_polling_stations, client, create_test_elections):
+
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    create_test_elections(elections_data)
     # Arrange: Create polling stations
     stations_data = [
         {"id": 1, "name": "North Polling", "location": "School", "election_id": 1, "capacity": 300}
     ]
+
     create_test_polling_stations(stations_data)
 
     # Act: Call the endpoint

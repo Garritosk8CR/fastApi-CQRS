@@ -24,14 +24,14 @@ def create_polling_station(query: CreatePollingStationCommand):
 def get_polling_station(station_id: int):
     query = GetPollingStationQuery(station_id=station_id)
     try:
-        return query_bus.get_polling_station(query)
+        return query_bus.handle(query)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     
 @router.get("/elections/{election_id}/polling-stations")
 def get_polling_stations_by_election(election_id: int):
     query = GetPollingStationsByElectionQuery(election_id=election_id)
-    return query_bus.get_polling_stations_by_election(query)
+    return query_bus.handle(query)
 
 @router.patch("/{station_id}")
 def update_polling_station(station_id: int, query: UpdatePollingStationCommand):
