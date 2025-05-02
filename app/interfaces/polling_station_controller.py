@@ -36,7 +36,7 @@ def get_polling_stations_by_election(election_id: int):
 @router.patch("/{station_id}")
 def update_polling_station(station_id: int, query: UpdatePollingStationCommand):
     try:
-        return command_bus.update_polling_station(query)
+        return command_bus.handle(query)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     
@@ -44,6 +44,6 @@ def update_polling_station(station_id: int, query: UpdatePollingStationCommand):
 def delete_polling_station(station_id: int):
     query = DeletePollingStationCommand(station_id=station_id)
     try:
-        return command_bus.delete_polling_station(query)
+        return command_bus.handle(query)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
