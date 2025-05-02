@@ -17,6 +17,8 @@ class Election(Base):
     votes = Column(String)
     status = Column(Enum(ElectionStatus), default=ElectionStatus.ACTIVE)  # Comma-separated votes count (e.g., "0,2,5")
 
+    polling_stations = relationship("PollingStation", back_populates="election")
+
     def increment_vote(self, candidate_name: str):
         candidate_list = self.candidates.split(",")
         vote_counts = list(map(int, self.votes.split(",")))
@@ -64,6 +66,7 @@ class PollingStation(Base):
     capacity = Column(Integer, nullable=False)
 
     election = relationship("Election", back_populates="polling_stations")
+    
 
 
 
