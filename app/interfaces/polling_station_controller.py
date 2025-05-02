@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CreatePollingStationCommand
+from app.application.queries import GetPollingStationQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.security import get_current_complete_user, get_current_user
@@ -18,3 +19,11 @@ def create_polling_station(query: CreatePollingStationCommand):
         return command_bus.handle(query)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/polling-stations/{station_id}")
+def get_polling_station(station_id: int):
+    query = GetPollingStationQuery(station_id=station_id)
+    try:
+        return query_bus.get_polling_station(query)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
