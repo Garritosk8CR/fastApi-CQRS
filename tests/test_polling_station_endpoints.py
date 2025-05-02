@@ -53,3 +53,23 @@ def create_test_polling_stations(test_db):
         test_db.commit()
         return stations
     return _create_stations
+
+def test_create_polling_station(test_db, create_test_elections, client):
+    # Arrange: Create an election before adding polling stations
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    create_test_elections(elections_data)
+
+    request_data = {
+        "name": "Central Voting Station",
+        "location": "City Hall",
+        "election_id": 1,
+        "capacity": 500
+    }
+
+    # Act: Call the endpoint
+    response = client.post("/polling-stations", json=request_data)
+
+    # Assert: Verify creation
+    assert response.status_code == 200
+    assert response.json()["name"] == "Central Voting Station"
+    assert response.json()["location"] == "City Hall"
