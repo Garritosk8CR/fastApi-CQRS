@@ -74,3 +74,20 @@ def test_create_polling_station(test_db, create_test_elections, client):
     assert response.status_code == 200
     assert response.json()["name"] == "Central Voting Station"
     assert response.json()["location"] == "City Hall"
+    
+    test_db.rollback()
+    gc.collect()
+
+def test_get_polling_station_by_id(test_db, create_test_polling_stations, client):
+    # Arrange: Create polling stations
+    stations_data = [
+        {"id": 1, "name": "North Polling", "location": "School", "election_id": 1, "capacity": 300}
+    ]
+    create_test_polling_stations(stations_data)
+
+    # Act: Call the endpoint
+    response = client.get("/polling-stations/1")
+
+    # Assert: Verify retrieval
+    assert response.status_code == 200
+    assert response.json()["name"] == "North Polling"
