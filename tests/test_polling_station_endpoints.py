@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.infrastructure.models import Election, User, Voter
+from app.infrastructure.models import Election, PollingStation, User, Voter
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import Base, SessionLocal, engine
 import gc
@@ -41,3 +41,15 @@ def create_test_elections(test_db):
         test_db.commit()
         return elections
     return _create_elections
+
+@pytest.fixture
+def create_test_polling_stations(test_db):
+    def _create_stations(stations_data):
+        stations = []
+        for station_data in stations_data:
+            station = PollingStation(**station_data)
+            test_db.add(station)
+            stations.append(station)
+        test_db.commit()
+        return stations
+    return _create_stations
