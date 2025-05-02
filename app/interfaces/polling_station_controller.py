@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.application.commands import CreatePollingStationCommand, UpdatePollingStationCommand
+from app.application.commands import CreatePollingStationCommand, DeletePollingStationCommand, UpdatePollingStationCommand
 from app.application.queries import GetPollingStationQuery, GetPollingStationsByElectionQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
@@ -37,5 +37,13 @@ def get_polling_stations_by_election(election_id: int):
 def update_polling_station(station_id: int, query: UpdatePollingStationCommand):
     try:
         return command_bus.update_polling_station(query)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    
+@router.delete("/{station_id}")
+def delete_polling_station(station_id: int):
+    query = DeletePollingStationCommand(station_id=station_id)
+    try:
+        return command_bus.delete_polling_station(query)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
