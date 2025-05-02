@@ -67,9 +67,10 @@ def test_create_polling_station(test_db, create_test_elections, client):
     }
 
     # Act: Call the endpoint
-    response = client.post("/polling-stations", json=request_data)
+    response = client.post("/polling-stations/add", json=request_data)
 
     # Assert: Verify creation
+    print(f"Polling station response: {response.json()}")
     assert response.status_code == 200
     assert response.json()["name"] == "Central Voting Station"
     assert response.json()["location"] == "City Hall"

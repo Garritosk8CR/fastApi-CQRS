@@ -13,7 +13,7 @@ from app.application.handlers import command_bus
 router = APIRouter(prefix="/polling-stations", tags=["Polling Stations"])
 templates = Jinja2Templates(directory="app/templates")
 
-@router.post("/")
+@router.post("/add")
 def create_polling_station(query: CreatePollingStationCommand):
     try:
         return command_bus.handle(query)
