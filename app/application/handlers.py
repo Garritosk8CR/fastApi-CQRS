@@ -713,6 +713,7 @@ query_bus.register_handler(InactiveVotersQuery, InactiveVotersHandler())
 query_bus.register_handler(ResultsBreakdownQuery, ResultsBreakdownHandler())
 query_bus.register_handler(GetPollingStationQuery, GetPollingStationHandler())
 query_bus.register_handler(GetPollingStationsByElectionQuery, GetPollingStationsByElectionHandler())
+query_bus.register_handler(GetAuditLogsQuery, GetAuditLogsHandler())
 
 
 
