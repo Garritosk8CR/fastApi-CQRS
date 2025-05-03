@@ -86,3 +86,6 @@ class GetPollingStationQuery(BaseModel):
 
 class GetPollingStationsByElectionQuery(BaseModel):
     election_id: int
+
+class GetAuditLogsQuery(BaseModel):
+    election_id: int
