@@ -5,8 +5,9 @@ import traceback
 from fastapi import HTTPException
 from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateElectionCommand, CreatePollingStationCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
+from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateAuditLogCommand, CreateElectionCommand, CreatePollingStationCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from app.infrastructure.audit_log_repo import AuditLogRepository
 from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election, User
 from app.infrastructure.database import SessionLocal
@@ -644,6 +645,12 @@ class DeletePollingStationHandler:
             if not success:
                 raise ValueError(f"Polling station with ID {command.station_id} not found.")
             return {"message": "Polling station deleted successfully"}
+        
+class CreateAuditLogHandler:
+    def handle(self, query: CreateAuditLogCommand):
+        with SessionLocal() as db:
+            repository = AuditLogRepository(db)
+        return repository.create_audit_log(query.election_id, query.performed_by, query.action, query.details)
         
 class CommandBus:
     def __init__(self):
