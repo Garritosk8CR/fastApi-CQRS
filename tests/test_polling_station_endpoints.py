@@ -113,3 +113,34 @@ def test_get_polling_stations_by_election(test_db, create_test_polling_stations,
     # Assert: Verify correct filtering
     assert response.status_code == 200
     assert len(response.json()) == 2
+
+    test_db.rollback()
+    gc.collect()
+
+def test_update_polling_station(test_db, create_test_polling_stations, create_test_elections, client):
+
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    create_test_elections(elections_data)
+    # Arrange: Create a polling station
+    stations_data = [
+        {"id": 1, "name": "East Polling", "location": "Library", "election_id": 1, "capacity": 250}
+    ]
+    create_test_polling_stations(stations_data)
+
+    update_data = {
+        "station_id": 1,
+        "name": "Updated Polling Station",
+        "location": "Conference Hall",
+        "capacity": 600
+    }
+
+    # Act: Call the endpoint
+    response = client.patch("/polling-stations/1", json=update_data)
+
+    # Assert: Verify update
+    assert response.status_code == 200
+    assert response.json()["name"] == "Updated Polling Station"
+    assert response.json()["capacity"] == 600
+
+    test_db.rollback()
+    gc.collect()
