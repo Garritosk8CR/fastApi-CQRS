@@ -3,7 +3,7 @@ import math
 import traceback
 
 from fastapi import HTTPException
-from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateAuditLogCommand, CreateElectionCommand, CreatePollingStationCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -650,7 +650,13 @@ class CreateAuditLogHandler:
     def handle(self, query: CreateAuditLogCommand):
         with SessionLocal() as db:
             repository = AuditLogRepository(db)
-        return repository.create_audit_log(query.election_id, query.performed_by, query.action, query.details)
+            return repository.create_audit_log(query.election_id, query.performed_by, query.action, query.details)
+    
+class GetAuditLogsHandler:
+    def handle(self, query: GetAuditLogsQuery):
+        with SessionLocal() as db:
+            repository = AuditLogRepository(db)
+            return repository.get_audit_logs_by_election(query.election_id)
         
 class CommandBus:
     def __init__(self):
