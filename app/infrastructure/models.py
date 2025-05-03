@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import List
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table, Enum
+from sqlalchemy import Column, DateTime, Integer, String, Boolean, ForeignKey, Table, Enum
 from sqlalchemy.orm import relationship
 from app.infrastructure.database import Base
 import enum
@@ -18,6 +19,7 @@ class Election(Base):
     status = Column(Enum(ElectionStatus), default=ElectionStatus.ACTIVE)  # Comma-separated votes count (e.g., "0,2,5")
 
     polling_stations = relationship("PollingStation", back_populates="election")
+    audit_logs = relationship("AuditLog", back_populates="election")
 
     def increment_vote(self, candidate_name: str):
         candidate_list = self.candidates.split(",")
@@ -46,6 +48,7 @@ class User(Base):
     
     # Relationship with Voter
     voter = relationship("Voter", uselist=False, back_populates="user")
+    audit_logs = relationship("AuditLog", back_populates="user")
 
 class Voter(Base):
     __tablename__ = "voters"
@@ -66,6 +69,19 @@ class PollingStation(Base):
     capacity = Column(Integer, nullable=False)
 
     election = relationship("Election", back_populates="polling_stations")
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    election_id = Column(Integer, ForeignKey("elections.id"), nullable=False)
+    performed_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    action = Column(String, nullable=False)
+    details = Column(String, nullable=True)
+    timestamp = Column(DateTime, default=datetime.now(datetime.timezone.utc), nullable=False)
+
+    election = relationship("Election", back_populates="audit_logs")
+    user = relationship("User")
     
 
 
