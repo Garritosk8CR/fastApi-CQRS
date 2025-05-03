@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import Column, DateTime, Integer, String, Boolean, ForeignKey, Table, Enum
@@ -78,7 +78,7 @@ class AuditLog(Base):
     performed_by = Column(Integer, ForeignKey("users.id"), nullable=False)
     action = Column(String, nullable=False)
     details = Column(String, nullable=True)
-    timestamp = Column(DateTime, default=datetime.now(datetime.timezone.utc), nullable=False)
+    timestamp = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
 
     election = relationship("Election", back_populates="audit_logs")
     user = relationship("User")
