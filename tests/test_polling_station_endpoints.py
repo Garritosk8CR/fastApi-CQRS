@@ -143,3 +143,20 @@ def test_update_polling_station(test_db, create_test_polling_stations, create_te
 
     test_db.rollback()
     gc.collect()
+
+def test_delete_polling_station(test_db, create_test_polling_stations, create_test_elections, client):
+
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    create_test_elections(elections_data)
+    # Arrange: Create a polling station
+    stations_data = [
+        {"id": 1, "name": "West Polling", "location": "Gym", "election_id": 1, "capacity": 200}
+    ]
+    create_test_polling_stations(stations_data)
+
+    # Act: Call the endpoint
+    response = client.delete("/polling-stations/1")
+
+    # Assert: Verify deletion
+    assert response.status_code == 200
+    assert response.json()["message"] == "Polling station deleted successfully"
