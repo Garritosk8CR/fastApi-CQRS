@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import List
+from typing import List, Optional
 
 class RegisterVoterCommand(BaseModel):
     voter_id: int
@@ -57,3 +57,9 @@ class UpdatePollingStationCommand(BaseModel):
 
 class DeletePollingStationCommand(BaseModel):
     station_id: int
+
+class CreateAuditLogCommand(BaseModel):
+    election_id: int
+    performed_by: int
+    action: str
+    details: Optional[str] = None
