@@ -83,7 +83,13 @@ class AuditLog(Base):
     election = relationship("Election", back_populates="audit_logs")
     user = relationship("User")
     
+class VoterData(BaseModel):
+    name: str
+    email: str
+    role: str
 
+class VoterUploadQuery(BaseModel):
+    voters: List[VoterData]
 
 
 
