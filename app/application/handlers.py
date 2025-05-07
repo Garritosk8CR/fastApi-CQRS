@@ -9,7 +9,7 @@ from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, Cre
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.audit_log_repo import AuditLogRepository
 from app.infrastructure.election_repo import ElectionRepository
-from app.infrastructure.models import Election, User
+from app.infrastructure.models import Election, User, VoterUploadQuery
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import Voter
 from app.infrastructure.polling_station_repo import PollingStationRepository
@@ -658,6 +658,12 @@ class GetAuditLogsHandler:
             repository = AuditLogRepository(db)
             return repository.get_audit_logs_by_election(query.election_id)
         
+class BulkVoterUploadHandler:
+    def handle(self, query: VoterUploadQuery):
+        with SessionLocal() as db:
+            repository = VoterRepository(db)
+        return repository.bulk_insert_voters(query.voters)
+        
 class CommandBus:
     def __init__(self):
         self.handlers = {}
@@ -687,6 +693,7 @@ command_bus.register_handler(CreatePollingStationCommand, CreatePollingStationHa
 command_bus.register_handler(UpdatePollingStationCommand, UpdatePollingStationHandler())
 command_bus.register_handler(DeletePollingStationCommand, DeletePollingStationHandler())
 command_bus.register_handler(CreateAuditLogCommand, CreateAuditLogHandler())
+command_bus.register_handler(VoterUploadQuery, BulkVoterUploadHandler())
 
 
 # Create and register the query handler
