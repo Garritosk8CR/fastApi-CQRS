@@ -1,3 +1,4 @@
+import datetime
 import pytest
 from fastapi.testclient import TestClient
 from app.infrastructure.models import AuditLog, Election, PollingStation, User, Voter
@@ -86,3 +87,26 @@ def test_create_audit_log(test_db, create_test_elections, create_test_users, cli
     assert response.status_code == 200
     assert response.json()["action"] == "Added Candidate"
     assert response.json()["details"] == "Candidate John Doe added"
+
+    test_db.rollback()
+    gc.collect()
+
+def test_get_audit_logs_by_election(test_db, create_test_audit_logs, client, create_test_elections, create_test_users):
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    users_data = [{"id": 1, "name": "Admin User", "email": "admin@example.com"}, {"id": 2, "name": "Voter User 1", "email": "voter1@example.com"}]
+    create_test_elections(elections_data)
+    create_test_users(users_data)
+    # Arrange: Create audit logs
+    logs_data = [
+        {"id": 1, "election_id": 1, "performed_by": 1, "action": "Added Candidate", "details": "Candidate A added", "timestamp": datetime.datetime.now(datetime.timezone.utc)},
+        {"id": 2, "election_id": 1, "performed_by": 2, "action": "Updated Voter Status", "details": "Marked voter as inactive", "timestamp": datetime.datetime.now(datetime.timezone.utc)},
+    ]
+    create_test_audit_logs(logs_data)
+
+    # Act: Call the endpoint
+    response = client.get("audit-logs/elections/1/audit-logs")
+
+    # Assert: Verify log retrieval
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+    assert response.json()[0]["action"] == "Added Candidate"
