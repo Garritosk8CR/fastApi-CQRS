@@ -3,6 +3,7 @@ from app.application.query_bus import query_bus
 from app.application.commands import RegisterVoterCommand, CastVoteCommand
 from app.application.handlers import HasVotedHandler, command_bus
 from app.application.queries import HasVotedQuery, InactiveVotersQuery, VoterDetailsQuery, VotingStatusQuery
+from app.infrastructure.models import VoterUploadQuery
 
 
 router = APIRouter()
@@ -70,4 +71,11 @@ def inactive_voters():
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail="An unexpected error occurred.")
+    
+@router.post("/bulk-upload")
+def bulk_voter_upload(query: VoterUploadQuery):
+    try:
+        return command_bus.handle(query)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
