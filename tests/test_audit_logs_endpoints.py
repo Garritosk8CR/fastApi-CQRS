@@ -110,3 +110,17 @@ def test_get_audit_logs_by_election(test_db, create_test_audit_logs, client, cre
     assert response.status_code == 200
     assert len(response.json()) == 2
     assert response.json()[0]["action"] == "Added Candidate"
+
+    test_db.rollback()
+    gc.collect()
+
+def test_get_audit_logs_non_existent_election(test_db, client):
+    # Act: Call the endpoint for an election without logs
+    response = client.get("audit-logs/elections/999/audit-logs")
+
+    # Assert: Verify response
+    assert response.status_code == 200
+    assert response.json() == []
+
+    test_db.rollback()
+    gc.collect()
