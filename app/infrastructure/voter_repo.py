@@ -1,6 +1,7 @@
+from typing import List
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from app.infrastructure.models import User, Voter
+from app.infrastructure.models import User, Voter, VoterData
 
 class VoterRepository:
     def __init__(self, db: Session):
@@ -60,3 +61,9 @@ class VoterRepository:
     def get_inactive_voters(self):
         """Retrieve all voters who have not participated in any elections."""
         return self.db.query(Voter).filter(Voter.has_voted == False).all()
+
+    def bulk_insert_voters(self, voters: List[VoterData]):
+        new_voters = [User(name=v.name, email=v.email, role=v.role) for v in voters]
+        self.db.bulk_save_objects(new_voters)
+        self.db.commit()
+        return new_voters
