@@ -89,3 +89,7 @@ class GetPollingStationsByElectionQuery(BaseModel):
 
 class GetAuditLogsQuery(BaseModel):
     election_id: int
+
+class ExportElectionResultsQuery(BaseModel):
+    election_id: int
+    format: str = "json"
