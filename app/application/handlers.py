@@ -6,7 +6,7 @@ import traceback
 
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
-from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateAuditLogCommand, CreateElectionCommand, CreatePollingStationCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -668,28 +668,28 @@ class BulkVoterUploadHandler:
         return repository.bulk_insert_voters(query.voters)
     
 class ExportElectionResultsHandler:
-    def handle(self, election_id: int, format: str):
+    def handle(self, query: ExportElectionResultsQuery):
         with SessionLocal() as db:
             repository = ElectionRepository(db)
-        """Export election results in CSV or JSON format."""
-        results_data = repository.get_election_results(election_id)
-        if not results_data:
-            raise ValueError(f"Election with ID {election_id} not found.")
+            """Export election results in CSV or JSON format."""
+            results_data = repository.get_election_results(query.election_id)
+            if not results_data:
+                raise ValueError(f"Election with ID {query.election_id} not found.")
 
-        if format == "json":
-            return results_data
+            if format == "json":
+                return results_data
 
-        elif format == "csv":
-            output = io.StringIO()
-            writer = csv.writer(output)
-            writer.writerow(["Candidate", "Votes", "Percentage"])
-            for result in results_data["results"]:
-                writer.writerow([result["candidate"], result["votes"], result["percentage"]])
-            output.seek(0)
-            return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=results.csv"})
+            elif format == "csv":
+                output = io.StringIO()
+                writer = csv.writer(output)
+                writer.writerow(["Candidate", "Votes", "Percentage"])
+                for result in results_data["results"]:
+                    writer.writerow([result["candidate"], result["votes"], result["percentage"]])
+                output.seek(0)
+                return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=results.csv"})
 
-        else:
-            raise ValueError("Invalid format. Supported formats: csv, json")
+            else:
+                raise ValueError("Invalid format. Supported formats: csv, json")
         
 class CommandBus:
     def __init__(self):
@@ -748,6 +748,7 @@ query_bus.register_handler(ResultsBreakdownQuery, ResultsBreakdownHandler())
 query_bus.register_handler(GetPollingStationQuery, GetPollingStationHandler())
 query_bus.register_handler(GetPollingStationsByElectionQuery, GetPollingStationsByElectionHandler())
 query_bus.register_handler(GetAuditLogsQuery, GetAuditLogsHandler())
+query_bus.register_handler(ExportElectionResultsQuery, ExportElectionResultsHandler())
 
 
 
