@@ -140,7 +140,7 @@ def results_breakdown(election_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail="An unexpected error occurred.")
     
-@router.get("/{election_id}/export-results")
+@router.get("/{election_id}/export-results/")
 def export_results(election_id: int, format: str = "json"):
     query = ExportElectionResultsQuery(election_id=election_id, format=format)
     try:

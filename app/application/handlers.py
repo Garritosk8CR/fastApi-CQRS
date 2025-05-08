@@ -673,13 +673,14 @@ class ExportElectionResultsHandler:
             repository = ElectionRepository(db)
             """Export election results in CSV or JSON format."""
             results_data = repository.get_election_results(query.election_id)
+            print(f"Exporting election results for election ID {query.election_id} in {query.format} format.")
             if not results_data:
                 raise ValueError(f"Election with ID {query.election_id} not found.")
 
-            if format == "json":
+            if query.format == "json":
                 return results_data
 
-            elif format == "csv":
+            elif query.format == "csv":
                 output = io.StringIO()
                 writer = csv.writer(output)
                 writer.writerow(["Candidate", "Votes", "Percentage"])

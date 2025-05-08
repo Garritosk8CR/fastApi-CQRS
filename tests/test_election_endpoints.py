@@ -547,3 +547,28 @@ def test_results_breakdown_no_votes(test_db, create_test_elections):
 
     test_db.rollback()
     gc.collect()
+
+def test_export_results_json(test_db, create_test_elections):
+    # Arrange: Create an election with candidates and votes
+    elections_data = [
+        {"id": 1, "name": "Presidential Election", "candidates": "A,B,C", "votes": "100,200,150"}
+    ]
+    create_test_elections(elections_data)
+
+    # Act: Call the endpoint for JSON export
+    response = client.get("/elections/1/export-results/?format=json")
+
+    # Assert: Verify JSON response
+    print(response.json())
+    assert response.status_code == 200
+    assert response.json() == {
+        "election_id": 1,
+        "results": [
+            {"candidate": "A", "votes": 100, "percentage": 22},
+            {"candidate": "B", "votes": 200, "percentage": 44},
+            {"candidate": "C", "votes": 150, "percentage": 33}
+        ]
+    }
+
+    test_db.rollback()
+    gc.collect()
