@@ -90,6 +90,11 @@ def create_test_voters(test_db):
         return users, voters
     return _create_voters
 
+@pytest.fixture
+def get_voter_count(test_db):
+    """Helper fixture to count voters in the database."""
+    return lambda: test_db.query(User).count()
+
 def test_cast_vote(client, test_db):
     # Step 1: Create an election
     create_response = client.post(
