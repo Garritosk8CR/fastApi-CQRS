@@ -530,3 +530,24 @@ def test_all_voters_active(test_db, create_test_voters, client):
 
     test_db.rollback()
     gc.collect()
+
+def test_bulk_voter_upload_success(test_db, get_voter_count, client):
+    # Arrange: Define the voter upload request
+    request_data = {
+        "voters": [
+            {"name": "Alice Johnson", "email": "alice@example.com", "role": "voter"},
+            {"name": "Bob Smith", "email": "bob@example.com", "role": "admin"}
+        ]
+    }
+    initial_voter_count = get_voter_count()
+
+    # Act: Call the endpoint
+    response = client.post("/voters/bulk-upload", json=request_data)
+
+    # Assert: Verify bulk insertion success
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+    assert get_voter_count() == initial_voter_count + 2  # Ensure voters were added
+
+    test_db.rollback()
+    gc.collect()
