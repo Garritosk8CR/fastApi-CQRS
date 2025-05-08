@@ -551,3 +551,17 @@ def test_bulk_voter_upload_success(test_db, get_voter_count, client):
 
     test_db.rollback()
     gc.collect()
+
+def test_bulk_voter_upload_empty_request(test_db, client):
+    # Arrange: Define an empty voter list
+    request_data = {"voters": []}
+
+    # Act: Call the endpoint
+    response = client.post("/voters/bulk-upload", json=request_data)
+
+    # Assert: Verify response handling
+    assert response.status_code == 200
+    assert response.json() == []
+
+    test_db.rollback()
+    gc.collect()
