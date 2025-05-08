@@ -565,3 +565,18 @@ def test_bulk_voter_upload_empty_request(test_db, client):
 
     test_db.rollback()
     gc.collect()
+
+def test_bulk_voter_upload_invalid_data(test_db, client):
+    # Arrange: Define a request with invalid data format (missing required fields)
+    request_data = {
+        "voters": [
+            {"name": "Charlie Brown"},  # Missing email and role
+            {"email": "dana@example.com", "role": "admin"}  # Missing name
+        ]
+    }
+
+    # Act: Call the endpoint
+    response = client.post("/voters/bulk-upload", json=request_data)
+
+    # Assert: Verify response validation
+    assert response.status_code == 422  # Unprocessable entity due to validation errors
