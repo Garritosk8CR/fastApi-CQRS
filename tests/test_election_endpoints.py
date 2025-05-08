@@ -594,3 +594,14 @@ def test_export_results_csv(test_db, create_test_elections):
 
     test_db.rollback()
     gc.collect()
+
+def test_export_results_election_not_found(test_db):
+    # Act: Call the endpoint for a non-existent election
+    response = client.get("/elections/999/export-results?format=json")
+
+    # Assert: Verify response handling
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Election with ID 999 not found."
+
+    test_db.rollback()
+    gc.collect()
