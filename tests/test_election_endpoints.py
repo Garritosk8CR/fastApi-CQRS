@@ -605,3 +605,19 @@ def test_export_results_election_not_found(test_db):
 
     test_db.rollback()
     gc.collect()
+
+def test_export_results_invalid_format(test_db, create_test_elections):
+    # Act: Call the endpoint with an unsupported format
+    elections_data = [
+        {"id": 1, "name": "Regional Election", "candidates": "X,Y,Z", "votes": "50,100,200"}
+    ]
+    create_test_elections(elections_data)
+
+    response = client.get("/elections/1/export-results?format=xml")
+
+    # Assert: Verify response rejection
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Invalid format. Supported formats: csv, json"
+
+    test_db.rollback()
+    gc.collect()
