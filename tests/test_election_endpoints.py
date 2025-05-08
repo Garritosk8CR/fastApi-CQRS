@@ -572,3 +572,25 @@ def test_export_results_json(test_db, create_test_elections):
 
     test_db.rollback()
     gc.collect()
+
+def test_export_results_csv(test_db, create_test_elections):
+    # Arrange: Create an election with candidates and votes
+    elections_data = [
+        {"id": 1, "name": "Regional Election", "candidates": "X,Y,Z", "votes": "50,100,200"}
+    ]
+    create_test_elections(elections_data)
+
+    # Act: Call the endpoint for CSV export
+    response = client.get("/elections/1/export-results?format=csv")
+
+    # Assert: Verify CSV response
+    assert response.status_code == 200
+    assert response.headers["Content-Disposition"] == "attachment; filename=results.csv"
+    csv_lines = response.text.split("\n")
+    assert csv_lines[0] == "Candidate,Votes,Percentage\r"  # Header row
+    assert "X,50,14\r" in csv_lines
+    assert "Y,100,28\r" in csv_lines
+    assert "Z,200,57\r" in csv_lines
+
+    test_db.rollback()
+    gc.collect()
