@@ -98,3 +98,26 @@ def test_get_observers_by_election(test_db, create_test_observers, create_test_e
 
     test_db.rollback()
     gc.collect()
+
+def test_update_observer(test_db, create_test_observers, create_test_elections, client):
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    create_test_elections(elections_data)
+    # Arrange: Create an observer
+    observers_data = [
+        {"id": 1, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Old Org"}
+    ]
+    create_test_observers(observers_data)
+
+    update_data = {
+        "observer_id": 1,
+        "name": "Updated Observer",
+        "organization": "New Transparency Org"
+    }
+
+    # Act: Call the endpoint
+    response = client.patch("/observers/1", json=update_data)
+
+    # Assert: Verify update
+    assert response.status_code == 200
+    assert response.json()["name"] == "Updated Observer"
+    assert response.json()["organization"] == "New Transparency Org"
