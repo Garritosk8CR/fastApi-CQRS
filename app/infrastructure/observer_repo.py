@@ -35,3 +35,18 @@ class ObserverRepository:
 
         self.db.commit()
         return observer
+    
+    def update_observer(self,p_observer: Observer):
+        observer = self.db.query(Observer).filter(Observer.id == p_observer.observer_id).first()
+        if not observer:
+            return None
+
+        if p_observer.name:
+            observer.name = p_observer.name
+        if p_observer.email:
+            observer.email = p_observer.email
+        if p_observer.organization:
+            observer.organization = p_observer.organization
+
+        self.db.commit()
+        return observer
