@@ -712,6 +712,7 @@ class UpdateObserverHandler:
         observer = repository.update_observer(query.observer_id, query.name, query.email, query.organization)
         if not observer:
             raise ValueError(f"Observer with ID {query.observer_id} not found.")
+        print(f"Observer updated successfully: {observer.name}, {observer.email}, {observer.organization}")
         return observer
     
 class DeleteObserverHandler:

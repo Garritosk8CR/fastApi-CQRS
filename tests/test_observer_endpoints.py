@@ -116,8 +116,11 @@ def test_update_observer(test_db, create_test_observers, create_test_elections, 
 
     # Act: Call the endpoint
     response = client.patch("/observers/1", json=update_data)
-
+    print(response.json())
     # Assert: Verify update
     assert response.status_code == 200
     assert response.json()["name"] == "Updated Observer"
     assert response.json()["organization"] == "New Transparency Org"
+
+    test_db.rollback()
+    gc.collect()
