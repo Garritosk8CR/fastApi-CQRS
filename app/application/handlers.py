@@ -8,9 +8,10 @@ from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetObserverByIdQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateAuditLogCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
+from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.audit_log_repo import AuditLogRepository
+from app.infrastructure.candidate_repo import CandidateRepository
 from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election, User, VoterUploadQuery
 from app.infrastructure.database import SessionLocal
@@ -732,6 +733,12 @@ class GetObserverByIdHandler:
         if not observer:
             raise ValueError(f"Observer with ID {query.observer_id} not found.")
         return observer
+    
+class CreateCandidateHandler:
+    def handle(self, query: CreateCandidateCommand):
+        with SessionLocal() as db:
+            repository = CandidateRepository(db)
+        return repository.create_candidate(query.name, query.party, query.bio, query.election_id)
         
 class CommandBus:
     def __init__(self):
