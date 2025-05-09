@@ -38,3 +38,6 @@ class CandidateRepository:
             self.db.commit()
             return True
         return False
+    
+    def get_candidate_by_id(self, candidate_id: int):
+        return self.db.query(Candidate).filter(Candidate.id == candidate_id).first()
