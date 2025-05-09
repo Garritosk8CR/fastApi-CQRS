@@ -12,11 +12,6 @@ class ObserverRepository:
         self.db.refresh(observer)
         return observer
     
-    def create_observer(self,observer: Observer):
-        self.db.add(observer)
-        self.db.commit()
-        self.db.refresh(observer)
-        return observer
     
     def get_observers_by_election(self, election_id: int):
         return self.db.query(Observer).filter(Observer.election_id == election_id).all()

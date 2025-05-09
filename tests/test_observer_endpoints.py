@@ -69,6 +69,7 @@ def test_create_observer(test_db, create_test_elections, client):
     response = client.post("/observers", json=request_data)
 
     # Assert: Verify creation
+    print(response.json())
     assert response.status_code == 200
     assert response.json()["name"] == "Observer One"
     assert response.json()["organization"] == "Transparency Group"
