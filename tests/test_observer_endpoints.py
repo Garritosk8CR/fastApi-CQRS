@@ -154,3 +154,23 @@ def test_observer_not_found(test_db, client):
 
     test_db.rollback()
     gc.collect()
+
+def test_get_observer_by_id_success(test_db, create_test_observers, create_test_elections, client):
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    create_test_elections(elections_data)
+    # Arrange: Create an observer
+    observers_data = [
+        {"id": 1, "name": "Observer X", "email": "observerx@example.com", "election_id": 1, "organization": "Transparency Watch"}
+    ]
+    create_test_observers(observers_data)
+
+    # Act: Call the endpoint
+    response = client.get("/observers/1")
+
+    # Assert: Verify correct retrieval
+    assert response.status_code == 200
+    assert response.json()["name"] == "Observer X"
+    assert response.json()["organization"] == "Transparency Watch"
+
+    test_db.rollback()
+    gc.collect()
