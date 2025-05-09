@@ -75,3 +75,6 @@ class UpdateObserverCommand(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     organization: Optional[str] = None
+
+class DeleteObserverCommand(BaseModel):
+    observer_id: int
