@@ -69,3 +69,9 @@ class CreateObserverCommand(BaseModel):
     email: str
     election_id: int
     organization: Optional[str] = None
+
+class UpdateObserverCommand(BaseModel):
+    observer_id: int
+    name: Optional[str] = None
+    email: Optional[str] = None
+    organization: Optional[str] = None
