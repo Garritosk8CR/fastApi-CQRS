@@ -140,3 +140,6 @@ def test_delete_observer(test_db, create_test_observers, create_test_elections, 
     # Assert: Verify deletion
     assert response.status_code == 200
     assert response.json()["message"] == "Observer deleted successfully"
+
+    test_db.rollback()
+    gc.collect()
