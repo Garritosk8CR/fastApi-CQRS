@@ -116,3 +116,30 @@ def test_get_candidate_by_id(test_db, create_test_candidates, create_test_electi
 
     test_db.rollback()
     gc.collect()
+
+def test_update_candidate(test_db, create_test_candidates, create_test_elections, client):
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    create_test_elections(elections_data)
+    # Arrange: Create a candidate
+    candidates_data = [
+        {"id": 1, "name": "Candidate D", "party": "Old Party", "bio": "Traditional values.", "election_id": 1}
+    ]
+    create_test_candidates(candidates_data)
+
+    update_data = {
+        "candidate_id": 1,
+        "name": "Updated Candidate",
+        "party": "Modern Party",
+        "bio": "Progressive approach to governance."
+    }
+
+    # Act: Call the endpoint
+    response = client.patch("/candidates/1", json=update_data)
+
+    # Assert: Verify update
+    assert response.status_code == 200
+    assert response.json()["name"] == "Updated Candidate"
+    assert response.json()["party"] == "Modern Party"
+
+    test_db.rollback()
+    gc.collect()
