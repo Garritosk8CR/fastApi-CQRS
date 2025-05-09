@@ -12,3 +12,6 @@ class CandidateRepository:
         self.db.commit()
         self.db.refresh(candidate)
         return candidate
+    
+    def get_candidates_by_election(self, election_id: int):
+        return self.db.query(Candidate).filter(Candidate.election_id == election_id).all()
