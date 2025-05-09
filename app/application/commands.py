@@ -63,3 +63,9 @@ class CreateAuditLogCommand(BaseModel):
     performed_by: int
     action: str
     details: Optional[str] = None
+
+class CreateObserverCommand(BaseModel):
+    name: str
+    email: str
+    election_id: int
+    organization: Optional[str] = None
