@@ -20,3 +20,18 @@ class ObserverRepository:
     
     def get_observers_by_election(self, election_id: int):
         return self.db.query(Observer).filter(Observer.election_id == election_id).all()
+    
+    def update_observer(self, observer_id: int, name: str = None, email: str = None, organization: str = None):
+        observer = self.db.query(Observer).filter(Observer.id == observer_id).first()
+        if not observer:
+            return None
+
+        if name:
+            observer.name = name
+        if email:
+            observer.email = email
+        if organization:
+            observer.organization = organization
+
+        self.db.commit()
+        return observer
