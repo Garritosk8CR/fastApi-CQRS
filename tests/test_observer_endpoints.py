@@ -1,7 +1,7 @@
 import datetime
 import pytest
 from fastapi.testclient import TestClient
-from app.infrastructure.models import AuditLog, Election, PollingStation, User, Voter
+from app.infrastructure.models import AuditLog, Election, Observer, PollingStation, User, Voter
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import Base, SessionLocal, engine
 import gc
@@ -40,3 +40,15 @@ def create_test_elections(test_db):
         test_db.commit()
         return elections
     return _create_elections
+
+@pytest.fixture
+def create_test_observers(test_db):
+    def _create_observers(observers_data):
+        observers = []
+        for observer_data in observers_data:
+            observer = Observer(**observer_data)
+            test_db.add(observer)
+            observers.append(observer)
+        test_db.commit()
+        return observers
+    return _create_observers
