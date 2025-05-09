@@ -755,6 +755,7 @@ command_bus.register_handler(CreateAuditLogCommand, CreateAuditLogHandler())
 command_bus.register_handler(VoterUploadQuery, BulkVoterUploadHandler())
 command_bus.register_handler(CreateObserverCommand, CreateObserverHandler())
 command_bus.register_handler(UpdateObserverCommand, UpdateObserverHandler())
+command_bus.register_handler(DeleteObserverCommand, DeleteObserverHandler())
 
 
 # Create and register the query handler
