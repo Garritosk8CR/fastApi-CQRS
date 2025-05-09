@@ -30,3 +30,11 @@ class CandidateRepository:
 
         self.db.commit()
         return candidate
+    
+    def delete_candidate(self, candidate_id: int):
+        candidate = self.db.query(Candidate).filter(Candidate.id == candidate_id).first()
+        if candidate:
+            self.db.delete(candidate)
+            self.db.commit()
+            return True
+        return False
