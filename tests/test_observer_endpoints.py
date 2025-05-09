@@ -143,3 +143,14 @@ def test_delete_observer(test_db, create_test_observers, create_test_elections, 
 
     test_db.rollback()
     gc.collect()
+
+def test_observer_not_found(test_db, client):
+    # Act: Call the endpoint for a non-existent observer
+    response = client.get("/observers/999")
+
+    # Assert: Verify response handling
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Observer with ID 999 not found."
+
+    test_db.rollback()
+    gc.collect()

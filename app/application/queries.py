@@ -96,3 +96,6 @@ class ExportElectionResultsQuery(BaseModel):
 
 class GetObserversQuery(BaseModel):
     election_id: int
+
+class GetObserverByIdQuery(BaseModel):
+    observer_id: int
