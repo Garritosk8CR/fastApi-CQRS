@@ -8,13 +8,14 @@ from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateAuditLogCommand, CreateElectionCommand, CreatePollingStationCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
+from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateAuditLogCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.audit_log_repo import AuditLogRepository
 from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election, User, VoterUploadQuery
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import Voter
+from app.infrastructure.observer_repo import ObserverRepository
 from app.infrastructure.polling_station_repo import PollingStationRepository
 from app.infrastructure.user_repo import UserRepository
 from app.infrastructure.voter_repo import VoterRepository
@@ -691,6 +692,12 @@ class ExportElectionResultsHandler:
 
             else:
                 raise ValueError("Invalid format. Supported formats: csv, json")
+            
+class CreateObserverHandler:
+    def handle(self, query: CreateObserverCommand):
+        with SessionLocal() as db:
+            repository = ObserverRepository(db)
+        return repository.create_observer(query.name, query.email, query.election_id, query.organization)
         
 class CommandBus:
     def __init__(self):
