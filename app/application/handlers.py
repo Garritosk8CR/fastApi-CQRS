@@ -795,6 +795,7 @@ query_bus.register_handler(GetPollingStationsByElectionQuery, GetPollingStations
 query_bus.register_handler(GetAuditLogsQuery, GetAuditLogsHandler())
 query_bus.register_handler(ExportElectionResultsQuery, ExportElectionResultsHandler())
 query_bus.register_handler(GetObserversQuery, GetObserversHandler())
+query_bus.register_handler(GetObserverByIdQuery, GetObserverByIdHandler())
 
 
 
