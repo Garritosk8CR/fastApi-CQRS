@@ -797,6 +797,9 @@ command_bus.register_handler(VoterUploadQuery, BulkVoterUploadHandler())
 command_bus.register_handler(CreateObserverCommand, CreateObserverHandler())
 command_bus.register_handler(UpdateObserverCommand, UpdateObserverHandler())
 command_bus.register_handler(DeleteObserverCommand, DeleteObserverHandler())
+command_bus.register_handler(CreateCandidateCommand, CreateCandidateHandler())
+command_bus.register_handler(UpdateCandidateCommand, UpdateCandidateHandler())
+command_bus.register_handler(DeleteCandidateCommand, DeleteCandidateHandler())
 
 
 # Create and register the query handler
