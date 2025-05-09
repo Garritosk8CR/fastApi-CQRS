@@ -72,3 +72,6 @@ def test_create_observer(test_db, create_test_elections, client):
     assert response.status_code == 200
     assert response.json()["name"] == "Observer One"
     assert response.json()["organization"] == "Transparency Group"
+
+    test_db.rollback()
+    gc.collect()

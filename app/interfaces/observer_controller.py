@@ -9,7 +9,7 @@ from app.infrastructure.database import get_db
 from fastapi import Form
 from app.application.handlers import command_bus
 
-router = APIRouter(prefix="/observer", tags=["Observer"])
+router = APIRouter(prefix="/observers", tags=["Observer"])
 templates = Jinja2Templates(directory="app/templates")
 
 @router.post("/")
