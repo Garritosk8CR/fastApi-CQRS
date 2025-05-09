@@ -102,3 +102,6 @@ class GetObserverByIdQuery(BaseModel):
 
 class GetCandidatesQuery(BaseModel):
     election_id: int
+
+class GetCandidateByIdQuery(BaseModel):
+    candidate_id: int
