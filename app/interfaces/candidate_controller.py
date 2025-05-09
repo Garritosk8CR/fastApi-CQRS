@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.application.commands import CreateCandidateCommand
+from app.application.commands import CreateCandidateCommand, UpdateCandidateCommand
 from app.application.queries import GetCandidatesQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
@@ -24,3 +24,10 @@ def create_candidate(query: CreateCandidateCommand, db: Session = Depends(get_db
 def get_candidates(election_id: int, db: Session = Depends(get_db)):
     query = GetCandidatesQuery(election_id=election_id)
     return query_bus.handle(query)
+
+@router.patch("/{candidate_id}")
+def update_candidate(candidate_id: int, query: UpdateCandidateCommand, db: Session = Depends(get_db)):
+    try:
+        return command_bus.handle(query)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
