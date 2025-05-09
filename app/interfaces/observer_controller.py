@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.application.commands import CreateObserverCommand, UpdateObserverCommand
+from app.application.commands import CreateObserverCommand, DeleteObserverCommand, UpdateObserverCommand
 from app.application.queries import GetObserversQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
@@ -26,6 +26,14 @@ def get_observers(election_id: int, db: Session = Depends(get_db)):
 
 @router.patch("/{observer_id}")
 def update_observer(observer_id: int, query: UpdateObserverCommand, db: Session = Depends(get_db)):
+    try:
+        return command_bus.handle(query)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    
+@router.delete("/{observer_id}")
+def delete_observer(observer_id: int, db: Session = Depends(get_db)):
+    query = DeleteObserverCommand(observer_id=observer_id)
     try:
         return command_bus.handle(query)
     except ValueError as e:
