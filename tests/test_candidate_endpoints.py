@@ -52,3 +52,26 @@ def create_test_candidates(test_db):
         test_db.commit()
         return candidates
     return _create_candidates
+
+def test_create_candidate(test_db, create_test_elections, client): 
+    # Arrange: Create an election before adding candidates
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    create_test_elections(elections_data)
+
+    request_data = {
+        "name": "Candidate One",
+        "party": "Progressive Party",
+        "bio": "A leader dedicated to social change.",
+        "election_id": 1
+    }
+
+    # Act: Call the endpoint
+    response = client.post("/candidates", json=request_data)
+
+    # Assert: Verify creation
+    assert response.status_code == 200
+    assert response.json()["name"] == "Candidate One"
+    assert response.json()["party"] == "Progressive Party"
+
+    test_db.rollback()
+    gc.collect()
