@@ -93,3 +93,6 @@ class GetAuditLogsQuery(BaseModel):
 class ExportElectionResultsQuery(BaseModel):
     election_id: int
     format: str = "json"
+
+class GetObserversQuery(BaseModel):
+    election_id: int
