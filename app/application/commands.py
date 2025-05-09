@@ -90,3 +90,6 @@ class UpdateCandidateCommand(BaseModel):
     name: Optional[str] = None
     party: Optional[str] = None
     bio: Optional[str] = None
+
+class DeleteCandidateCommand(BaseModel):
+    candidate_id: int
