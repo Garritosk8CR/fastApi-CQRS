@@ -143,3 +143,22 @@ def test_update_candidate(test_db, create_test_candidates, create_test_elections
 
     test_db.rollback()
     gc.collect()
+
+def test_delete_candidate(test_db, create_test_candidates, create_test_elections, client):
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    create_test_elections(elections_data)
+    # Arrange: Create a candidate
+    candidates_data = [
+        {"id": 1, "name": "Candidate E", "party": "Green Party", "bio": "Environmental advocate.", "election_id": 1}
+    ]
+    create_test_candidates(candidates_data)
+
+    # Act: Call the endpoint
+    response = client.delete("/candidates/1")
+
+    # Assert: Verify deletion
+    assert response.status_code == 200
+    assert response.json()["message"] == "Candidate deleted successfully"
+
+    test_db.rollback()
+    gc.collect()
