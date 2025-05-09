@@ -78,3 +78,9 @@ class UpdateObserverCommand(BaseModel):
 
 class DeleteObserverCommand(BaseModel):
     observer_id: int
+
+class CreateCandidateCommand(BaseModel):
+    name: str
+    party: Optional[str] = None
+    bio: Optional[str] = None
+    election_id: int
