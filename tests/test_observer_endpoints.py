@@ -76,3 +76,25 @@ def test_create_observer(test_db, create_test_elections, client):
 
     test_db.rollback()
     gc.collect()
+
+def test_get_observers_by_election(test_db, create_test_observers, create_test_elections, client):
+
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    create_test_elections(elections_data)
+    # Arrange: Create observers linked to an election
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+    ]
+    create_test_observers(observers_data)
+
+    # Act: Call the endpoint
+    response = client.get("/observers/elections/1/observers")
+
+    # Assert: Verify correct filtering
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+    assert response.json()[0]["name"] == "Observer A"
+
+    test_db.rollback()
+    gc.collect()
