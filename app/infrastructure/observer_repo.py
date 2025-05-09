@@ -38,3 +38,6 @@ class ObserverRepository:
             self.db.commit()
             return True
         return False
+    
+    def get_observer_by_id(self, observer_id: int):
+        return self.db.query(Observer).filter(Observer.id == observer_id).first()
