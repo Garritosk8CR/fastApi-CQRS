@@ -52,3 +52,23 @@ def create_test_observers(test_db):
         test_db.commit()
         return observers
     return _create_observers
+
+def test_create_observer(test_db, create_test_elections, client):
+    # Arrange: Create an election before adding observers
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    create_test_elections(elections_data)
+
+    request_data = {
+        "name": "Observer One",
+        "email": "observer1@example.com",
+        "election_id": 1,
+        "organization": "Transparency Group"
+    }
+
+    # Act: Call the endpoint
+    response = client.post("/observers", json=request_data)
+
+    # Assert: Verify creation
+    assert response.status_code == 200
+    assert response.json()["name"] == "Observer One"
+    assert response.json()["organization"] == "Transparency Group"
