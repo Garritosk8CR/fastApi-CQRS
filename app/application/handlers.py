@@ -753,6 +753,7 @@ class UpdateCandidateHandler:
             candidate = repository.update_candidate(query.candidate_id, query.name, query.party, query.bio)
             if not candidate:
                 raise ValueError(f"Candidate with ID {query.candidate_id} not found.")
+            print(f"Candidate updated successfully: {candidate.name}, {candidate.party}, {candidate.bio}")
             return candidate
         
 class DeleteCandidateHandler:
