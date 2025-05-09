@@ -162,3 +162,14 @@ def test_delete_candidate(test_db, create_test_candidates, create_test_elections
 
     test_db.rollback()
     gc.collect()
+
+def test_candidate_not_found(test_db, client):
+    # Act: Call the endpoint for a nonexistent candidate
+    response = client.get("/candidates/999")
+
+    # Assert: Verify response handling
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Candidate with ID 999 not found."
+
+    test_db.rollback()
+    gc.collect()
