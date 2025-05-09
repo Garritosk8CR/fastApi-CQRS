@@ -50,3 +50,11 @@ class ObserverRepository:
 
         self.db.commit()
         return observer
+    
+    def delete_observer(self, observer_id: int):
+        observer = self.db.query(Observer).filter(Observer.id == observer_id).first()
+        if observer:
+            self.db.delete(observer)
+            self.db.commit()
+            return True
+        return False
