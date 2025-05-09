@@ -84,3 +84,9 @@ class CreateCandidateCommand(BaseModel):
     party: Optional[str] = None
     bio: Optional[str] = None
     election_id: int
+
+class UpdateCandidateCommand(BaseModel):
+    candidate_id: int
+    name: Optional[str] = None
+    party: Optional[str] = None
+    bio: Optional[str] = None
