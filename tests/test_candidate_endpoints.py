@@ -96,3 +96,23 @@ def test_get_candidates_by_election(test_db, create_test_candidates, create_test
 
     test_db.rollback()
     gc.collect()
+
+def test_get_candidate_by_id(test_db, create_test_candidates, create_test_elections, client):
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    create_test_elections(elections_data)
+    # Arrange: Create a candidate
+    candidates_data = [
+        {"id": 1, "name": "Candidate C", "party": "Independent", "bio": "Advocate for reform.", "election_id": 1}
+    ]
+    create_test_candidates(candidates_data)
+
+    # Act: Call the endpoint
+    response = client.get("/candidates/1")
+
+    # Assert: Verify correct retrieval
+    assert response.status_code == 200
+    assert response.json()["name"] == "Candidate C"
+    assert response.json()["party"] == "Independent"
+
+    test_db.rollback()
+    gc.collect()
