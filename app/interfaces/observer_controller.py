@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.application.commands import CreateObserverCommand
+from app.application.commands import CreateObserverCommand, UpdateObserverCommand
 from app.application.queries import GetObserversQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
@@ -23,3 +23,10 @@ def create_observer(query: CreateObserverCommand, db: Session = Depends(get_db))
 def get_observers(election_id: int, db: Session = Depends(get_db)):
     query = GetObserversQuery(election_id=election_id)
     return query_bus.handle(query)
+
+@router.patch("/{observer_id}")
+def update_observer(observer_id: int, query: UpdateObserverCommand, db: Session = Depends(get_db)):
+    try:
+        return command_bus.handle(query)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
