@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CreateObserverCommand
+from app.application.queries import GetObserversQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from fastapi import Form
@@ -17,3 +18,8 @@ def create_observer(query: CreateObserverCommand, db: Session = Depends(get_db))
         return command_bus.handle(query)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/elections/{election_id}/observers")
+def get_observers(election_id: int, db: Session = Depends(get_db)):
+    query = GetObserversQuery(election_id=election_id)
+    return query_bus.handle(query)
