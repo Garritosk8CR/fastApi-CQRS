@@ -22,6 +22,7 @@ class Election(Base):
     audit_logs = relationship("AuditLog", back_populates="election")
     observers = relationship("Observer", back_populates="election")
     candidates = relationship("Candidate", back_populates="election")
+    votes = relationship("Vote", back_populates="election")
 
     def increment_vote(self, candidate_name: str):
         candidate_list = self.candidates.split(",")
@@ -60,6 +61,7 @@ class Voter(Base):
 
     # Relationship with User
     user = relationship("User", back_populates="voter")
+    votes = relationship("Vote", back_populates="voter")
 
 class PollingStation(Base):
     __tablename__ = "polling_stations"
