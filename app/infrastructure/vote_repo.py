@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-
 from app.infrastructure.models import Vote
 
 class VoteRepository:
@@ -12,3 +11,6 @@ class VoteRepository:
         self.db.commit()
         self.db.refresh(vote)
         return vote
+    
+    def get_votes_by_election(self, election_id: int):
+        return self.db.query(Vote).filter(Vote.election_id == election_id).all()
