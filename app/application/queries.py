@@ -108,3 +108,6 @@ class GetCandidateByIdQuery(BaseModel):
 
 class GetVotesByElectionQuery(BaseModel):
     election_id: int
+
+class GetVotesByVoterQuery(BaseModel):
+    voter_id: int
