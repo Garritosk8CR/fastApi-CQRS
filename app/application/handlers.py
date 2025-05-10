@@ -6,7 +6,7 @@ import traceback
 
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
-from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidatesQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetObserverByIdQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidatesQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetObserverByIdQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteCandidateCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateCandidateCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -779,6 +779,18 @@ class CastVoteHandler:
         with SessionLocal() as db:
             repository = VoterRepository(db)
             return repository.cast_vote(query.voter_id, query.candidate_id, query.election_id)
+        
+class GetVotesByElectionHandler:
+    def handle(self, query: GetVotesByElectionQuery):
+        with SessionLocal() as db:
+            repository = VoterRepository(db)
+            return repository.get_votes_by_election(query.election_id)
+        
+class GetVotesByVoterHandler:
+    def handle(self, query: GetVotesByVoterQuery):
+        with SessionLocal() as db:
+            repository = VoterRepository(db)
+            return repository.get_votes_by_voter(query.voter_id)
         
 class CommandBus:
     def __init__(self):
