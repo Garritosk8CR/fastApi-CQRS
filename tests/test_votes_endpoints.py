@@ -117,3 +117,32 @@ def test_cast_vote_success(test_db, create_test_elections, create_test_candidate
 
     test_db.rollback()
     gc.collect()
+
+def test_get_votes_by_election(test_db, create_test_votes, create_test_elections, create_test_candidates, create_test_users, create_test_voters, client):
+    # Arrange: Create votes linked to an election
+    users_data = [{"id": 1, "name": "Admin User", "email": "admin@example.com"}, {"id": 2, "name": "Voter User 1", "email": "voter1@example.com"}]
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    candidates_data = [{"id": 1, "name": "Candidate A", "party": "Independent", "bio": "Leader for change.", "election_id": 1}, {"id": 2, "name": "Candidate B", "party": "Democratic", "bio": "Protects the American people.", "election_id": 1}]
+    votes_data = [
+        {"id": 1, "voter_id": 1, "candidate_id": 1, "election_id": 1, "timestamp": "2025-05-10T00:57:00"},
+        {"id": 2, "voter_id": 2, "candidate_id": 2, "election_id": 1, "timestamp": "2025-05-10T01:00:00"},
+    ]
+    voters_data = [{"id": 1, "user_id": 1, "has_voted": False}, {"id": 2, "user_id": 2, "has_voted": True}]
+
+    create_test_users(users_data)
+    create_test_elections(elections_data)
+    create_test_candidates(candidates_data)
+    create_test_voters(voters_data)
+    create_test_votes(votes_data)
+    
+
+    # Act: Call the endpoint
+    response = client.get("/votes/elections/1/votes")
+
+    # Assert: Verify correct filtering
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+    assert response.json()[0]["candidate_id"] == 1
+
+    test_db.rollback()
+    gc.collect()

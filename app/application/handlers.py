@@ -784,13 +784,13 @@ class CastVoteHandler:
 class GetVotesByElectionHandler:
     def handle(self, query: GetVotesByElectionQuery):
         with SessionLocal() as db:
-            repository = VoterRepository(db)
+            repository = VoteRepository(db)
             return repository.get_votes_by_election(query.election_id)
         
 class GetVotesByVoterHandler:
     def handle(self, query: GetVotesByVoterQuery):
         with SessionLocal() as db:
-            repository = VoterRepository(db)
+            repository = VoteRepository(db)
             return repository.get_votes_by_voter(query.voter_id)
         
 class CommandBus:
