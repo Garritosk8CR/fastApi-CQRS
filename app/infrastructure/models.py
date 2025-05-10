@@ -116,7 +116,7 @@ class Vote(Base):
     voter_id = Column(Integer, ForeignKey("voters.id"), nullable=False)  # Linked to Voter
     candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
     election_id = Column(Integer, ForeignKey("elections.id"), nullable=False)
-    timestamp = Column(DateTime, default=datetime.now(datetime.timezone.utc), nullable=False)
+    timestamp = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
 
     voter = relationship("Voter", back_populates="votes")
     candidate = relationship("Candidate")
