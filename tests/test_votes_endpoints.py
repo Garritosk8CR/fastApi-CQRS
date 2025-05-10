@@ -87,3 +87,32 @@ def create_test_users(test_db):
         test_db.commit()
         return users
     return _create_users
+
+def test_cast_vote_success(test_db, create_test_elections, create_test_candidates, create_test_voters,create_test_users, client):
+    # Arrange: Create an election, candidate, and voter
+    users_data = [{"id": 1, "name": "Admin User", "email": "admin@example.com"}]
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    candidates_data = [{"id": 1, "name": "Candidate A", "party": "Independent", "bio": "Leader for change.", "election_id": 1}]
+    voters_data = [{"id": 1, "user_id": 1, "has_voted": False}]
+
+    create_test_users(users_data)
+    create_test_elections(elections_data)
+    create_test_candidates(candidates_data)
+    create_test_voters(voters_data)
+
+    request_data = {
+        "voter_id": 1,
+        "candidate_id": 1,
+        "election_id": 1
+    }
+
+    # Act: Call the endpoint
+    response = client.post("/votes", json=request_data)
+
+    # Assert: Verify vote logging
+    assert response.status_code == 200
+    assert response.json()["voter_id"] == 1
+    assert response.json()["candidate_id"] == 1
+
+    test_db.rollback()
+    gc.collect()
