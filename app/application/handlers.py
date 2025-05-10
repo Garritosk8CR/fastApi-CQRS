@@ -861,6 +861,8 @@ query_bus.register_handler(GetObserversQuery, GetObserversHandler())
 query_bus.register_handler(GetObserverByIdQuery, GetObserverByIdHandler())
 query_bus.register_handler(GetCandidatesQuery, GetCandidatesHandler())
 query_bus.register_handler(GetCandidateByIdQuery, GetCandidateByIdHandler())
+query_bus.register_handler(GetVotesByElectionQuery, GetVotesByElectionHandler())
+query_bus.register_handler(GetVotesByVoterQuery, GetVotesByVoterHandler())
 
 
 
