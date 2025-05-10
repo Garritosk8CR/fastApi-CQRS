@@ -774,6 +774,12 @@ class GetCandidateByIdHandler:
                 raise ValueError(f"Candidate with ID {query.candidate_id} not found.")
             return candidate
         
+class CastVoteHandler:
+    def handle(self, query: CastVoteCommand):
+        with SessionLocal() as db:
+            repository = VoterRepository(db)
+            return repository.cast_vote(query.voter_id, query.candidate_id, query.election_id)
+        
 class CommandBus:
     def __init__(self):
         self.handlers = {}
