@@ -75,3 +75,15 @@ def create_test_votes(test_db):
         test_db.commit()
         return votes
     return _create_votes
+
+@pytest.fixture
+def create_test_users(test_db):
+    def _create_users(users_data):
+        users = []
+        for user_data in users_data:
+            user = User(**user_data)
+            test_db.add(user)
+            users.append(user)
+        test_db.commit()
+        return users
+    return _create_users
