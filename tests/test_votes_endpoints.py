@@ -146,3 +146,29 @@ def test_get_votes_by_election(test_db, create_test_votes, create_test_elections
 
     test_db.rollback()
     gc.collect()
+
+def test_get_votes_by_voter(test_db, create_test_votes, create_test_elections, create_test_candidates, create_test_users, create_test_voters, client):
+    users_data = [{"id": 1, "name": "Admin User", "email": "admin@example.com"}]
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    candidates_data = [{"id": 1, "name": "Candidate A", "party": "Independent", "bio": "Leader for change.", "election_id": 1}]
+    voters_data = [{"id": 1, "user_id": 1, "has_voted": False}]
+    # Arrange: Create votes for a voter
+    votes_data = [
+        {"id": 1, "voter_id": 1, "candidate_id": 1, "election_id": 1, "timestamp": "2025-05-10T00:57:00"},
+    ]
+
+    create_test_users(users_data)
+    create_test_elections(elections_data)
+    create_test_candidates(candidates_data)
+    create_test_voters(voters_data)
+    create_test_votes(votes_data)
+
+    # Act: Call the endpoint
+    response = client.get("/votes/voters/1/votes")
+
+    # Assert: Verify correct retrieval
+    assert response.status_code == 200
+    assert response.json()[0]["election_id"] == 1
+
+    test_db.rollback()
+    gc.collect()
