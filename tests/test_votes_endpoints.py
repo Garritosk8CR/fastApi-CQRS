@@ -51,3 +51,15 @@ def create_test_candidates(test_db):
         test_db.commit()
         return candidates
     return _create_candidates
+
+@pytest.fixture
+def create_test_voters(test_db):
+    def _create_voters(voters_data):
+        voters = []
+        for voter_data in voters_data:
+            voter = Voter(**voter_data)
+            test_db.add(voter)
+            voters.append(voter)
+        test_db.commit()
+        return voters
+    return _create_voters
