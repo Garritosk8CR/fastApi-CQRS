@@ -106,6 +106,19 @@ class Candidate(Base):
     election_id = Column(Integer, ForeignKey("elections.id"), nullable=False)
 
     election = relationship("Election", back_populates="candidates")
+
+class Vote(Base):
+    __tablename__ = "votes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    voter_id = Column(Integer, ForeignKey("voters.id"), nullable=False)  # Linked to Voter
+    candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
+    election_id = Column(Integer, ForeignKey("elections.id"), nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    voter = relationship("Voter", back_populates="votes")
+    candidate = relationship("Candidate")
+    election = relationship("Election", back_populates="votes")
     
 class VoterData(BaseModel):
     name: str
