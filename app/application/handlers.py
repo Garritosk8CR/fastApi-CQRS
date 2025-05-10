@@ -19,6 +19,7 @@ from app.infrastructure.models import Voter
 from app.infrastructure.observer_repo import ObserverRepository
 from app.infrastructure.polling_station_repo import PollingStationRepository
 from app.infrastructure.user_repo import UserRepository
+from app.infrastructure.vote_repo import VoteRepository
 from app.infrastructure.voter_repo import VoterRepository
 from app.security import create_access_token
 from app.utils.password_utils import hash_password, verify_password
@@ -777,7 +778,7 @@ class GetCandidateByIdHandler:
 class CastVoteHandler:
     def handle(self, query: CastVoteCommand):
         with SessionLocal() as db:
-            repository = VoterRepository(db)
+            repository = VoteRepository(db)
             return repository.cast_vote(query.voter_id, query.candidate_id, query.election_id)
         
 class GetVotesByElectionHandler:

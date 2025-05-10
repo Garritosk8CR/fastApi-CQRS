@@ -110,6 +110,7 @@ def test_cast_vote_success(test_db, create_test_elections, create_test_candidate
     response = client.post("/votes", json=request_data)
 
     # Assert: Verify vote logging
+    print(response.json())
     assert response.status_code == 200
     assert response.json()["voter_id"] == 1
     assert response.json()["candidate_id"] == 1
