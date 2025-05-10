@@ -816,6 +816,7 @@ command_bus.register_handler(DeleteObserverCommand, DeleteObserverHandler())
 command_bus.register_handler(CreateCandidateCommand, CreateCandidateHandler())
 command_bus.register_handler(UpdateCandidateCommand, UpdateCandidateHandler())
 command_bus.register_handler(DeleteCandidateCommand, DeleteCandidateHandler())
+command_bus.register_handler(CastVoteCommand, CastVoteHandler())
 
 
 # Create and register the query handler
