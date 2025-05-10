@@ -14,3 +14,6 @@ class VoteRepository:
     
     def get_votes_by_election(self, election_id: int):
         return self.db.query(Vote).filter(Vote.election_id == election_id).all()
+    
+    def get_votes_by_voter(self, voter_id: int):
+        return self.db.query(Vote).filter(Vote.voter_id == voter_id).all()
