@@ -44,7 +44,9 @@ def test_create_election():
         "/elections/elections/new",
         json={
             "name": "Presidential Election",
-            "candidates": ["Alice", "Bob", "Charlie"]
+            "candidates": ["Alice", "Bob", "Charlie"],
+            "votes": "0,0,0",
+    "       status": "ACTIVE"
         },
     )
     print("Response JSON:", response.json())  # Debugging output

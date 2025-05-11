@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidatesQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetObserverByIdQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CheckVoterExistsQuery, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteCandidateCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateCandidateCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
+from app.application.commands import CastVoteCommand, CastVoteCommandv2, CheckVoterExistsQuery, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteCandidateCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateCandidateCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.audit_log_repo import AuditLogRepository
 from app.infrastructure.candidate_repo import CandidateRepository
@@ -775,10 +775,11 @@ class GetCandidateByIdHandler:
                 raise ValueError(f"Candidate with ID {query.candidate_id} not found.")
             return candidate
         
-class CastVoteHandler:
-    def handle(self, query: CastVoteCommand):
+class CastVoteHandlerv2:
+    def handle(self, query: CastVoteCommandv2):
         with SessionLocal() as db:
             repository = VoteRepository(db)
+            print(f"Voter ID: {query.voter_id}, Candidate ID: {query.candidate_id}, Election ID: {query.election_id}")
             return repository.cast_vote(query.voter_id, query.candidate_id, query.election_id)
         
 class GetVotesByElectionHandler:
@@ -829,7 +830,7 @@ command_bus.register_handler(DeleteObserverCommand, DeleteObserverHandler())
 command_bus.register_handler(CreateCandidateCommand, CreateCandidateHandler())
 command_bus.register_handler(UpdateCandidateCommand, UpdateCandidateHandler())
 command_bus.register_handler(DeleteCandidateCommand, DeleteCandidateHandler())
-command_bus.register_handler(CastVoteCommand, CastVoteHandler())
+command_bus.register_handler(CastVoteCommandv2, CastVoteHandlerv2())
 
 
 # Create and register the query handler

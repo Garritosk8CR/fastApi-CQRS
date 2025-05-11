@@ -94,7 +94,7 @@ class UpdateCandidateCommand(BaseModel):
 class DeleteCandidateCommand(BaseModel):
     candidate_id: int
 
-class CastVoteCommand(BaseModel):
+class CastVoteCommandv2(BaseModel):
     voter_id: int
     candidate_id: int
     election_id: int

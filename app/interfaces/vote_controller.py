@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.application.commands import CastVoteCommand
+from app.application.commands import CastVoteCommand, CastVoteCommandv2
 from app.application.queries import GetVotesByElectionQuery, GetVotesByVoterQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/votes", tags=["Votes"])
 templates = Jinja2Templates(directory="app/templates")
 
 @router.post("/")
-def cast_vote(query: CastVoteCommand, db: Session = Depends(get_db)):
+def cast_vote(query: CastVoteCommandv2, db: Session = Depends(get_db)):
     try:
         return command_bus.handle(query)
     except Exception as e:

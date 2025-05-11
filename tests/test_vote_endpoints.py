@@ -177,6 +177,7 @@ def test_cast_vote_voter_already_voted(client, test_db):
             "candidate": "Bob"
             }
     )
+    print(vote_response.json())
     assert vote_response.status_code == 400
     assert vote_response.json()["detail"] == "Voter has already voted"
     test_db.rollback()

@@ -29,6 +29,7 @@ def cast_vote(voter_id: int, election_id: int, command: CastVoteCommand):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        print(f"Error casting vote: {e}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 @router.get("/users/{user_id}/has-voted")

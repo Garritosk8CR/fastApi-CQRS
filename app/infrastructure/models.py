@@ -21,8 +21,8 @@ class Election(Base):
     polling_stations = relationship("PollingStation", back_populates="election")
     audit_logs = relationship("AuditLog", back_populates="election")
     observers = relationship("Observer", back_populates="election")
-    candidates = relationship("Candidate", back_populates="election")
-    votes = relationship("Vote", back_populates="election")
+    candidatesv2 = relationship("Candidate", back_populates="election")
+    vote = relationship("Vote", back_populates="election")
 
     def increment_vote(self, candidate_name: str):
         candidate_list = self.candidates.split(",")
@@ -107,7 +107,7 @@ class Candidate(Base):
     bio = Column(String, nullable=True)
     election_id = Column(Integer, ForeignKey("elections.id"), nullable=False)
 
-    election = relationship("Election", back_populates="candidates")
+    election = relationship("Election", back_populates="candidatesv2")
 
 class Vote(Base):
     __tablename__ = "votes"
@@ -120,7 +120,7 @@ class Vote(Base):
 
     voter = relationship("Voter", back_populates="votes")
     candidate = relationship("Candidate")
-    election = relationship("Election", back_populates="votes")
+    election = relationship("Election", back_populates="vote")
     
 class VoterData(BaseModel):
     name: str
