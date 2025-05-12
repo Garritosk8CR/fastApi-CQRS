@@ -6,7 +6,7 @@ import traceback
 
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
-from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidatesQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetObserverByIdQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidatesQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetIntegrityScoreQuery, GetObserverByIdQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CastVoteCommandv2, CheckVoterExistsQuery, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteCandidateCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, SubmitFeedbackCommand, UpdateCandidateCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -812,6 +812,12 @@ class GetFeedbackBySeverityHandler:
         with SessionLocal() as db:
             repository = ObserverFeedbackRepository(db)
         return repository.get_feedback_by_severity(query.severity)
+    
+class GetIntegrityScoreHandler:
+    def handle(self, query: GetIntegrityScoreQuery):
+        with SessionLocal() as db:
+            repository = ObserverFeedbackRepository(db)
+        return repository.get_integrity_score(query.election_id)
         
 class CommandBus:
     def __init__(self):
