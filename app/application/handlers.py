@@ -886,6 +886,7 @@ query_bus.register_handler(GetCandidateByIdQuery, GetCandidateByIdHandler())
 query_bus.register_handler(GetVotesByElectionQuery, GetVotesByElectionHandler())
 query_bus.register_handler(GetVotesByVoterQuery, GetVotesByVoterHandler())
 query_bus.register_handler(GetFeedbackByElectionQuery, GetFeedbackByElectionHandler())
+query_bus.register_handler(GetFeedbackBySeverityQuery, GetFeedbackBySeverityHandler())
 
 
 
