@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.infrastructure.models import User, Voter
+from app.infrastructure.models import Election, User, Voter
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import Base, SessionLocal, engine
 import gc
@@ -28,3 +28,15 @@ def setup_and_teardown_db():
 def client():
     with TestClient(app) as client:
         yield client
+
+@pytest.fixture
+def create_test_elections(test_db):
+    def _create_elections(elections_data):
+        elections = []
+        for election_data in elections_data:
+            election = Election(**election_data)
+            test_db.add(election)
+            elections.append(election)
+        test_db.commit()
+        return elections
+    return _create_elections
