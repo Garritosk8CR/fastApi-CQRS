@@ -23,6 +23,7 @@ class Election(Base):
     observers = relationship("Observer", back_populates="election")
     candidatesv2 = relationship("Candidate", back_populates="election")
     vote = relationship("Vote", back_populates="election")
+    observer_feedback = relationship("ObserverFeedback", back_populates="election")
 
     def increment_vote(self, candidate_name: str):
         candidate_list = self.candidates.split(",")
@@ -97,6 +98,7 @@ class Observer(Base):
     organization = Column(String, nullable=True)
 
     election = relationship("Election", back_populates="observers")
+    feedback = relationship("ObserverFeedback", back_populates="observer")
 
 class Candidate(Base):
     __tablename__ = "candidates"
@@ -121,6 +123,19 @@ class Vote(Base):
     voter = relationship("Voter", back_populates="votes")
     candidate = relationship("Candidate")
     election = relationship("Election", back_populates="vote")
+
+class ObserverFeedback(Base):
+    __tablename__ = "observer_feedback"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    observer_id = Column(Integer, ForeignKey("observers.id"), nullable=False)
+    election_id = Column(Integer, ForeignKey("elections.id"), nullable=False)
+    description = Column(String, nullable=False)
+    severity = Column(String, nullable=False)  # e.g., "LOW", "MEDIUM", "HIGH"
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    observer = relationship("Observer", back_populates="feedback")
+    election = relationship("Election", back_populates="observer_feedback")
     
 class VoterData(BaseModel):
     name: str
