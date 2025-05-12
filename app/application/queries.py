@@ -117,3 +117,6 @@ class GetFeedbackByElectionQuery(BaseModel):
 
 class GetFeedbackBySeverityQuery(BaseModel):
     severity: str
+
+class GetIntegrityScoreQuery(BaseModel):
+    election_id: int
