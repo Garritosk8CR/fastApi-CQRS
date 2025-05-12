@@ -14,6 +14,7 @@ from app.interfaces.audit_log_controller import router as audit_log_router
 from app.interfaces.observer_controller import router as observer_router
 from app.interfaces.candidate_controller import router as candidate_router
 from app.interfaces.vote_controller import router as votes_router
+from app.interfaces.observer_feedback_controller import router as observer_feedback_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -33,6 +34,7 @@ app.include_router(audit_log_router)
 app.include_router(observer_router)
 app.include_router(candidate_router)
 app.include_router(votes_router)
+app.include_router(observer_feedback_router)
 
 
 # Create tables in the database
