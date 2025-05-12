@@ -20,3 +20,6 @@ class ObserverFeedbackRepository:
     
     def get_feedback_by_election(self, election_id: int):
         return self.db.query(ObserverFeedback).filter(ObserverFeedback.election_id == election_id).all()
+    
+    def get_feedback_by_severity(self, severity: str):
+        return self.db.query(ObserverFeedback).filter(ObserverFeedback.severity == severity).all()
