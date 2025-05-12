@@ -111,3 +111,6 @@ class GetVotesByElectionQuery(BaseModel):
 
 class GetVotesByVoterQuery(BaseModel):
     voter_id: int
+
+class GetFeedbackByElectionQuery(BaseModel):
+    election_id: int
