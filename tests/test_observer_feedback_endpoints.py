@@ -277,3 +277,33 @@ def test_integrity_score_election_with_low_reports(test_db, create_test_election
 
     test_db.rollback()
     gc.collect()
+
+def test_integrity_score_election_with_high_risk_reports(test_db, create_test_elections, create_test_feedback, create_test_observers, client):
+    # Arrange: Create an election with multiple HIGH severity reports
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    feedback_data = [
+        {"id": 1, "observer_id": 1, "election_id": 1, "description": "Votes missing from final count.", "severity": "HIGH"},
+        {"id": 2, "observer_id": 2, "election_id": 1, "description": "Attempted voter suppression detected.", "severity": "HIGH"},
+        {"id": 3, "observer_id": 3, "election_id": 1, "description": "Polling station security breached.", "severity": "HIGH"},
+    ]
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+    ]
+    
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+    create_test_feedback(feedback_data)
+
+    # Act: Call the endpoint
+    response = client.get("/observer_feedback/elections/1/integrity_score")
+
+    # Assert: Verify critical risk designation
+    assert response.status_code == 200
+    assert response.json()["election_id"] == 1
+    assert response.json()["status"] == "Critical"
+
+    test_db.rollback()
+    gc.collect()
