@@ -22,3 +22,25 @@ class ObserverFeedbackRepository:
     
     def get_feedback_by_severity(self, severity: str):
         return self.db.query(ObserverFeedback).filter(ObserverFeedback.severity == severity).all()
+    
+    def get_integrity_score(self, election_id: int):
+        feedbacks = self.db.query(ObserverFeedback).filter(ObserverFeedback.election_id == election_id).all()
+
+        if not feedbacks:
+            return {"election_id": election_id, "risk_score": 0, "status": "Stable"}
+
+        severity_counts = {"LOW": 0, "MEDIUM": 0, "HIGH": 0}
+        for feedback in feedbacks:
+            severity_counts[feedback.severity] += 1
+
+        total_reports = sum(severity_counts.values())
+        risk_score = (severity_counts["HIGH"] * 3 + severity_counts["MEDIUM"] * 2 + severity_counts["LOW"]) / total_reports
+
+        risk_status = "Critical" if risk_score >= 2.5 else "Moderate" if risk_score >= 1.5 else "Stable"
+
+        return {
+            "election_id": election_id,
+            "risk_score": round(risk_score, 2),
+            "status": risk_status,
+            "breakdown": severity_counts
+        }
