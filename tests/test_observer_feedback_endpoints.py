@@ -156,3 +156,25 @@ def test_get_feedback_by_severity(test_db, create_test_feedback, create_test_ele
 
     test_db.rollback()
     gc.collect()
+
+def test_missing_fields_handling(test_db, create_test_elections, create_test_observers, client):
+    elections_data = [{"id": 1, "name": "General Election"}]
+    create_test_elections(elections_data)
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+    ]
+    create_test_observers(observers_data)
+    # Arrange: Missing severity in payload
+    request_data = {
+        "observer_id": 1,
+        "election_id": 1,
+        "description": "Security concerns raised."
+    }
+
+    # Act: Call the endpoint
+    response = client.post("/observer_feedback", json=request_data)
+
+    # Assert: Verify rejection
+    assert response.status_code == 422  # Validation error
+    assert "severity" in response.json()["detail"][0]["loc"]
