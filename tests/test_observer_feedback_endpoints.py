@@ -106,3 +106,29 @@ def test_submit_feedback_success(test_db, create_test_elections, create_test_obs
 
     test_db.rollback()
     gc.collect()
+
+def test_get_feedback_by_election(test_db, create_test_feedback, create_test_elections, create_test_observers, client):
+    elections_data = [{"id": 1, "name": "General Election"}]
+    create_test_elections(elections_data)
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+    ]
+    create_test_observers(observers_data)
+    # Arrange: Create feedback entries
+    feedback_data = [
+        {"id": 1, "observer_id": 1, "election_id": 1, "description": "Unverified voters spotted.", "severity": "MEDIUM", "timestamp": "2025-05-10T00:57:00"},
+        {"id": 2, "observer_id": 2, "election_id": 1, "description": "Ballot tampering suspected.", "severity": "HIGH", "timestamp": "2025-05-10T01:00:00"},
+    ]
+    create_test_feedback(feedback_data)
+
+    # Act: Call the endpoint
+    response = client.get("/observer_feedback/elections/1/observer_feedback")
+
+    # Assert: Verify correct filtering
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+    assert response.json()[0]["severity"] == "MEDIUM"
+
+    test_db.rollback()
+    gc.collect()
