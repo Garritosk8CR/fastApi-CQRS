@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.infrastructure.models import Candidate, Election, Observer, User, Voter
+from app.infrastructure.models import Candidate, Election, Observer, ObserverFeedback, User, Voter
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import Base, SessionLocal, engine
 import gc
@@ -64,3 +64,15 @@ def create_test_candidates(test_db):
         test_db.commit()
         return candidates
     return _create_candidates
+
+@pytest.fixture
+def create_test_feedback(test_db):
+    def _create_feedback(feedback_data):
+        feedbacks = []
+        for feedback in feedback_data:
+            observer_feedback = ObserverFeedback(**feedback)
+            test_db.add(observer_feedback)
+            feedbacks.append(observer_feedback)
+        test_db.commit()
+        return feedbacks
+    return _create_feedback
