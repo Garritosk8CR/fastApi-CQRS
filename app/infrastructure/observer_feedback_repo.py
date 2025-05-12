@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-
 from app.infrastructure.models import ObserverFeedback
 
 class ObserverFeedbackRepository:

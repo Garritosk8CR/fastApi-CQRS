@@ -98,3 +98,9 @@ class CastVoteCommandv2(BaseModel):
     voter_id: int
     candidate_id: int
     election_id: int
+
+class SubmitFeedbackCommand(BaseModel):
+    observer_id: int
+    election_id: int
+    description: str
+    severity: str  # "LOW", "MEDIUM", "HIGH"
