@@ -181,3 +181,24 @@ def test_missing_fields_handling(test_db, create_test_elections, create_test_obs
 
     test_db.rollback()
     gc.collect()
+
+def test_invalid_observer_submission(test_db, create_test_elections, client):
+
+    elections_data = [{"id": 1, "name": "General Election"}]
+    create_test_elections(elections_data)
+    # Act: Try submitting feedback from a non-existent observer
+    request_data = {
+        "observer_id": 999,  # Observer doesn't exist
+        "election_id": 1,
+        "description": "Voting fraud suspected.",
+        "severity": "HIGH"
+    }
+
+    response = client.post("/observer_feedback", json=request_data)
+
+    # Assert: Verify rejection
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Observer with ID 999 not found."
+
+    test_db.rollback()
+    gc.collect()
