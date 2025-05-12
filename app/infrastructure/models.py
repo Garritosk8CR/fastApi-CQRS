@@ -132,7 +132,7 @@ class ObserverFeedback(Base):
     election_id = Column(Integer, ForeignKey("elections.id"), nullable=False)
     description = Column(String, nullable=False)
     severity = Column(String, nullable=False)  # e.g., "LOW", "MEDIUM", "HIGH"
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    timestamp = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
 
     observer = relationship("Observer", back_populates="feedback")
     election = relationship("Election", back_populates="observer_feedback")
