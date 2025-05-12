@@ -76,3 +76,29 @@ def create_test_feedback(test_db):
         test_db.commit()
         return feedbacks
     return _create_feedback
+
+def test_submit_feedback_success(test_db, create_test_elections, create_test_observers, client):
+    # Arrange: Create an election and an observer
+    elections_data = [{"id": 1, "name": "General Election"}]
+    observers_data = [{"id": 1, "user_id": 1}]
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+
+    request_data = {
+        "observer_id": 1,
+        "election_id": 1,
+        "description": "Polling station irregularities noticed.",
+        "severity": "HIGH"
+    }
+
+    # Act: Call the endpoint
+    response = client.post("/observer_feedback", json=request_data)
+
+    # Assert: Verify feedback submission
+    assert response.status_code == 200
+    assert response.json()["description"] == "Polling station irregularities noticed."
+    assert response.json()["severity"] == "HIGH"
+
+    test_db.rollback()
+    gc.collect()
