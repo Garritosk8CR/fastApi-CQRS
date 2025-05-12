@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import SubmitFeedbackCommand
-from app.application.queries import GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetObserverByIdQuery
+from app.application.queries import GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetIntegrityScoreQuery, GetObserverByIdQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -32,4 +32,10 @@ def get_feedback_by_election(election_id: int):
 @router.get("/severity/{severity}")
 def get_feedback_by_severity(severity: str):
     query = GetFeedbackBySeverityQuery(severity=severity)
+    return query_bus.handle(query)
+
+@router.get("/elections/{election_id}/integrity_score")
+def get_integrity_score(election_id: int):
+    query = GetIntegrityScoreQuery(election_id=election_id)
+    
     return query_bus.handle(query)
