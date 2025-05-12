@@ -80,10 +80,14 @@ def create_test_feedback(test_db):
 def test_submit_feedback_success(test_db, create_test_elections, create_test_observers, client):
     # Arrange: Create an election and an observer
     elections_data = [{"id": 1, "name": "General Election"}]
-    observers_data = [{"id": 1, "user_id": 1}]
-
     create_test_elections(elections_data)
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+    ]
     create_test_observers(observers_data)
+    
+    
 
     request_data = {
         "observer_id": 1,
