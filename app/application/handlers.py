@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidatesQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetObserverByIdQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CastVoteCommandv2, CheckVoterExistsQuery, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteCandidateCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, UpdateCandidateCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
+from app.application.commands import CastVoteCommand, CastVoteCommandv2, CheckVoterExistsQuery, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteCandidateCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, SubmitFeedbackCommand, UpdateCandidateCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.audit_log_repo import AuditLogRepository
 from app.infrastructure.candidate_repo import CandidateRepository
@@ -16,6 +16,7 @@ from app.infrastructure.election_repo import ElectionRepository
 from app.infrastructure.models import Election, User, VoterUploadQuery
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import Voter
+from app.infrastructure.observer_feedback_repo import ObserverFeedbackRepository
 from app.infrastructure.observer_repo import ObserverRepository
 from app.infrastructure.polling_station_repo import PollingStationRepository
 from app.infrastructure.user_repo import UserRepository
@@ -793,6 +794,12 @@ class GetVotesByVoterHandler:
         with SessionLocal() as db:
             repository = VoteRepository(db)
             return repository.get_votes_by_voter(query.voter_id)
+        
+class SubmitFeedbackHandler:
+    def handle(self, query: SubmitFeedbackCommand):
+        with SessionLocal() as db:
+            repository = ObserverFeedbackRepository(db)
+        return repository.submit_feedback(query.observer_id, query.election_id, query.description, query.severity)
         
 class CommandBus:
     def __init__(self):
