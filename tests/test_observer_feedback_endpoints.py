@@ -178,3 +178,6 @@ def test_missing_fields_handling(test_db, create_test_elections, create_test_obs
     # Assert: Verify rejection
     assert response.status_code == 422  # Validation error
     assert "severity" in response.json()["detail"][0]["loc"]
+
+    test_db.rollback()
+    gc.collect()
