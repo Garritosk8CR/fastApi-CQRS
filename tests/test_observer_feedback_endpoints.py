@@ -906,3 +906,23 @@ def test_export_observer_feedback_json_no_feedback(test_db, client):
 
     test_db.rollback()
     gc.collect()
+
+def test_export_observer_feedback_csv_no_feedback(test_db, client):
+    # Arrange: No feedback data is created
+    
+    # Act: Request CSV export
+    response = client.get("/observer_feedback/export?export_format=csv")
+    
+    # Assert: Verify CSV output contains only the header row
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/csv; charset=utf-8"
+    csv_content = response.text
+    reader = csv.reader(io.StringIO(csv_content))
+    rows = list(reader)
+    expected_header = ["id", "observer_id", "election_id", "description", "severity", "timestamp"]
+    assert rows[0] == expected_header
+    # Only header should be present
+    assert len(rows) == 1
+
+    test_db.rollback()
+    gc.collect()
