@@ -479,3 +479,39 @@ def test_observer_rankings_limited_results(test_db, create_test_feedback, create
 
     test_db.rollback()
     gc.collect()
+
+def test_time_patterns_with_feedback(test_db, create_test_feedback, create_test_elections, create_test_observers, client):
+    elections_data = [
+        {"id": 1, "name": "Presidential Election"}, 
+        {"id": 2, "name": "General Election"}, 
+        {"id": 3, "name": "Local Election"}
+    ]
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 4, "name": "Observer D", "email": "observerD@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 5, "name": "Observer E", "email": "observerE@example.com", "election_id": 2, "organization": "Group Z"},
+    ]
+    # Arrange: Create feedback with different timestamps
+    feedback_data = [
+        {"id": 1, "observer_id": 1, "election_id": 1, "description": "Unauthorized access", "severity": "HIGH", "timestamp": "2025-05-10T08:00:00"},
+        {"id": 2, "observer_id": 1, "election_id": 1, "description": "Polling station issues", "severity": "MEDIUM", "timestamp": "2025-05-10T12:30:00"},
+        {"id": 3, "observer_id": 2, "election_id": 1, "description": "Security concerns", "severity": "HIGH", "timestamp": "2025-05-11T09:15:00"},
+        {"id": 4, "observer_id": 3, "election_id": 2, "description": "Voting fraud suspected", "severity": "LOW", "timestamp": "2025-05-12T15:45:00"},
+    ]
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+    create_test_feedback(feedback_data)
+
+    # Act: Call the endpoint
+    response = client.get("/observer_feedback/time_patterns")
+
+    # Assert: Verify correct aggregation by date
+    assert response.status_code == 200
+    assert len(response.json()) == 3  # 3 unique dates
+    assert response.json()[0]["date"] == "2025-05-10"  # Earliest date
+
+    test_db.rollback()
+    gc.collect()
