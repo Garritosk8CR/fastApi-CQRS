@@ -120,3 +120,6 @@ class GetFeedbackBySeverityQuery(BaseModel):
 
 class GetIntegrityScoreQuery(BaseModel):
     election_id: int
+
+class GetSeverityDistributionQuery(BaseModel):
+    pass  # No input required for this query
