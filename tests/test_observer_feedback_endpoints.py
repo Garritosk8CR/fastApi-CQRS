@@ -562,3 +562,36 @@ def test_time_patterns_chronological_ordering(test_db, create_test_feedback, cre
 
     test_db.rollback()
     gc.collect()
+
+def test_positive_sentiment_detection(test_db, create_test_feedback, create_test_elections, create_test_observers, client):
+    elections_data = [
+        {"id": 1, "name": "Presidential Election"}, 
+        {"id": 2, "name": "General Election"}, 
+        {"id": 3, "name": "Local Election"}
+    ]
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 4, "name": "Observer D", "email": "observerD@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 5, "name": "Observer E", "email": "observerE@example.com", "election_id": 2, "organization": "Group Z"},
+    ]
+    # Arrange: Create feedback with positive sentiment
+    feedback_data = [
+        {"id": 1, "observer_id": 1, "election_id": 1, "description": "The voting process was smooth and well-managed.", "severity": "LOW"}
+    ]
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+    create_test_feedback(feedback_data)
+
+    # Act: Call the endpoint
+    response = client.get("/observer_feedback/sentiment_analysis")
+
+    # Assert: Verify sentiment classification
+    assert response.status_code == 200
+    assert response.json()[0]["sentiment"] == "Positive"
+    assert response.json()[0]["score"] > 0.2  # Positive polarity threshold
+
+    test_db.rollback()
+    gc.collect()
