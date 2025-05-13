@@ -442,3 +442,40 @@ def test_observer_rankings_no_feedback(test_db,client):
 
     test_db.rollback()
     gc.collect()
+
+def test_observer_rankings_limited_results(test_db, create_test_feedback, create_test_elections, create_test_observers, client):
+
+    elections_data = [
+        {"id": 1, "name": "Presidential Election"}, 
+        {"id": 2, "name": "General Election"}, 
+        {"id": 3, "name": "Local Election"}
+    ]
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 4, "name": "Observer D", "email": "observerD@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 5, "name": "Observer E", "email": "observerE@example.com", "election_id": 2, "organization": "Group Z"},
+    ]
+    # Arrange: Create feedback with multiple observers
+    feedback_data = [
+        {"id": 1, "observer_id": 1, "election_id": 1, "description": "Polling station issue", "severity": "MEDIUM"},
+        {"id": 2, "observer_id": 2, "election_id": 2, "description": "Ballot fraud suspected", "severity": "HIGH"},
+        {"id": 3, "observer_id": 2, "election_id": 2, "description": "Voting machine malfunction", "severity": "HIGH"},
+        {"id": 4, "observer_id": 3, "election_id": 3, "description": "Access denial at polling station", "severity": "HIGH"},
+        {"id": 5, "observer_id": 3, "election_id": 3, "description": "Observer interference", "severity": "MEDIUM"},
+    ]
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+    create_test_feedback(feedback_data)
+
+    # Act: Limit results to only top 2 observers
+    response = client.get("/observer_feedback/top_observers?limit=2")
+
+    # Assert: Validate limited results
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+
+    test_db.rollback()
+    gc.collect()

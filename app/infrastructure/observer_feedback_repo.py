@@ -67,3 +67,12 @@ class ObserverFeedbackRepository:
         rankings = [{"observer_id": observer_id, "report_count": count} for observer_id, count in observer_reports]
 
         return rankings
+    
+    def get_time_patterns(self):
+        time_data = self.db.query(func.date(ObserverFeedback.timestamp), func.count(ObserverFeedback.id)) \
+                           .group_by(func.date(ObserverFeedback.timestamp)) \
+                           .order_by(func.date(ObserverFeedback.timestamp)).all()
+
+        patterns = [{"date": date.isoformat(), "report_count": count} for date, count in time_data]
+
+        return patterns
