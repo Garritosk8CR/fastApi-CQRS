@@ -58,18 +58,19 @@ class ElectionRepository:
         return {"election_id": election.id, "results": results}
     
     def predict_turnout(self, election_id: int):
-        # Retrieve past election voter turnout (count voters based on actual votes)
+    # Retrieve past election voter turnout from actual votes
         turnout_data = self.db.query(Election.id, func.count(Vote.voter_id).label("voter_count")) \
-                              .join(Vote, Vote.election_id == Election.id) \
-                              .group_by(Election.id) \
-                              .order_by(Election.id).all()
-        
-        if not turnout_data:
+                            .join(Vote, Vote.election_id == Election.id) \
+                            .group_by(Election.id) \
+                            .order_by(Election.id).all()
+
+        # Ensure we only predict turnout when past data exists
+        if not turnout_data or election_id not in [data.id for data in turnout_data]:
             return {"election_id": election_id, "predicted_turnout": 0, "status": "No Data"}
 
-        # Apply a moving average model for turnout prediction
+        # Apply moving average model based on past election turnout
         voter_counts = [data.voter_count for data in turnout_data]
-        predicted_turnout = sum(voter_counts[-3:]) // len(voter_counts[-3:])  # Average of last 3 elections
+        predicted_turnout = sum(voter_counts[-3:]) // len(voter_counts[-3:])
 
         return {
             "election_id": election_id,
