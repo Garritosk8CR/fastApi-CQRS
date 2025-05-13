@@ -1,6 +1,7 @@
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.infrastructure.models import ObserverFeedback
+from textblob import TextBlob
 
 class ObserverFeedbackRepository:
     def __init__(self, db: Session):
@@ -76,3 +77,20 @@ class ObserverFeedbackRepository:
         patterns = [{"date": date.isoformat(), "report_count": count} for date, count in time_data]
 
         return patterns
+    
+    def analyze_sentiment(self):
+        feedbacks = self.db.query(ObserverFeedback.id, ObserverFeedback.description).all()
+
+        sentiments = []
+        for feedback in feedbacks:
+            sentiment_score = TextBlob(feedback.description).sentiment.polarity
+            sentiment_category = "Positive" if sentiment_score > 0.2 else "Neutral" if -0.2 <= sentiment_score <= 0.2 else "Negative"
+
+            sentiments.append({
+                "feedback_id": feedback.id,
+                "description": feedback.description,
+                "sentiment": sentiment_category,
+                "score": round(sentiment_score, 2)
+            })
+
+        return sentiments
