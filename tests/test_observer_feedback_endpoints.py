@@ -662,3 +662,14 @@ def test_negative_sentiment_detection(test_db, create_test_feedback, create_test
 
     test_db.rollback()
     gc.collect()
+
+def test_sentiment_analysis_no_feedback(test_db, client):
+    # Act: Call the endpoint with an empty dataset
+    response = client.get("/observer_feedback/sentiment_analysis")
+
+    # Assert: Verify system handles empty results correctly
+    assert response.status_code == 200
+    assert response.json() == []
+
+    test_db.rollback()
+    gc.collect()
