@@ -1,3 +1,4 @@
+from datetime import datetime
 import pytest
 from fastapi.testclient import TestClient
 from app.infrastructure.models import Candidate, Election, Observer, ObserverFeedback, User, Voter
@@ -773,6 +774,63 @@ def test_observer_trust_scores_limited_engagement(test_db, create_test_observers
     assert response.status_code == 200
     scores = response.json()
     assert len(scores) == 2  # Only two observers submitted reports
+
+    test_db.rollback()
+    gc.collect()
+
+def test_export_observer_feedback_json_with_feedback(test_db, create_test_feedback, create_test_observers, create_test_elections, client):
+    elections_data = [
+        {"id": 1, "name": "Presidential Election"}, 
+        {"id": 2, "name": "General Election"}, 
+        {"id": 3, "name": "Local Election"}
+    ]
+    # Arrange: Create observers with no feedback
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 4, "name": "Observer D", "email": "observerD@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 5, "name": "Observer E", "email": "observerE@example.com", "election_id": 2, "organization": "Group Z"},
+    ]
+    # Arrange: Create test feedback data with election_id
+    feedback_data = [
+        {
+            "id": 1,
+            "observer_id": 1,
+            "election_id": 1,
+            "description": "Test feedback one",
+            "severity": "LOW",
+            "timestamp": datetime(2025, 5, 10, 9, 0, 0)
+        },
+        {
+            "id": 2,
+            "observer_id": 2,
+            "election_id": 2,
+            "description": "Test feedback two",
+            "severity": "HIGH",
+            "timestamp": datetime(2025, 5, 11, 10, 30, 0)
+        }
+    ]
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+    create_test_feedback(feedback_data)
+    
+    # Act: Request JSON export
+    response = client.get("/observer_feedback/export?export_format=json")
+    
+    # Assert: Verify response returns a list of feedback with required fields including election_id
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 2
+    for item in data:
+        assert "id" in item
+        assert "observer_id" in item
+        assert "election_id" in item  # New field
+        assert "description" in item
+        assert "severity" in item
+        assert "timestamp" in item
 
     test_db.rollback()
     gc.collect()
