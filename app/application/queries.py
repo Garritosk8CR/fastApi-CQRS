@@ -129,3 +129,6 @@ class GetTopObserversQuery(BaseModel):
 
 class GetTimePatternsQuery(BaseModel):
     pass  # No input required
+
+class GetSentimentAnalysisQuery(BaseModel):
+    pass  # No input required
