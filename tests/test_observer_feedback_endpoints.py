@@ -673,3 +673,43 @@ def test_sentiment_analysis_no_feedback(test_db, client):
 
     test_db.rollback()
     gc.collect()
+
+def test_observer_trust_scores_with_multiple_reports(test_db, create_test_observers, create_test_feedback, create_test_elections, client):
+    # Arrange: Create observers and their feedback reports
+    elections_data = [
+        {"id": 1, "name": "Presidential Election"}, 
+        {"id": 2, "name": "General Election"}, 
+        {"id": 3, "name": "Local Election"}
+    ]
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 4, "name": "Observer D", "email": "observerD@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 5, "name": "Observer E", "email": "observerE@example.com", "election_id": 2, "organization": "Group Z"},
+    ]
+    feedback_data = [
+        {"id": 1, "observer_id": 1, "description": "Polling station closed early", "severity": "HIGH", "election_id": 1},
+        {"id": 2, "observer_id": 1, "description": "Unauthorized access detected", "severity": "HIGH", "election_id": 1},
+        {"id": 3, "observer_id": 2, "description": "Security concerns raised", "severity": "HIGH", "election_id": 1},
+        {"id": 4, "observer_id": 3, "description": "Observer interference noted", "severity": "HIGH", "election_id": 1},
+        {"id": 5, "observer_id": 3, "description": "Ballot fraud suspected", "severity": "HIGH", "election_id": 1},
+        {"id": 6, "observer_id": 3, "description": "Electronic voting issues reported", "severity": "HIGH", "election_id": 1},
+    ]
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+    create_test_feedback(feedback_data)
+
+    # Act: Call the endpoint
+    response = client.get("/observer_feedback/reliability_scores")
+    
+    test_db.rollback()
+    gc.collect()
+    # Assert: Verify trust score calculation
+    assert response.status_code == 200
+    scores = response.json()
+    print(scores)
+    assert scores[0]["observer_id"] == 2    # Third highest
+    assert scores[1]["observer_id"] == 3  # Highest number of reports
+    assert scores[2]["observer_id"] == 1  # Second highest
