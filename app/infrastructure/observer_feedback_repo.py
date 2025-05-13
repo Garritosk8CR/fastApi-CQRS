@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.infrastructure.models import ObserverFeedback
 
@@ -46,7 +47,7 @@ class ObserverFeedbackRepository:
         }
     
     def get_severity_distribution(self):
-        feedbacks = self.db.query(ObserverFeedback.severity, self.db.func.count(ObserverFeedback.id)) \
+        feedbacks = self.db.query(ObserverFeedback.severity, func.count(ObserverFeedback.id)) \
                            .group_by(ObserverFeedback.severity).all()
 
         severity_counts = {severity: count for severity, count in feedbacks}
