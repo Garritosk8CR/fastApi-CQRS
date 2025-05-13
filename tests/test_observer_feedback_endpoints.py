@@ -891,3 +891,18 @@ def test_export_observer_feedback_csv_with_feedback( test_db, client, create_tes
 
     test_db.rollback()
     gc.collect()
+
+def test_export_observer_feedback_json_no_feedback(test_db, client):
+    # Arrange: No feedback data is created
+    
+    # Act: Request JSON export
+    response = client.get("/observer_feedback/export?export_format=json")
+    
+    # Assert: Verify response is an empty list
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 0
+
+    test_db.rollback()
+    gc.collect()
