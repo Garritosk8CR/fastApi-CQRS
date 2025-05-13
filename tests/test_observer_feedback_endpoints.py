@@ -1,4 +1,6 @@
+import csv
 from datetime import datetime
+import io
 import pytest
 from fastapi.testclient import TestClient
 from app.infrastructure.models import Candidate, Election, Observer, ObserverFeedback, User, Voter
@@ -831,6 +833,61 @@ def test_export_observer_feedback_json_with_feedback(test_db, create_test_feedba
         assert "description" in item
         assert "severity" in item
         assert "timestamp" in item
+
+    test_db.rollback()
+    gc.collect()
+
+def test_export_observer_feedback_csv_with_feedback( test_db, client, create_test_elections, create_test_observers, create_test_feedback):
+    elections_data = [
+        {"id": 1, "name": "Presidential Election"}, 
+        {"id": 2, "name": "General Election"}, 
+        {"id": 3, "name": "Local Election"}
+    ]
+    # Arrange: Create observers with no feedback
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 4, "name": "Observer D", "email": "observerD@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 5, "name": "Observer E", "email": "observerE@example.com", "election_id": 2, "organization": "Group Z"},
+    ]
+    # Arrange: Create test feedback data with election_id
+    feedback_data = [
+        {
+            "id": 1,
+            "observer_id": 1,
+            "election_id": 1,
+            "description": "CSV test feedback one",
+            "severity": "MEDIUM",
+            "timestamp": datetime(2025, 5, 10, 9, 0, 0)
+        },
+        {
+            "id": 2,
+            "observer_id": 2,
+            "election_id": 2,
+            "description": "CSV test feedback two",
+            "severity": "HIGH",
+            "timestamp": datetime(2025, 5, 11, 11, 45, 0)
+        }
+    ]
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+    create_test_feedback(feedback_data)
+    
+    # Act: Request CSV export
+    response = client.get("/observer_feedback/export?export_format=csv")
+    
+    # Assert: Verify response has CSV Content-Type and includes correct header and rows
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/csv"
+    csv_content = response.text
+    reader = csv.reader(io.StringIO(csv_content))
+    rows = list(reader)
+    expected_header = ["id", "observer_id", "election_id", "description", "severity", "timestamp"]
+    assert rows[0] == expected_header
+    # Expect header row + two data rows
+    assert len(rows) == 3
 
     test_db.rollback()
     gc.collect()
