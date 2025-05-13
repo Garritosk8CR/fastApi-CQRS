@@ -352,3 +352,41 @@ def test_severity_distribution_no_feedback(test_db,client):
 
     test_db.rollback()
     gc.collect()
+
+def test_severity_distribution_mixed_cases(test_db, create_test_feedback, create_test_elections, create_test_observers, client):
+    elections_data = [
+        {"id": 1, "name": "Presidential Election"}, 
+        {"id": 2, "name": "General Election"}, 
+        {"id": 3, "name": "Local Election"}
+    ]
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 4, "name": "Observer D", "email": "observerD@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 5, "name": "Observer E", "email": "observerE@example.com", "election_id": 2, "organization": "Group Z"},
+    ]
+    # Arrange: Create multiple feedback entries with varied severity
+    feedback_data = [
+        {"id": 1, "observer_id": 1, "election_id": 1, "description": "Polling station overcrowded", "severity": "HIGH"},
+        {"id": 2, "observer_id": 2, "election_id": 2, "description": "Power outage at station", "severity": "MEDIUM"},
+        {"id": 3, "observer_id": 3, "election_id": 3, "description": "Delayed opening of polls", "severity": "LOW"},
+        {"id": 4, "observer_id": 4, "election_id": 3, "description": "Confusion over voter registration", "severity": "LOW"},
+        {"id": 5, "observer_id": 5, "election_id": 2, "description": "Incorrect ballot distribution", "severity": "MEDIUM"},
+    ]
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+    create_test_feedback(feedback_data)
+
+    # Act: Call the endpoint
+    response = client.get("/observer_feedback/severity_distribution")
+
+    # Assert: Validate correct breakdown
+    assert response.status_code == 200
+    assert response.json()["LOW"] == 2
+    assert response.json()["MEDIUM"] == 2
+    assert response.json()["HIGH"] == 1
+
+    test_db.rollback()
+    gc.collect()
