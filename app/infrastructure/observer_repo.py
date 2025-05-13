@@ -1,5 +1,6 @@
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-from app.infrastructure.models import Observer
+from app.infrastructure.models import Observer, ObserverFeedback
 
 class ObserverRepository:
     def __init__(self, db: Session):
@@ -41,3 +42,21 @@ class ObserverRepository:
     
     def get_observer_by_id(self, observer_id: int):
         return self.db.query(Observer).filter(Observer.id == observer_id).first()
+    
+    def calculate_observer_trust_scores(self):
+        observer_data = self.db.query(Observer.id, func.count(ObserverFeedback.id).label("report_count")) \
+                               .join(ObserverFeedback, ObserverFeedback.observer_id == Observer.id) \
+                               .group_by(Observer.id) \
+                               .all()
+
+        observer_scores = []
+        for observer_id, report_count in observer_data:
+            trust_score = min(100, report_count * 10)  # Example scoring logic
+
+            observer_scores.append({
+                "observer_id": observer_id,
+                "report_count": report_count,
+                "trust_score": trust_score
+            })
+
+        return observer_scores
