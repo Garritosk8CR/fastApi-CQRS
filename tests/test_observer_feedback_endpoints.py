@@ -515,3 +515,14 @@ def test_time_patterns_with_feedback(test_db, create_test_feedback, create_test_
 
     test_db.rollback()
     gc.collect()
+
+def test_time_patterns_no_feedback(test_db, client):
+    # Act: Call the endpoint when no feedback exists
+    response = client.get("/observer_feedback/time_patterns")
+
+    # Assert: Verify empty response
+    assert response.status_code == 200
+    assert response.json() == []
+
+    test_db.rollback()
+    gc.collect()
