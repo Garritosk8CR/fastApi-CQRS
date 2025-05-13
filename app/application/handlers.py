@@ -907,6 +907,7 @@ query_bus.register_handler(GetFeedbackByElectionQuery, GetFeedbackByElectionHand
 query_bus.register_handler(GetFeedbackBySeverityQuery, GetFeedbackBySeverityHandler())
 query_bus.register_handler(GetIntegrityScoreQuery, GetIntegrityScoreHandler())
 query_bus.register_handler(GetSeverityDistributionQuery, GetSeverityDistributionHandler())
+query_bus.register_handler(GetTopObserversQuery, GetTopObserversHandler())
 
 
 
