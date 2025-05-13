@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import SubmitFeedbackCommand
-from app.application.queries import GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetIntegrityScoreQuery, GetObserverByIdQuery, GetSeverityDistributionQuery, GetTopObserversQuery
+from app.application.queries import GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetIntegrityScoreQuery, GetObserverByIdQuery, GetSeverityDistributionQuery, GetTimePatternsQuery, GetTopObserversQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -48,4 +48,9 @@ def get_severity_distribution():
 @router.get("/top_observers")
 def get_top_observers(limit: int = 10):
     query = GetTopObserversQuery(limit=limit) 
+    return query_bus.handle(query)
+
+@router.get("/time_patterns")
+def get_time_patterns():
+    query = GetTimePatternsQuery()
     return query_bus.handle(query)
