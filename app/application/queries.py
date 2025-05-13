@@ -135,3 +135,6 @@ class GetSentimentAnalysisQuery(BaseModel):
 
 class GetTurnoutPredictionQuery(BaseModel):
     election_id: int
+
+class GetObserverTrustScoresQuery(BaseModel):
+    pass  # No input needed
