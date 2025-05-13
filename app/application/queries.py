@@ -132,3 +132,6 @@ class GetTimePatternsQuery(BaseModel):
 
 class GetSentimentAnalysisQuery(BaseModel):
     pass  # No input required
+
+class GetTurnoutPredictionQuery(BaseModel):
+    election_id: int
