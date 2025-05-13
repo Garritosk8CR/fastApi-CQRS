@@ -713,3 +713,31 @@ def test_observer_trust_scores_with_multiple_reports(test_db, create_test_observ
     assert scores[0]["observer_id"] == 2    # Third highest
     assert scores[1]["observer_id"] == 3  # Highest number of reports
     assert scores[2]["observer_id"] == 1  # Second highest
+
+def test_observer_trust_scores_no_feedback(test_db, create_test_observers, create_test_elections, client):
+    elections_data = [
+        {"id": 1, "name": "Presidential Election"}, 
+        {"id": 2, "name": "General Election"}, 
+        {"id": 3, "name": "Local Election"}
+    ]
+    # Arrange: Create observers with no feedback
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 4, "name": "Observer D", "email": "observerD@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 5, "name": "Observer E", "email": "observerE@example.com", "election_id": 2, "organization": "Group Z"},
+    ]
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+
+    # Act: Call the endpoint
+    response = client.get("/observer_feedback/reliability_scores")
+
+    # Assert: Verify empty response
+    assert response.status_code == 200
+    assert response.json() == []
+
+    test_db.rollback()
+    gc.collect()
