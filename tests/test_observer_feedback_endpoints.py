@@ -307,3 +307,35 @@ def test_integrity_score_election_with_high_risk_reports(test_db, create_test_el
 
     test_db.rollback()
     gc.collect()
+
+def test_severity_distribution_with_feedback(test_db, create_test_feedback, create_test_elections, create_test_observers, client):
+    elections_data = [{"id": 1, "name": "Presidential Election"}]
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 4, "name": "Observer D", "email": "observerD@example.com", "election_id": 1, "organization": "Group Z"},
+    ]
+    # Arrange: Create feedback with different severity levels
+    feedback_data = [
+        {"id": 1, "observer_id": 1, "election_id": 1, "description": "Minor delay at polling station", "severity": "LOW"},
+        {"id": 2, "observer_id": 2, "election_id": 1, "description": "Unauthorized observers present", "severity": "MEDIUM"},
+        {"id": 3, "observer_id": 3, "election_id": 1, "description": "Ballot tampering suspected", "severity": "HIGH"},
+        {"id": 4, "observer_id": 4, "election_id": 1, "description": "Technical issues with voter ID scanning", "severity": "MEDIUM"},
+    ]
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+    create_test_feedback(feedback_data)
+
+    # Act: Call the endpoint
+    response = client.get("/observer_feedback/severity_distribution")
+
+    # Assert: Verify correct aggregation
+    assert response.status_code == 200
+    assert response.json()["LOW"] == 1
+    assert response.json()["MEDIUM"] == 2
+    assert response.json()["HIGH"] == 1
+
+    test_db.rollback()
+    gc.collect()
