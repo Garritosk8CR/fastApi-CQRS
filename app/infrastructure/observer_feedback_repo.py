@@ -44,3 +44,15 @@ class ObserverFeedbackRepository:
             "status": risk_status,
             "breakdown": severity_counts
         }
+    
+    def get_severity_distribution(self):
+        feedbacks = self.db.query(ObserverFeedback.severity, self.db.func.count(ObserverFeedback.id)) \
+                           .group_by(ObserverFeedback.severity).all()
+
+        severity_counts = {severity: count for severity, count in feedbacks}
+
+        return {
+            "LOW": severity_counts.get("LOW", 0),
+            "MEDIUM": severity_counts.get("MEDIUM", 0),
+            "HIGH": severity_counts.get("HIGH", 0)
+        }
