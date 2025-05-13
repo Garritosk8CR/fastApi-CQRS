@@ -697,3 +697,19 @@ def test_turnout_prediction_with_past_votes(test_db, create_test_elections, crea
 
     test_db.rollback()
     gc.collect()
+
+def test_turnout_prediction_no_past_votes(test_db, create_test_elections):
+    # Arrange: Create an upcoming election with no past votes
+    elections_data = [{"id": 4, "name": "Upcoming Election"}]
+    create_test_elections(elections_data)
+
+    # Act: Call the endpoint
+    response = client.get("/elections/4/turnout_prediction")
+
+    # Assert: Verify default response for lack of data
+    assert response.status_code == 200
+    assert response.json()["status"] == "No Data"
+    assert response.json()["predicted_turnout"] == 0
+
+    test_db.rollback()
+    gc.collect()
