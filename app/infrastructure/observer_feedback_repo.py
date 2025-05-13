@@ -1,3 +1,5 @@
+import csv
+import io
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.infrastructure.models import ObserverFeedback
@@ -94,3 +96,37 @@ class ObserverFeedbackRepository:
             })
 
         return sentiments
+    
+    def export_observer_feedback(self, export_format: str = "json"):
+        feedbacks = self.db.query(ObserverFeedback).all()
+        
+        if export_format.lower() == "csv":
+            output = io.StringIO()
+            writer = csv.writer(output)
+            # Write CSV header including election_id
+            writer.writerow(["id", "observer_id", "election_id", "description", "severity", "timestamp"])
+            # Write feedback data rows including the election_id field
+            for fb in feedbacks:
+                writer.writerow([
+                    fb.id,
+                    fb.observer_id,
+                    fb.election_id,  # Added election_id here
+                    fb.description,
+                    fb.severity,
+                    fb.timestamp.isoformat() if fb.timestamp else ""
+                ])
+            csv_data = output.getvalue()
+            output.close()
+            return csv_data
+        
+        # Default JSON export: return list of dictionaries with election_id
+        return [
+            {
+                "id": fb.id,
+                "observer_id": fb.observer_id,
+                "election_id": fb.election_id,  # Added election_id here
+                "description": fb.description,
+                "severity": fb.severity,
+                "timestamp": fb.timestamp.isoformat() if fb.timestamp else None,
+            } for fb in feedbacks
+        ]
