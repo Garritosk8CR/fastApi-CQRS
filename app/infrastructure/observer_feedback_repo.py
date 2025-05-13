@@ -57,3 +57,13 @@ class ObserverFeedbackRepository:
             "MEDIUM": severity_counts.get("MEDIUM", 0),
             "HIGH": severity_counts.get("HIGH", 0)
         }
+    
+    def get_top_observers(self, limit=10):
+        observer_reports = self.db.query(ObserverFeedback.observer_id, func.count(ObserverFeedback.id)) \
+                                  .group_by(ObserverFeedback.observer_id) \
+                                  .order_by(func.count(ObserverFeedback.id).desc()) \
+                                  .limit(limit).all()
+
+        rankings = [{"observer_id": observer_id, "report_count": count} for observer_id, count in observer_reports]
+
+        return rankings
