@@ -526,3 +526,39 @@ def test_time_patterns_no_feedback(test_db, client):
 
     test_db.rollback()
     gc.collect()
+
+def test_time_patterns_chronological_ordering(test_db, create_test_feedback, create_test_elections, create_test_observers, client):
+    elections_data = [
+        {"id": 1, "name": "Presidential Election"}, 
+        {"id": 2, "name": "General Election"}, 
+        {"id": 3, "name": "Local Election"}
+    ]
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 4, "name": "Observer D", "email": "observerD@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 5, "name": "Observer E", "email": "observerE@example.com", "election_id": 2, "organization": "Group Z"},
+    ]
+    # Arrange: Create multiple feedback entries spanning several days
+    feedback_data = [
+        {"id": 1, "observer_id": 1, "election_id": 1, "description": "Ballot tampering", "severity": "HIGH", "timestamp": "2025-05-15T09:00:00"},
+        {"id": 2, "observer_id": 1, "election_id": 1, "description": "Voting system failure", "severity": "MEDIUM", "timestamp": "2025-05-14T10:30:00"},
+        {"id": 3, "observer_id": 2, "election_id": 1, "description": "Observer interference", "severity": "LOW", "timestamp": "2025-05-13T16:15:00"},
+    ]
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+    create_test_feedback(feedback_data)
+
+    # Act: Call the endpoint
+    response = client.get("/observer_feedback/time_patterns")
+
+    # Assert: Validate correct chronological ordering
+    assert response.status_code == 200
+    assert response.json()[0]["date"] == "2025-05-13"  # First in sequence
+    assert response.json()[1]["date"] == "2025-05-14"  # Second in sequence
+    assert response.json()[2]["date"] == "2025-05-15"  # Last in sequence
+
+    test_db.rollback()
+    gc.collect()
