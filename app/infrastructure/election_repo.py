@@ -1,6 +1,7 @@
 import math
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-from app.infrastructure.models import Election
+from app.infrastructure.models import Election, Voter
 
 class ElectionRepository:
     def __init__(self, db: Session):
@@ -55,3 +56,23 @@ class ElectionRepository:
         ]
 
         return {"election_id": election.id, "results": results}
+    
+    def predict_turnout(self, election_id: int):
+        # Retrieve past election voter counts
+        turnout_data = self.db.query(Election.id, func.count(Voter.id).label("voter_count")) \
+                              .join(Voter, Voter.election_id == Election.id) \
+                              .group_by(Election.id) \
+                              .order_by(Election.id).all()
+        
+        if not turnout_data:
+            return {"election_id": election_id, "predicted_turnout": 0, "status": "No Data"}
+
+        # Apply a simple moving average model for turnout prediction
+        voter_counts = [data.voter_count for data in turnout_data]
+        predicted_turnout = sum(voter_counts[-3:]) // len(voter_counts[-3:])  # Average of last 3 elections
+
+        return {
+            "election_id": election_id,
+            "predicted_turnout": predicted_turnout,
+            "status": "Projected turnout based on past trends"
+        }
