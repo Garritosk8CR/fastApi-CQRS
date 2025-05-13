@@ -880,7 +880,7 @@ def test_export_observer_feedback_csv_with_feedback( test_db, client, create_tes
     
     # Assert: Verify response has CSV Content-Type and includes correct header and rows
     assert response.status_code == 200
-    assert response.headers["content-type"] == "text/csv"
+    assert response.headers["content-type"] == "text/csv; charset=utf-8"
     csv_content = response.text
     reader = csv.reader(io.StringIO(csv_content))
     rows = list(reader)
