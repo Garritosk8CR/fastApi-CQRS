@@ -390,3 +390,44 @@ def test_severity_distribution_mixed_cases(test_db, create_test_feedback, create
 
     test_db.rollback()
     gc.collect()
+
+def test_observer_rankings_multiple_feedback_entries(test_db, create_test_feedback, create_test_elections, create_test_observers, client):
+    elections_data = [
+        {"id": 1, "name": "Presidential Election"}, 
+        {"id": 2, "name": "General Election"}, 
+        {"id": 3, "name": "Local Election"}
+    ]
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 4, "name": "Observer D", "email": "observerD@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 5, "name": "Observer E", "email": "observerE@example.com", "election_id": 2, "organization": "Group Z"},
+    ]
+    # Arrange: Create multiple observers with different report counts
+    feedback_data = [
+        {"id": 1, "observer_id": 1, "election_id": 1, "description": "Unauthorized access", "severity": "HIGH"},
+        {"id": 2, "observer_id": 1, "election_id": 1, "description": "Polling station closed early", "severity": "MEDIUM"},
+        {"id": 3, "observer_id": 2, "election_id": 1, "description": "Incorrect ballot distribution", "severity": "LOW"},
+        {"id": 5, "observer_id": 3, "election_id": 3, "description": "Security concerns raised", "severity": "HIGH"},
+        {"id": 6, "observer_id": 3, "election_id": 3, "description": "Voting fraud suspected", "severity": "HIGH"},
+        {"id": 7, "observer_id": 3, "election_id": 3, "description": "Observer interference", "severity": "MEDIUM"},
+    ]
+
+    create_test_elections(elections_data)
+    create_test_observers(observers_data)
+    create_test_feedback(feedback_data)
+
+    # Act: Call the endpoint
+    response = client.get("/observer_feedback/top_observers?limit=3")
+
+    # Assert: Verify correct ranking
+    assert response.status_code == 200
+    top_observers = response.json()
+    print(top_observers)
+    assert top_observers[0]["observer_id"] == 3  # Most reports submitted
+    assert top_observers[1]["observer_id"] == 1  # Second most
+    assert top_observers[2]["observer_id"] == 2  # Third most
+
+    test_db.rollback()
+    gc.collect()
