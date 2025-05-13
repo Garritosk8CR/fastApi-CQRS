@@ -123,3 +123,6 @@ class GetIntegrityScoreQuery(BaseModel):
 
 class GetSeverityDistributionQuery(BaseModel):
     pass  # No input required for this query
+
+class GetTopObserversQuery(BaseModel):
+    limit: int = 10  # Default: Top 10 observers
