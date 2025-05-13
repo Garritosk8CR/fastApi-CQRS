@@ -339,3 +339,16 @@ def test_severity_distribution_with_feedback(test_db, create_test_feedback, crea
 
     test_db.rollback()
     gc.collect()
+
+def test_severity_distribution_no_feedback(test_db,client):
+    # Act: Call the endpoint with an empty dataset
+    response = client.get("/observer_feedback/severity_distribution")
+
+    # Assert: Verify zero counts
+    assert response.status_code == 200
+    assert response.json()["LOW"] == 0
+    assert response.json()["MEDIUM"] == 0
+    assert response.json()["HIGH"] == 0
+
+    test_db.rollback()
+    gc.collect()
