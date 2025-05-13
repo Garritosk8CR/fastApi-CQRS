@@ -431,3 +431,14 @@ def test_observer_rankings_multiple_feedback_entries(test_db, create_test_feedba
 
     test_db.rollback()
     gc.collect()
+
+def test_observer_rankings_no_feedback(test_db,client):
+    # Act: Call the endpoint when no feedback exists
+    response = client.get("/observer_feedback/top_observers")
+
+    # Assert: Verify empty rankings
+    assert response.status_code == 200
+    assert response.json() == []
+
+    test_db.rollback()
+    gc.collect()
