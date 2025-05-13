@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import SubmitFeedbackCommand
-from app.application.queries import GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetIntegrityScoreQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetSentimentAnalysisQuery, GetSeverityDistributionQuery, GetTimePatternsQuery, GetTopObserversQuery
+from app.application.queries import GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetFeedbackExportQuery, GetIntegrityScoreQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetSentimentAnalysisQuery, GetSeverityDistributionQuery, GetTimePatternsQuery, GetTopObserversQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -64,3 +64,12 @@ def get_sentiment_analysis():
 def get_observer_trust_scores():
     query = GetObserverTrustScoresQuery()
     return query_bus.handle(query)
+
+@router.get("/export")
+def export_observer_feedback(export_format: str = "json"):
+    query = GetFeedbackExportQuery(export_format=export_format)
+    result = query_bus.handle(query)
+    
+    if export_format.lower() == "csv":
+        return Response(content=result, media_type="text/csv")
+    return result
