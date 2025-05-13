@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.application.query_bus import query_bus
-from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery
+from app.application.queries import CandidateSupportQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GetAllElectionsQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetTurnoutPredictionQuery, ParticipationByRoleQuery, ResultsBreakdownQuery, TopCandidateQuery
 from app.application.commands import CreateElectionCommand, EndElectionCommand
 from app.infrastructure.models import ElectionResponse
 from app.application.commands import CreateElectionCommand
@@ -147,3 +147,8 @@ def export_results(election_id: int, format: str = "json"):
         return query_bus.handle(query)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    
+@router.get("/{election_id}/turnout_prediction")
+def get_turnout_prediction(election_id: int):  
+    query = GetTurnoutPredictionQuery(election_id=election_id)
+    return query_bus.handle(query)
