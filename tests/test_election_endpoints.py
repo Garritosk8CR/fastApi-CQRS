@@ -713,3 +713,63 @@ def test_turnout_prediction_no_past_votes(test_db, create_test_elections):
 
     test_db.rollback()
     gc.collect()
+
+def test_turnout_prediction_multiple_past_votes(test_db, create_test_elections, create_test_votes, create_test_voters, create_test_candidates):
+    users_data = [
+        {"id": 1, "name": "Admin User 1", "email": "admin1@example.com", "role": "admin"},
+        {"id": 2, "name": "Admin User 2", "email": "admin2@example.com", "role": "admin"},
+        {"id": 3, "name": "Voter User 1", "email": "voter1@example.com", "role": "voter"},
+        {"id": 4, "name": "Voter User 2", "email": "voter2@example.com", "role": "voter"},
+        {"id": 5, "name": "Voter User 3", "email": "voter3@example.com", "role": "voter"},
+        {"id": 6, "name": "Voter User 4", "email": "voter4@example.com", "role": "voter"},
+        {"id": 7, "name": "Voter User 5", "email": "voter5@example.com", "role": "voter"},
+        {"id": 8, "name": "Voter User 6", "email": "voter6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": False},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": True},
+        {"user_id": 6, "has_voted": True},
+        {"user_id": 7, "has_voted": True},
+        {"user_id": 8, "has_voted": True},
+    ]
+    candidates_data = [
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 2},
+        {"id": 4, "name": "Candidate D", "party": "Group X", "bio": "Experienced leader.", "election_id": 2},
+        {"id": 5, "name": "Candidate E", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 2},
+        {"id": 6, "name": "Candidate F", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 3},
+        {"id": 7, "name": "Candidate G", "party": "Group X", "bio": "Experienced leader.", "election_id": 3},
+        {"id": 8, "name": "Candidate H", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 3},
+    ]
+    # Arrange: Create historical elections with fluctuating voter participation
+    elections_data = [{"id": 1, "name": "Election A"}, {"id": 2, "name": "Election B"}, {"id": 3, "name": "Election C"}]
+    votes_data = [
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1}, 
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 2}, 
+        {"id": 3, "election_id": 1, "voter_id": 3, "candidate_id": 3},
+        {"id": 4, "election_id": 2, "voter_id": 4, "candidate_id": 4}, 
+        {"id": 5, "election_id": 2, "voter_id": 5, "candidate_id": 5},
+        {"id": 6, "election_id": 3, "voter_id": 6, "candidate_id": 6}, 
+        {"id": 7, "election_id": 3, "voter_id": 7, "candidate_id": 7}, 
+        {"id": 8, "election_id": 3, "voter_id": 8, "candidate_id": 8},
+    ]
+
+    create_test_elections(elections_data)
+    create_test_voters(users_data, voters_data)
+    create_test_candidates(candidates_data)
+    create_test_votes(votes_data)
+
+    # Act: Call the endpoint
+    response = client.get("/elections/3/turnout_prediction")
+
+    # Assert: Verify correct averaging
+    assert response.status_code == 200
+    assert response.json()["predicted_turnout"] == 2  # Moving average of 3, 2, and 5 actual votes cast per election
+
+    test_db.rollback()
+    gc.collect()
+    
