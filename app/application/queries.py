@@ -138,3 +138,6 @@ class GetTurnoutPredictionQuery(BaseModel):
 
 class GetObserverTrustScoresQuery(BaseModel):
     pass  # No input needed
+
+class GetFeedbackExportQuery(BaseModel):
+    export_format: str = "json"
