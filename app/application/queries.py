@@ -126,3 +126,6 @@ class GetSeverityDistributionQuery(BaseModel):
 
 class GetTopObserversQuery(BaseModel):
     limit: int = 10  # Default: Top 10 observers
+
+class GetTimePatternsQuery(BaseModel):
+    pass  # No input required
