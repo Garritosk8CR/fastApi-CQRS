@@ -1,7 +1,7 @@
 import gc
 import pytest
 from fastapi.testclient import TestClient
-from app.infrastructure.models import Election, User, Voter
+from app.infrastructure.models import Candidate, Election, User, Vote, Voter
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import SessionLocal, Base, engine
 from tests.test_vote_endpoints import create_test_user_and_voter
@@ -36,6 +36,31 @@ def create_test_elections(test_db):
         test_db.commit()
         return elections
     return _create_elections
+
+@pytest.fixture
+def create_test_votes(test_db):
+    def _create_votes(votes_data):
+        votes = []
+        for vote_data in votes_data:
+            vote = Vote(**vote_data)
+            test_db.add(vote)
+            votes.append(vote)
+        test_db.commit()
+        return votes
+    return _create_votes
+
+@pytest.fixture
+def create_test_candidates(test_db):
+    def _create_candidates(candidates_data):
+        candidates = []
+        for candidate_data in candidates_data:
+            candidate = Candidate(**candidate_data)
+            test_db.add(candidate)
+            candidates.append(candidate)
+        test_db.commit()
+        return candidates
+    return _create_candidates
+
 # Initialize TestClient for the FastAPI app
 client = TestClient(app)
 
@@ -620,6 +645,55 @@ def test_export_results_invalid_format(test_db, create_test_elections):
     # Assert: Verify response rejection
     assert response.status_code == 404
     assert response.json()["detail"] == "Invalid format. Supported formats: csv, json"
+
+    test_db.rollback()
+    gc.collect()
+
+def test_turnout_prediction_with_past_votes(test_db, create_test_elections, create_test_votes, create_test_voters, create_test_candidates):
+    users_data = [
+        {"id": 1, "name": "Admin User 1", "email": "admin1@example.com", "role": "admin"},
+        {"id": 2, "name": "Admin User 2", "email": "admin2@example.com", "role": "admin"},
+        {"id": 3, "name": "Voter User 1", "email": "voter1@example.com", "role": "voter"},
+        {"id": 4, "name": "Voter User 2", "email": "voter2@example.com", "role": "voter"},
+        {"id": 5, "name": "Voter User 3", "email": "voter3@example.com", "role": "voter"},
+        {"id": 6, "name": "Voter User 4", "email": "voter4@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": False},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": True},
+        {"user_id": 6, "has_voted": True},
+    ]
+    candidates_data = [
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 2},
+        {"id": 4, "name": "Candidate D", "party": "Group X", "bio": "Experienced leader.", "election_id": 2},
+        {"id": 5, "name": "Candidate E", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 2},
+        {"id": 6, "name": "Candidate F", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 3},
+    ]
+    # Arrange: Create historical elections and votes cast
+    elections_data = [{"id": 1, "name": "Election 2021"}, {"id": 2, "name": "Election 2022"}, {"id": 3, "name": "Election 2023"}]
+    votes_data = [
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1}, {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 2},
+        {"id": 3, "election_id": 2, "voter_id": 3, "candidate_id": 3}, {"id": 4, "election_id": 2, "voter_id": 4, "candidate_id": 4},
+        {"id": 5, "election_id": 2, "voter_id": 5, "candidate_id": 5}, {"id": 6, "election_id": 3, "voter_id": 6, "candidate_id": 6},
+    ]
+
+    create_test_elections(elections_data)
+    create_test_voters(users_data, voters_data)
+    create_test_candidates(candidates_data)
+    create_test_votes(votes_data)
+
+    # Act: Call the endpoint for an upcoming election
+    response = client.get("/elections/2/turnout_prediction")
+
+    # Assert: Verify correct turnout estimation
+    assert response.status_code == 200
+    assert response.json()["status"] == "Projected turnout based on actual votes cast"
+    assert response.json()["predicted_turnout"] == 2  # Moving average of last 3 elections
 
     test_db.rollback()
     gc.collect()
