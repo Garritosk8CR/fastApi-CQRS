@@ -942,6 +942,7 @@ query_bus.register_handler(GetTimePatternsQuery, GetTimePatternsHandler())
 query_bus.register_handler(GetSentimentAnalysisQuery, GetSentimentAnalysisHandler())
 query_bus.register_handler(GetTurnoutPredictionQuery, GetTurnoutPredictionHandler())
 query_bus.register_handler(GetObserverTrustScoresQuery, GetObserverTrustScoresHandler())
+query_bus.register_handler(GetFeedbackExportQuery, GetFeedbackExportHandler())
 
 
 
