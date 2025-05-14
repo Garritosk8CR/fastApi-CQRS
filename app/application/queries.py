@@ -141,3 +141,6 @@ class GetObserverTrustScoresQuery(BaseModel):
 
 class GetFeedbackExportQuery(BaseModel):
     export_format: str = "json"
+
+class GetElectionSummaryQuery(BaseModel):
+    election_id: int
