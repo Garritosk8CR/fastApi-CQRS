@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.infrastructure.models import Election, Observer, User, Voter
+from app.infrastructure.models import Candidate, Election, Observer, User, Voter
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import Base, SessionLocal, engine
 import gc
@@ -118,6 +118,18 @@ def create_test_observers(test_db):
         test_db.commit()
         return observers
     return _create_observers
+
+@pytest.fixture
+def create_test_candidates(test_db):
+    def _create_candidates(candidates_data):
+        candidates = []
+        for candidate_data in candidates_data:
+            candidate = Candidate(**candidate_data)
+            test_db.add(candidate)
+            candidates.append(candidate)
+        test_db.commit()
+        return candidates
+    return _create_candidates
 
 def test_cast_vote(client, test_db):
     # Step 1: Create an election
