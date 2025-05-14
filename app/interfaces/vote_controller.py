@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
-from app.application.queries import GetVotesByElectionQuery, GetVotesByVoterQuery
+from app.application.queries import GetElectionSummaryQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -25,4 +25,9 @@ def get_votes_by_election(election_id: int, db: Session = Depends(get_db)):
 @router.get("/voters/{voter_id}/votes")
 def get_votes_by_voter(voter_id: int, db: Session = Depends(get_db)):
     query = GetVotesByVoterQuery(voter_id=voter_id)
+    return query_bus.handle(query)
+
+@router.get("/analytics/election_summary")
+def get_election_summary(election_id: int):
+    query = GetElectionSummaryQuery(election_id=election_id)
     return query_bus.handle(query)
