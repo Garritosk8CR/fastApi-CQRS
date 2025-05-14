@@ -359,7 +359,6 @@ def test_user_has_not_voted(test_db, create_test_user_and_voter, client):
     test_db.rollback()
     gc.collect()
 
-
 @pytest.fixture
 def create_test_users_and_voters(test_db):
     def _create_users_and_voters(users_data, voters_data):
@@ -629,3 +628,45 @@ def test_bulk_voter_upload_invalid_data(test_db, client):
 
     # Assert: Verify response validation
     assert response.status_code == 422  # Unprocessable entity due to validation errors
+
+    test_db.rollback()
+    gc.collect()
+
+def test_election_summary_no_feedback(test_db, create_test_elections, create_test_votes, create_test_voters, client):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": True},
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create an election with ID 1
+    create_test_elections([{"id": 1, "name": "Test Election"}])
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 100},
+        {"id": 2, "election_id": 1, "voter_id": 101},
+        {"id": 3, "election_id": 1, "voter_id": 102},
+        {"id": 4, "election_id": 1, "voter_id": 103},
+        {"id": 5, "election_id": 1, "voter_id": 104}
+    ])
+    
+    # Act: Get the election summary for election_id=10
+    response = client.get("/votes/analytics/election_summary?election_id=1")
+    data = response.json()
+
+    # Assert: Total votes should be 5; without feedback, sentiment & trust are None
+    assert response.status_code == 200
+    assert data["total_votes"] == 5
+    assert data["average_sentiment"] is None
+    assert data["average_observer_trust"] is None
+
+    test_db.rollback()
+    gc.collect()
