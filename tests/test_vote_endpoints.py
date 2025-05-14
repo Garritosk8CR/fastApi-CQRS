@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.infrastructure.models import User, Voter
+from app.infrastructure.models import Election, Observer, User, Voter
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import Base, SessionLocal, engine
 import gc
@@ -94,6 +94,30 @@ def create_test_voters(test_db):
 def get_voter_count(test_db):
     """Helper fixture to count voters in the database."""
     return lambda: test_db.query(User).count()
+
+@pytest.fixture
+def create_test_elections(test_db):
+    def _create_elections(elections_data):
+        elections = []
+        for election_data in elections_data:
+            election = Election(**election_data)
+            test_db.add(election)
+            elections.append(election)
+        test_db.commit()
+        return elections
+    return _create_elections
+
+@pytest.fixture
+def create_test_observers(test_db):
+    def _create_observers(observers_data):
+        observers = []
+        for observer_data in observers_data:
+            observer = Observer(**observer_data)
+            test_db.add(observer)
+            observers.append(observer)
+        test_db.commit()
+        return observers
+    return _create_observers
 
 def test_cast_vote(client, test_db):
     # Step 1: Create an election
