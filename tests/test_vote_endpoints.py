@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.infrastructure.models import Candidate, Election, Observer, ObserverFeedback, User, Voter
+from app.infrastructure.models import Candidate, Election, Observer, ObserverFeedback, User, Vote, Voter
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import Base, SessionLocal, engine
 import gc
@@ -65,6 +65,18 @@ def create_test_user_and_voter(test_db):
 
         return user, voter
     return _create_user_and_voter
+
+@pytest.fixture
+def create_test_votes(test_db):
+    def _create(vote_data):
+        votes = []
+        for data in vote_data:
+            vote = Vote(**data)
+            test_db.add(vote)
+            votes.append(vote)
+        test_db.commit()
+        return votes
+    return _create
 
 @pytest.fixture
 def create_test_voters(test_db):
@@ -632,7 +644,7 @@ def test_bulk_voter_upload_invalid_data(test_db, client):
     test_db.rollback()
     gc.collect()
 
-def test_election_summary_no_feedback(test_db, create_test_elections, create_test_votes, create_test_voters, client):
+def test_election_summary_no_feedback(test_db, create_test_elections, create_test_votes, create_test_voters, create_test_candidates, client):
     users_data = [
         {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
         {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
@@ -647,17 +659,28 @@ def test_election_summary_no_feedback(test_db, create_test_elections, create_tes
         {"user_id": 4, "has_voted": True},
         {"user_id": 5, "has_voted": True},
     ]
+    candidates_data = [
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1},
+        {"id": 4, "name": "Candidate D", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 5, "name": "Candidate E", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 6, "name": "Candidate F", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1},
+    ]
     create_test_voters(users_data, voters_data)
+    
     # Arrange: Create an election with ID 1
     create_test_elections([{"id": 1, "name": "Test Election"}])
-    create_test_votes([
-        {"id": 1, "election_id": 1, "voter_id": 100},
-        {"id": 2, "election_id": 1, "voter_id": 101},
-        {"id": 3, "election_id": 1, "voter_id": 102},
-        {"id": 4, "election_id": 1, "voter_id": 103},
-        {"id": 5, "election_id": 1, "voter_id": 104}
-    ])
     
+    create_test_candidates(candidates_data)
+
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 2},
+        {"id": 3, "election_id": 1, "voter_id": 3, "candidate_id": 3},
+        {"id": 4, "election_id": 1, "voter_id": 4, "candidate_id": 4},
+        {"id": 5, "election_id": 1, "voter_id": 5, "candidate_id": 5},
+    ])
     # Act: Get the election summary for election_id=10
     response = client.get("/votes/analytics/election_summary?election_id=1")
     data = response.json()
