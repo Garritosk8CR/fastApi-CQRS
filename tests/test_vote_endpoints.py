@@ -1,3 +1,4 @@
+from datetime import datetime
 import pytest
 from fastapi.testclient import TestClient
 from app.infrastructure.models import Candidate, Election, Observer, ObserverFeedback, User, Vote, Voter
@@ -690,6 +691,82 @@ def test_election_summary_no_feedback(test_db, create_test_elections, create_tes
     assert data["total_votes"] == 5
     assert data["average_sentiment"] is None
     assert data["average_observer_trust"] is None
+
+    test_db.rollback()
+    gc.collect()
+
+def test_election_summary_with_feedback( test_db, create_test_elections, create_test_votes, create_test_feedback, create_test_voters, create_test_candidates, create_test_observers, client):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": True},
+    ]
+    candidates_data = [
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1},
+        {"id": 4, "name": "Candidate D", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 5, "name": "Candidate E", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 6, "name": "Candidate F", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1},
+    ]
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+    ]
+    
+    # Arrange: Create an election with ID 1
+    create_test_voters(users_data, voters_data)
+    create_test_elections([{"id": 1, "name": "Election 1"}])
+    create_test_candidates(candidates_data)
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 2},
+        {"id": 3, "election_id": 1, "voter_id": 3, "candidate_id": 3},
+    ])
+    create_test_observers(observers_data)
+    # ObserverFeedback records for election 1.
+    # Observer 1 submits 2 reports, Observer 2 submits 1.
+    create_test_feedback([
+        {
+            "id": 1, "observer_id": 1, "election_id": 1,
+            "description": "Great process",  # Positive sentiment
+            "severity": "LOW",
+            "timestamp": datetime(2025, 5, 10, 10, 0, 0)
+        },
+        {
+            "id": 2, "observer_id": 1, "election_id": 1,
+            "description": "Smooth voting",  # Positive sentiment
+            "severity": "LOW",
+            "timestamp": datetime(2025, 5, 10, 11, 0, 0)
+        },
+        {
+            "id": 3, "observer_id": 2, "election_id": 1,
+            "description": "Issues observed",  # Likely a negative sentiment
+            "severity": "HIGH",
+            "timestamp": datetime(2025, 5, 10, 12, 0, 0)
+        },
+    ])
+    
+    # Act: Get the election summary for election_id=20
+    response = client.get("/votes/analytics/election_summary?election_id=1")
+    data = response.json()
+
+    # Assert: Total votes should be 3.
+    # For observer trust: Observer 1 made 2 reports (score = min(100, 2*10)=20) and Observer 2 made 1 (score=10).
+    # Average trust = (20 + 10) / 2 = 15.
+    assert response.status_code == 200
+    assert data["total_votes"] == 3
+    assert isinstance(data["average_sentiment"], float)
+    assert data["average_observer_trust"] == 15
 
     test_db.rollback()
     gc.collect()
