@@ -956,6 +956,7 @@ query_bus.register_handler(GetTurnoutPredictionQuery, GetTurnoutPredictionHandle
 query_bus.register_handler(GetObserverTrustScoresQuery, GetObserverTrustScoresHandler())
 query_bus.register_handler(GetFeedbackExportQuery, GetFeedbackExportHandler())
 query_bus.register_handler(GetElectionSummaryQuery, GetElectionSummaryHandler())
+query_bus.register_handler(GetSentimentTrendQuery, GetSentimentTrendHandler())
 
 
 
