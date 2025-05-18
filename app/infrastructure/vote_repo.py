@@ -1,3 +1,4 @@
+from collections import defaultdict
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from textblob import TextBlob
@@ -62,3 +63,36 @@ class VoteRepository:
             "average_sentiment": average_sentiment,
             "average_observer_trust": average_trust
         }
+    
+    def get_sentiment_trend(self, election_id: int):
+        # Retrieve all feedback entries for the election.
+        feedbacks = self.db.query(ObserverFeedback)\
+                           .filter(ObserverFeedback.election_id == election_id)\
+                           .all()
+        
+        # Aggregate data by date.
+        trend_data = defaultdict(lambda: {"total_sentiment": 0.0, "count": 0})
+        for fb in feedbacks:
+            if fb.timestamp:
+                # Group by date in ISO format.
+                date_str = fb.timestamp.date().isoformat()
+            else:
+                date_str = "unknown"
+            
+            # Calculate sentiment polarity.
+            polarity = TextBlob(fb.description).sentiment.polarity
+            trend_data[date_str]["total_sentiment"] += polarity
+            trend_data[date_str]["count"] += 1
+
+        # Create a sorted list of daily sentiment trends.
+        trend_list = []
+        for date_str, data in trend_data.items():
+            average_sentiment = data["total_sentiment"] / data["count"] if data["count"] > 0 else None
+            trend_list.append({
+                "date": date_str,
+                "average_sentiment": average_sentiment,
+                "feedback_count": data["count"]
+            })
+        
+        trend_list.sort(key=lambda x: x["date"])
+        return trend_list
