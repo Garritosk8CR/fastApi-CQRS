@@ -990,3 +990,18 @@ def test_feedback_category_analytics_with_feedback( test_db, client, create_test
 
     test_db.rollback()
     gc.collect()
+
+def test_feedback_category_analytics_no_feedback( test_db, client, create_test_elections):
+    # Arrange: Create an election (ID 1) with no observer feedback.
+    create_test_elections([{"id": 1, "name": "Empty Category Election"}])
+    
+    # Act: Retrieve category analytics.
+    response = client.get("/observer_feedback/analytics/feedback_category?election_id=1")
+    data = response.json()
+    
+    # Assert: When no feedback exists, an empty list is returned.
+    assert response.status_code == 200
+    assert data == []
+
+    test_db.rollback()
+    gc.collect()
