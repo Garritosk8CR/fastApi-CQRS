@@ -926,3 +926,67 @@ def test_export_observer_feedback_csv_no_feedback(test_db, client):
 
     test_db.rollback()
     gc.collect()
+
+def test_feedback_category_analytics_with_feedback( test_db, client, create_test_observers, create_test_elections, create_test_feedback):
+    # Arrange: Create an election (ID 1) and multiple feedback records.
+    create_test_elections([{
+        "id": 1, 
+        "name": "Category Election"
+    }])
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+        {"id": 3, "name": "Observer C", "email": "observerC@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 4, "name": "Observer D", "email": "observerD@example.com", "election_id": 1, "organization": "Group Z"},
+        {"id": 5, "name": "Observer E", "email": "observerE@example.com", "election_id": 1, "organization": "Group Z"},
+    ]
+    create_test_observers(observers_data)
+    create_test_feedback([
+        # Should be classified as Security.
+        {
+            "id": 1, 
+            "observer_id": 1, 
+            "election_id": 1, 
+            "description": 
+            "Suspicious activity detected due to potential fraud", "severity": "HIGH", "timestamp": datetime(2025, 5, 10, 10, 0, 0)
+        },
+        # Should be classified as Operational.
+        {
+            "id": 2, 
+            "observer_id": 2, 
+            "election_id": 1, 
+            "description": "Long waiting lines and staff issues were observed", "severity": "MEDIUM", "timestamp": datetime(2025, 5, 10, 11, 0, 0)
+        },
+        # Should be classified as Technical.
+        {
+            "id": 3, 
+            "observer_id": 3, 
+            "election_id": 1, 
+            "description": "System error encountered during voting process", "severity": "LOW", "timestamp": datetime(2025, 5, 10, 12, 0, 0)
+        },
+        # Should fall into Other.
+        {
+            "id": 4, 
+            "observer_id": 4, 
+            "election_id": 1, 
+            "description": 
+            "Everything went fine without any issues", "severity": "LOW", "timestamp": datetime(2025, 5, 10, 13, 0, 0)
+        }
+    ])
+    
+    # Act: Retrieve category analytics.
+    response = client.get("/observer_feedback/analytics/feedback_category?election_id=1")
+    data = response.json()
+    
+    # Convert response to a dictionary for easy assertions.
+    category_dict = {item["category"]: item["count"] for item in data}
+    
+    # Assert: Each feedback record should match its category.
+    assert response.status_code == 200
+    assert category_dict.get("Security") == 1
+    assert category_dict.get("Operational") == 2
+    assert category_dict.get("Technical") == 1
+    assert category_dict.get("Other") == None
+
+    test_db.rollback()
+    gc.collect()
