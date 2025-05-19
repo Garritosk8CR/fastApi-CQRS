@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import SubmitFeedbackCommand
-from app.application.queries import GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetFeedbackExportQuery, GetIntegrityScoreQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetSentimentAnalysisQuery, GetSeverityDistributionQuery, GetTimePatternsQuery, GetTopObserversQuery
+from app.application.queries import GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetFeedbackCategoryAnalyticsQuery, GetFeedbackExportQuery, GetIntegrityScoreQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetSentimentAnalysisQuery, GetSeverityDistributionQuery, GetTimePatternsQuery, GetTopObserversQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -73,3 +73,8 @@ def export_observer_feedback(export_format: str = "json"):
     if export_format.lower() == "csv":
         return Response(content=result, media_type="text/csv")
     return result
+
+@router.get("/analytics/feedback_category")
+def get_feedback_category_analytics(election_id: int):
+    query = GetFeedbackCategoryAnalyticsQuery(election_id=election_id)
+    return query_bus.handle(query)
