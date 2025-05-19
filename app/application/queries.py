@@ -147,3 +147,6 @@ class GetElectionSummaryQuery(BaseModel):
 
 class GetSentimentTrendQuery(BaseModel):
     election_id: int
+
+class GetFeedbackCategoryAnalyticsQuery(BaseModel):
+    election_id: int
