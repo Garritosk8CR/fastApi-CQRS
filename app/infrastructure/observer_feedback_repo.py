@@ -1,3 +1,4 @@
+from collections import defaultdict
 import csv
 import io
 from sqlalchemy import func
@@ -130,3 +131,37 @@ class ObserverFeedbackRepository:
                 "timestamp": fb.timestamp.isoformat() if fb.timestamp else None,
             } for fb in feedbacks
         ]
+    
+    def get_feedback_category_analytics(self, election_id: int):
+        # Retrieve all feedback for the specified election.
+        feedbacks = self.db.query(ObserverFeedback).filter(ObserverFeedback.election_id == election_id).all()
+        
+        # Define a mapping of categories to keywords.
+        categories_map = {
+            "Security": ["security", "fraud", "attack", "unauthorized", "cheat"],
+            "Operational": ["delay", "waiting", "staff", "line", "issue", "administration"],
+            "Technical": ["error", "bug", "system", "technical", "software", "hardware"],
+        }
+        
+        # Use a defaultdict to count occurrences.
+        category_counts = defaultdict(int)
+        
+        for fb in feedbacks:
+            desc = fb.description.lower() if fb.description else ""
+            found_category = None
+            # Attempt to match a category based on keywords.
+            for category, keywords in categories_map.items():
+                for keyword in keywords:
+                    if keyword in desc:
+                        found_category = category
+                        break
+                if found_category is not None:
+                    break
+            # If no category matches, classify as "Other"
+            if found_category is None:
+                found_category = "Other"
+            category_counts[found_category] += 1
+        
+        # Convert counts to a list of dictionaries.
+        result = [{"category": cat, "count": count} for cat, count in category_counts.items()]
+        return result

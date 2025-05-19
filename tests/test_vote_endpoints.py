@@ -770,3 +770,78 @@ def test_election_summary_with_feedback( test_db, create_test_elections, create_
 
     test_db.rollback()
     gc.collect()
+
+
+def test_sentiment_trend_with_feedback( client, test_db, create_test_elections, create_test_feedback, create_test_voters, create_test_candidates, create_test_observers ):
+
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": True},
+    ]
+    candidates_data = [
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1},
+        {"id": 4, "name": "Candidate D", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 5, "name": "Candidate E", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 6, "name": "Candidate F", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1},
+    ]
+    observers_data = [
+        {"id": 1, "name": "Observer A", "email": "observerA@example.com", "election_id": 1, "organization": "Group X"},
+        {"id": 2, "name": "Observer B", "email": "observerB@example.com", "election_id": 1, "organization": "Group Y"},
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create an election and feedback entries on different dates.
+    create_test_elections([{"id": 1, "name": "Trend Election"}])
+    create_test_candidates(candidates_data)
+    create_test_observers(observers_data)
+    create_test_feedback([
+        {
+            "id": 1,
+            "observer_id": 1,
+            "election_id": 1,
+            "description": "Great process",         # Positive sentiment around 0.8
+            "severity": "LOW",
+            "timestamp": datetime(2025, 5, 10, 9, 0, 0)
+        },
+        {
+            "id": 2,
+            "observer_id": 2,
+            "election_id": 1,
+            "description": "Smooth voting",          # Positive sentiment
+            "severity": "LOW",
+            "timestamp": datetime(2025, 5, 10, 10, 0, 0)
+        },
+        {
+            "id": 3,
+            "observer_id": 1,
+            "election_id": 1,
+            "description": "Issues observed",        # Negative sentiment
+            "severity": "HIGH",
+            "timestamp": datetime(2025, 5, 11, 11, 0, 0)
+        },
+    ])
+    
+    # Act: Call the endpoint for election_id 1.
+    response = client.get("/votes/analytics/sentiment_trend?election_id=1")
+    data = response.json()
+    
+    # Assert: Verify we have entries for the two dates.
+    assert response.status_code == 200
+    # Expect two dates: one for 2025-05-10 and one for 2025-05-11.
+    dates = [entry["date"] for entry in data]
+    assert "2025-05-10" in dates
+    assert "2025-05-11" in dates
+
+    test_db.rollback()
+    gc.collect()

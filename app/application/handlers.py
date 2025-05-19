@@ -870,7 +870,7 @@ class GetElectionSummaryHandler:
 class GetSentimentTrendHandler:
     def handle(self, query: GetSentimentTrendQuery):
         with SessionLocal() as db:
-            repository = ObserverFeedbackRepository(db)
+            repository = VoteRepository(db)
         return repository.get_sentiment_trend(query.election_id)
         
 class CommandBus:
