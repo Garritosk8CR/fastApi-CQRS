@@ -124,3 +124,16 @@ class VoteRepository:
                 "vote_percentage": round(percentage, 2)
             })
         return distribution
+    
+    def get_time_based_voting_patterns(self, election_id: int, interval: str = "hourly"):
+        # Determine time grouping (hourly or daily)
+        time_group = func.date_trunc("hour", Vote.timestamp) if interval == "hourly" else func.date_trunc("day", Vote.timestamp)
+
+        # Aggregate votes based on the chosen time interval
+        vote_data = self.db.query(time_group.label("time_period"), func.count(Vote.id).label("vote_count")) \
+                           .filter(Vote.election_id == election_id) \
+                           .group_by(time_group) \
+                           .order_by(time_group) \
+                           .all()
+
+        return [{"time_period": record.time_period.isoformat(), "vote_count": record.vote_count} for record in vote_data]
