@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
-from app.application.queries import GetCandidateVoteDistributionQuery, GetElectionSummaryQuery, GetSentimentTrendQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
+from app.application.queries import GetCandidateVoteDistributionQuery, GetElectionSummaryQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -40,4 +40,9 @@ def get_sentiment_trend(election_id: int):
 @router.get("/analytics/candidate_distribution")
 def candidate_distribution(election_id: int):
     query = GetCandidateVoteDistributionQuery(election_id=election_id)
+    return query_bus.handle(query)
+
+@router.get("/analytics/voting_patterns")
+def get_time_based_voting_patterns(election_id: int, interval: str = "hourly"):
+    query = GetTimeBasedVotingPatternsQuery(election_id=election_id, interval=interval)
     return query_bus.handle(query)
