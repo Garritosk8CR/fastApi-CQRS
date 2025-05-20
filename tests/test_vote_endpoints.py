@@ -875,7 +875,7 @@ def test_candidate_vote_distribution( test_db, create_test_elections, create_tes
     ])
     
     # Act: Call the endpoint.
-    response = client.get("/analytics/candidate_distribution?election_id=1")
+    response = client.get("/votes/analytics/candidate_distribution?election_id=1")
     
     # Assert: Verify candidate vote counts and percentages.
     data = response.json()
