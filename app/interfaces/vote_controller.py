@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
-from app.application.queries import GetElectionSummaryQuery, GetSentimentTrendQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
+from app.application.queries import GetCandidateVoteDistributionQuery, GetElectionSummaryQuery, GetSentimentTrendQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -35,4 +35,9 @@ def get_election_summary(election_id: int):
 @router.get("/analytics/sentiment_trend")
 def get_sentiment_trend(election_id: int):
     query = GetSentimentTrendQuery(election_id=election_id)
+    return query_bus.handle(query)
+
+@router.get("/analytics/candidate_distribution")
+def candidate_distribution(election_id: int):
+    query = GetCandidateVoteDistributionQuery(election_id=election_id)
     return query_bus.handle(query)
