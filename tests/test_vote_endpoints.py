@@ -845,3 +845,47 @@ def test_sentiment_trend_with_feedback( client, test_db, create_test_elections, 
 
     test_db.rollback()
     gc.collect()
+
+def test_candidate_vote_distribution( test_db, create_test_elections, create_test_candidates, create_test_votes, create_test_voters, client):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": True},
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create an election, candidates, and votes.
+    create_test_elections([{"id": 1, "name": "Election 1"}])
+    create_test_candidates([
+         {"id": 1, "name": "Candidate A"},
+         {"id": 2, "name": "Candidate B"}
+    ])
+    create_test_votes([
+         {"id": 1, "election_id": 1, "candidate_id": 1, "voter_id": 1},
+         {"id": 2, "election_id": 1, "candidate_id": 1, "voter_id": 2},
+         {"id": 3, "election_id": 1, "candidate_id": 2, "voter_id": 3}
+    ])
+    
+    # Act: Call the endpoint.
+    response = client.get("/analytics/candidate_distribution?election_id=1")
+    
+    # Assert: Verify candidate vote counts and percentages.
+    data = response.json()
+    assert response.status_code == 200
+    candidate_a = next(item for item in data if item["candidate_id"] == 1)
+    candidate_b = next(item for item in data if item["candidate_id"] == 2)
+    assert candidate_a["vote_count"] == 2
+    assert candidate_a["vote_percentage"] == 66.67
+    assert candidate_b["vote_count"] == 1
+    assert candidate_b["vote_percentage"] == 33.33
+
+    test_db.rollback()
+    gc.collect()
