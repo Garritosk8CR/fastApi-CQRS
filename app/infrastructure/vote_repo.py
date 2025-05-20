@@ -2,7 +2,7 @@ from collections import defaultdict
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from textblob import TextBlob
-from app.infrastructure.models import ObserverFeedback, Vote
+from app.infrastructure.models import Candidate, ObserverFeedback, Vote
 
 class VoteRepository:
     def __init__(self, db: Session):
@@ -96,3 +96,31 @@ class VoteRepository:
         
         trend_list.sort(key=lambda x: x["date"])
         return trend_list
+    
+    def get_candidate_vote_distribution(self, election_id: int):
+        # Retrieve vote counts for each candidate in the given election.
+        votes_data = (
+            self.db.query(
+                Candidate.id,
+                Candidate.name,
+                func.count(Vote.id).label("vote_count")
+            )
+            .join(Vote, Vote.candidate_id == Candidate.id)
+            .filter(Vote.election_id == election_id)
+            .group_by(Candidate.id, Candidate.name)
+            .all()
+        )
+        
+        # Calculate total votes in the election.
+        total_votes = sum([item.vote_count for item in votes_data])
+        
+        distribution = []
+        for candidate in votes_data:
+            percentage = (candidate.vote_count / total_votes * 100) if total_votes > 0 else 0
+            distribution.append({
+                "candidate_id": candidate.id,
+                "candidate_name": candidate.name,
+                "vote_count": candidate.vote_count,
+                "vote_percentage": round(percentage, 2)
+            })
+        return distribution
