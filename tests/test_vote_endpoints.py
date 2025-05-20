@@ -865,8 +865,9 @@ def test_candidate_vote_distribution( test_db, create_test_elections, create_tes
     # Arrange: Create an election, candidates, and votes.
     create_test_elections([{"id": 1, "name": "Election 1"}])
     create_test_candidates([
-         {"id": 1, "name": "Candidate A"},
-         {"id": 2, "name": "Candidate B"}
+         {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
     ])
     create_test_votes([
          {"id": 1, "election_id": 1, "candidate_id": 1, "voter_id": 1},
