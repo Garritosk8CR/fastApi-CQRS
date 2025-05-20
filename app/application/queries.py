@@ -153,3 +153,7 @@ class GetFeedbackCategoryAnalyticsQuery(BaseModel):
 
 class GetCandidateVoteDistributionQuery(BaseModel):
     election_id: int
+
+class GetTimeBasedVotingPatternsQuery(BaseModel):
+    election_id: int
+    interval: str = "hourly"  # Supports "hourly" or "daily"
