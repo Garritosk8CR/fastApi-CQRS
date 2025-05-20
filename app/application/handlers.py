@@ -977,6 +977,7 @@ query_bus.register_handler(GetElectionSummaryQuery, GetElectionSummaryHandler())
 query_bus.register_handler(GetSentimentTrendQuery, GetSentimentTrendHandler())
 query_bus.register_handler(GetFeedbackCategoryAnalyticsQuery, GetFeedbackCategoryAnalyticsHandler())
 query_bus.register_handler(GetCandidateVoteDistributionQuery, GetCandidateVoteDistributionHandler())
+query_bus.register_handler(GetTimeBasedVotingPatternsQuery, GetTimeBasedVotingPatternsHandler())
 
 
 
