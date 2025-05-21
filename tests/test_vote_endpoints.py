@@ -934,3 +934,46 @@ def test_voting_patterns_hourly( test_db, create_test_elections, create_test_vot
 
     test_db.rollback()
     gc.collect()
+
+def test_voting_patterns_daily( test_db, create_test_elections, create_test_votes, create_test_voters, create_test_candidates, client):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": True},
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create an election and votes spread across multiple days
+    create_test_elections([{"id": 1, "name": "Election 1"}])
+    create_test_candidates([
+         {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "timestamp": datetime(2025, 5, 8, 14, 0, 0)},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 1, "timestamp": datetime(2025, 5, 9, 10, 0, 0)},
+        {"id": 3, "election_id": 1, "voter_id": 3, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 16, 0, 0)}
+    ])
+
+    # Act: Request daily voting trends
+    response = client.get("/votes/analytics/voting_patterns?election_id=1&interval=daily")
+    
+    # Assert: Verify correct daily grouping
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) == 3  # Expecting entries for May 8, May 9, and May 10
+    assert data[0]["time_period"].startswith("2025-05-08")
+    assert data[1]["time_period"].startswith("2025-05-09")
+    assert data[2]["time_period"].startswith("2025-05-10")
+
+    test_db.rollback()
+    gc.collect()
