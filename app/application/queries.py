@@ -157,3 +157,6 @@ class GetCandidateVoteDistributionQuery(BaseModel):
 class GetTimeBasedVotingPatternsQuery(BaseModel):
     election_id: int
     interval: str = "hourly"  # Supports "hourly" or "daily"
+
+class GetHistoricalTurnoutTrendsQuery(BaseModel):
+    election_ids: list[int]
