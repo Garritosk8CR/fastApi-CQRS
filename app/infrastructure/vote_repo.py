@@ -2,7 +2,7 @@ from collections import defaultdict
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from textblob import TextBlob
-from app.infrastructure.models import Candidate, ObserverFeedback, Vote
+from app.infrastructure.models import Candidate, Election, ObserverFeedback, Vote
 
 class VoteRepository:
     def __init__(self, db: Session):
@@ -137,3 +137,36 @@ class VoteRepository:
                            .all()
 
         return [{"time_period": record.time_period.isoformat(), "vote_count": record.vote_count} for record in vote_data]
+    
+    def get_turnout_trends(self, election_ids: list[int]):
+        # Retrieve total voter turnout for each election
+        turnout_data = (
+            self.db.query(Election.id, Election.name, func.count(Vote.id).label("vote_count"))
+            .join(Vote, Vote.election_id == Election.id)
+            .filter(Election.id.in_(election_ids))
+            .group_by(Election.id, Election.name)
+            .order_by(Election.id)
+            .all()
+        )
+
+        if not turnout_data:
+            return []
+
+        # Compute percentage change between consecutive elections
+        trends = []
+        for i in range(len(turnout_data)):
+            current = turnout_data[i]
+            previous = turnout_data[i - 1] if i > 0 else None
+            percentage_change = (
+                ((current.vote_count - previous.vote_count) / previous.vote_count * 100)
+                if previous and previous.vote_count > 0 else None
+            )
+
+            trends.append({
+                "election_id": current.id,
+                "election_name": current.name,
+                "vote_count": current.vote_count,
+                "percentage_change": round(percentage_change, 2) if percentage_change is not None else None
+            })
+
+        return trends
