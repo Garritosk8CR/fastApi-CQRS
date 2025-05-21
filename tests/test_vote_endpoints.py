@@ -977,3 +977,65 @@ def test_voting_patterns_daily( test_db, create_test_elections, create_test_vote
 
     test_db.rollback()
     gc.collect()
+
+def test_historical_turnout_trends( test_db, create_test_elections, create_test_votes, create_test_voters, create_test_candidates, client):
+
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": True},
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create elections and votes over multiple years
+    create_test_elections([
+        {"id": 1, "name": "Election 2021"},
+        {"id": 2, "name": "Election 2022"},
+        {"id": 3, "name": "Election 2023"}
+    ])
+    create_test_candidates([
+         {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 9, 15, 0)},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 9, 45, 0)},
+        {"id": 3, "election_id": 1, "voter_id": 3, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 10, 5, 0)},
+        {"id": 4, "election_id": 1, "voter_id": 4, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 11, 30, 0)},
+        {"id": 5, "election_id": 1, "voter_id": 5, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 12, 0, 0)},
+        {"id": 6, "election_id": 2, "voter_id": 1, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 9, 15, 0)},
+        {"id": 7, "election_id": 2, "voter_id": 2, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 9, 45, 0)},
+        {"id": 8, "election_id": 2, "voter_id": 3, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 10, 5, 0)},
+        {"id": 9, "election_id": 2, "voter_id": 4, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 11, 30, 0)},
+        {"id": 10, "election_id": 2, "voter_id": 5, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 12, 0, 0)},
+        {"id": 11, "election_id": 3, "voter_id": 1, "candidate_id": 1, "timestamp": datetime(2027, 5, 10, 9, 15, 0)},
+        {"id": 12, "election_id": 3, "voter_id": 2, "candidate_id": 1, "timestamp": datetime(2027, 5, 10, 9, 45, 0)},
+    ])
+
+    # Act: Request historical turnout trends
+    response = client.get("/votes/analytics/turnout_trends?election_ids=1,2,3")
+
+    # Assert: Verify correct turnout calculations
+    data = response.json()
+    assert response.status_code == 200
+    print(data)
+    test_db.rollback()
+    gc.collect()
+    assert len(data) == 3
+    
+    assert data[0]["vote_count"] == 5  # Election 2021 turnout
+    assert data[1]["vote_count"] == 5  # Election 2022 turnout
+    assert data[2]["vote_count"] == 2  # Election 2023 turnout
+    assert data[1]["percentage_change"] == 0.0  # Increase from 2 to 3 votes
+    assert data[2]["percentage_change"] == -60.0  # Increase from 3 to 4 votes
+
+    

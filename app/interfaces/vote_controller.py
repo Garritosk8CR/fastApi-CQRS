@@ -50,6 +50,12 @@ def get_time_based_voting_patterns(election_id: int, interval: str = "hourly"):
 @router.get("/analytics/turnout_trends")
 def get_historical_turnout_trends(election_ids: str):
     # Convert election IDs from query string to list of integers
-    election_ids_list = list(map(int, election_ids.split(",")))
-    query = GetHistoricalTurnoutTrendsQuery(election_ids=election_ids_list)
-    return query_bus.handle(query)
+    try:
+        print(election_ids)
+        election_ids_list = list(map(int, election_ids.split(",")))
+        query = GetHistoricalTurnoutTrendsQuery(election_ids=election_ids_list)
+        return query_bus.handle(query)
+    except ValueError:
+        print(f"Invalid election IDs: {election_ids}")
+        raise HTTPException(status_code=400, detail="Invalid election IDs")
+    
