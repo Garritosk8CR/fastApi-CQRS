@@ -193,3 +193,39 @@ class VoteRepository:
             "predicted_turnout": predicted_turnout,
             "status": "Projection based on historical trends"
         }
+    
+    def predict_turnout_with_seasonality(self, election_id: int, lookback: int = 5, weight_factor: float = 1.5):
+        # Retrieve details of the upcoming election
+        upcoming_election = self.db.query(Election).filter(Election.id == election_id).first()
+        if not upcoming_election:
+            return {"election_id": election_id, "predicted_turnout": None, "status": "Election not found"}
+
+        upcoming_month = upcoming_election.date.month
+
+        # Retrieve past elections for comparison
+        past_turnout = self.db.query(Election.id, Election.date, func.count(Vote.id).label("vote_count")) \
+                              .join(Vote, Vote.election_id == Election.id) \
+                              .filter(Election.id < election_id) \
+                              .group_by(Election.id, Election.date) \
+                              .order_by(Election.id.desc()) \
+                              .limit(lookback) \
+                              .all()
+
+        if not past_turnout:
+            return {"election_id": election_id, "predicted_turnout": None, "status": "Not enough historical data"}
+
+        # Apply seasonality weighting
+        total_weighted_votes = 0
+        total_weight = 0
+        for past in past_turnout:
+            weight = weight_factor if past.date.month == upcoming_month else 1.0
+            total_weighted_votes += past.vote_count * weight
+            total_weight += weight
+
+        predicted_turnout = total_weighted_votes / total_weight
+
+        return {
+            "election_id": election_id,
+            "predicted_turnout": round(predicted_turnout),
+            "status": f"Projection adjusted for seasonality (month={upcoming_month})"
+        }
