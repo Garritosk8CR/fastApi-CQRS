@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
-from app.application.queries import GetCandidateVoteDistributionQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
+from app.application.queries import GetCandidateVoteDistributionQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -58,4 +58,9 @@ def get_historical_turnout_trends(election_ids: str):
     except ValueError:
         print(f"Invalid election IDs: {election_ids}")
         raise HTTPException(status_code=400, detail="Invalid election IDs")
+
+@router.get("/analytics/turnout_forecast")
+def get_turnout_forecast(election_id: int, lookback: int = 3, db: Session = Depends(get_db)):
+    query = GetTurnoutPredictionQuery(election_id=election_id, lookback=lookback)
+    return query_bus.handle(query)
     
