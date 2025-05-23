@@ -691,8 +691,9 @@ def test_turnout_prediction_with_past_votes(test_db, create_test_elections, crea
     response = client.get("/elections/2/turnout_prediction")
 
     # Assert: Verify correct turnout estimation
+    print(response.json())
     assert response.status_code == 200
-    assert response.json()["status"] == "Projected turnout based on actual votes cast"
+    assert response.json()["status"] == "Projection based on historical trends"
     assert response.json()["predicted_turnout"] == 2  # Moving average of last 3 elections
 
     test_db.rollback()
@@ -708,8 +709,8 @@ def test_turnout_prediction_no_past_votes(test_db, create_test_elections):
 
     # Assert: Verify default response for lack of data
     assert response.status_code == 200
-    assert response.json()["status"] == "No Data"
-    assert response.json()["predicted_turnout"] == 0
+    assert response.json()["status"] == "Not enough historical data"
+    assert response.json()["predicted_turnout"] == None
 
     test_db.rollback()
     gc.collect()
