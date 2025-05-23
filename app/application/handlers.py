@@ -896,6 +896,12 @@ class GetHistoricalTurnoutTrendsHandler:
         with SessionLocal() as db:
             repository = VoteRepository(db)
         return repository.get_turnout_trends(query.election_ids)
+    
+class GetTurnoutPredictionHandler:
+    def handle(self, query: GetTurnoutPredictionQuery):
+        with SessionLocal() as db:
+            repository = VoteRepository(db)
+        return repository.predict_turnout(query.election_id, query.lookback)
         
 class CommandBus:
     def __init__(self):
