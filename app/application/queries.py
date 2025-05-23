@@ -164,3 +164,8 @@ class GetHistoricalTurnoutTrendsQuery(BaseModel):
 class GetTurnoutPredictionQuery(BaseModel):
     election_id: int
     lookback: int = 3  # Default to using last 3 elections
+
+class GetSeasonalTurnoutPredictionQuery(BaseModel):
+    election_id: int
+    lookback: int = 5  # Default to using last 5 elections
+    weight_factor: float = 1.5  # Higher weight applied to matching seasons
