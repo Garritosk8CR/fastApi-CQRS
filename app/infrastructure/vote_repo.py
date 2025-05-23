@@ -3,6 +3,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from textblob import TextBlob
 from app.infrastructure.models import Candidate, Election, ObserverFeedback, Vote
+import numpy as np
 
 class VoteRepository:
     def __init__(self, db: Session):
@@ -230,4 +231,38 @@ class VoteRepository:
             "election_id": election_id,
             "predicted_turnout": round(predicted_turnout),
             "status": f"Projection adjusted for seasonality (month={upcoming_month})"
+        }
+    
+    def predict_turnout_with_confidence(self, election_id: int, lookback: int = 5):
+        # Retrieve past turnout data
+        past_turnout = self.db.query(Election.id, func.count(Vote.id).label("vote_count")) \
+                              .join(Vote, Vote.election_id == Election.id) \
+                              .filter(Election.id < election_id) \
+                              .group_by(Election.id) \
+                              .order_by(Election.id.desc()) \
+                              .limit(lookback) \
+                              .all()
+
+        if not past_turnout:
+            return {"election_id": election_id, "predicted_turnout": None, "confidence_score": None, "status": "Not enough historical data"}
+
+        vote_counts = [item.vote_count for item in past_turnout]
+        predicted_turnout = sum(vote_counts) // len(vote_counts)
+
+        # Compute standard deviation of turnout
+        std_dev = np.std(vote_counts)
+
+        # Define confidence level based on variability
+        if std_dev < 5:
+            confidence_score = "High Confidence 🔵"
+        elif std_dev < 15:
+            confidence_score = "Moderate Confidence 🟡"
+        else:
+            confidence_score = "Low Confidence 🔴"
+
+        return {
+            "election_id": election_id,
+            "predicted_turnout": predicted_turnout,
+            "confidence_score": confidence_score,
+            "status": "Forecast includes confidence analysis based on turnout variability"
         }
