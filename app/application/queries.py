@@ -160,3 +160,7 @@ class GetTimeBasedVotingPatternsQuery(BaseModel):
 
 class GetHistoricalTurnoutTrendsQuery(BaseModel):
     election_ids: list[int]
+
+class GetTurnoutPredictionQuery(BaseModel):
+    election_id: int
+    lookback: int = 3  # Default to using last 3 elections
