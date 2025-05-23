@@ -170,3 +170,26 @@ class VoteRepository:
             })
 
         return trends
+    
+    def predict_turnout(self, election_id: int, lookback: int = 3):
+        # Retrieve turnout data for previous elections
+        past_turnout = self.db.query(Election.id, func.count(Vote.id).label("vote_count")) \
+                              .join(Vote, Vote.election_id == Election.id) \
+                              .filter(Election.id < election_id) \
+                              .group_by(Election.id) \
+                              .order_by(Election.id.desc()) \
+                              .limit(lookback) \
+                              .all()
+
+        if not past_turnout:
+            return {"election_id": election_id, "predicted_turnout": None, "status": "Not enough historical data"}
+
+        # Compute simple moving average as the predicted turnout
+        total_votes = sum([item.vote_count for item in past_turnout])
+        predicted_turnout = total_votes // len(past_turnout)
+
+        return {
+            "election_id": election_id,
+            "predicted_turnout": predicted_turnout,
+            "status": "Projection based on historical trends"
+        }
