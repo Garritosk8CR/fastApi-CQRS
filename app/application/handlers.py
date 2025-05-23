@@ -998,6 +998,7 @@ query_bus.register_handler(GetCandidateVoteDistributionQuery, GetCandidateVoteDi
 query_bus.register_handler(GetTimeBasedVotingPatternsQuery, GetTimeBasedVotingPatternsHandler())
 query_bus.register_handler(GetHistoricalTurnoutTrendsQuery, GetHistoricalTurnoutTrendsHandler())
 query_bus.register_handler(GetTurnoutPredictionQuery, GetTurnoutPredictionHandler())
+query_bus.register_handler(GetSeasonalTurnoutPredictionQuery, GetSeasonalTurnoutPredictionHandler())
 
 
 
