@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
-from app.application.queries import GetCandidateVoteDistributionQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
+from app.application.queries import GetCandidateVoteDistributionQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -67,5 +67,10 @@ def get_turnout_forecast(election_id: int, lookback: int = 3, db: Session = Depe
 @router.get("/analytics/turnout_forecast/seasonal")
 def get_seasonal_turnout_forecast(election_id: int, lookback: int = 5, weight_factor: float = 1.5):
     query = GetSeasonalTurnoutPredictionQuery(election_id=election_id, lookback=lookback, weight_factor=weight_factor)
+    return query_bus.handle(query)
+
+@router.get("/analytics/turnout_forecast/confidence")
+def get_turnout_confidence(election_id: int, lookback: int = 5):
+    query = GetTurnoutConfidenceQuery(election_id=election_id, lookback=lookback)
     return query_bus.handle(query)
     
