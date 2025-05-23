@@ -169,3 +169,7 @@ class GetSeasonalTurnoutPredictionQuery(BaseModel):
     election_id: int
     lookback: int = 5  # Default to using last 5 elections
     weight_factor: float = 1.5  # Higher weight applied to matching seasons
+
+class GetTurnoutConfidenceQuery(BaseModel):
+    election_id: int
+    lookback: int = 5  # Use last 5 elections by default
