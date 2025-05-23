@@ -195,19 +195,21 @@ class VoteRepository:
         }
     
     def predict_turnout_with_seasonality(self, election_id: int, lookback: int = 5, weight_factor: float = 1.5):
-        # Retrieve details of the upcoming election
-        upcoming_election = self.db.query(Election).filter(Election.id == election_id).first()
-        if not upcoming_election:
-            return {"election_id": election_id, "predicted_turnout": None, "status": "Election not found"}
+        # Retrieve the first recorded vote timestamp for the election
+        election_timing = self.db.query(Vote.election_id, func.min(Vote.timestamp).label("start_date")) \
+                                 .filter(Vote.election_id == election_id) \
+                                 .group_by(Vote.election_id) \
+                                 .first()
 
-        upcoming_month = upcoming_election.date.month
+        if not election_timing or not election_timing.start_date:
+            return {"election_id": election_id, "predicted_turnout": None, "status": "Election timing unavailable"}
+
+        upcoming_month = election_timing.start_date.month
 
         # Retrieve past elections for comparison
-        past_turnout = self.db.query(Election.id, Election.date, func.count(Vote.id).label("vote_count")) \
-                              .join(Vote, Vote.election_id == Election.id) \
-                              .filter(Election.id < election_id) \
-                              .group_by(Election.id, Election.date) \
-                              .order_by(Election.id.desc()) \
+        past_turnout = self.db.query(Vote.election_id, func.min(Vote.timestamp).label("start_date"), func.count(Vote.id).label("vote_count")) \
+                              .group_by(Vote.election_id) \
+                              .order_by(Vote.election_id.desc()) \
                               .limit(lookback) \
                               .all()
 
@@ -218,7 +220,7 @@ class VoteRepository:
         total_weighted_votes = 0
         total_weight = 0
         for past in past_turnout:
-            weight = weight_factor if past.date.month == upcoming_month else 1.0
+            weight = weight_factor if past.start_date.month == upcoming_month else 1.0
             total_weighted_votes += past.vote_count * weight
             total_weight += weight
 
