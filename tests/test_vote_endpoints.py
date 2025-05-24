@@ -1351,4 +1351,73 @@ def test_turnout_confidence_low(test_db, create_test_elections, create_test_vote
     assert response.status_code == 200
     assert data["confidence_score"] == "Low Confidence 🔴"
 
-    
+def test_detailed_historical_comparisons(test_db, create_test_elections, create_test_votes, create_test_voters, create_test_candidates, client):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+        {"id": 7, "name": "Active Voter 7", "email": "active7@example.com", "role": "voter"},
+        {"id": 8, "name": "Active Voter 8", "email": "active8@example.com", "role": "voter"},
+        {"id": 9, "name": "Active Voter 9", "email": "active9@example.com", "role": "voter"},
+        {"id": 10, "name": "Active Voter 10", "email": "active10@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": True},
+        {"user_id": 6, "has_voted": True},
+        {"user_id": 7, "has_voted": True},
+        {"user_id": 8, "has_voted": True},
+        {"user_id": 9, "has_voted": True},
+        {"user_id": 10, "has_voted": True},
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create elections with their associated votes (with timestamps)
+    create_test_elections([
+        {"id": 1, "name": "Election 2021"},
+        {"id": 2, "name": "Election 2022"},
+        {"id": 3, "name": "Election 2023"}
+    ])
+    create_test_candidates([
+         {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    create_test_votes([
+        # Election 1 (Baseline: 2 votes, earliest timestamp)
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "timestamp": datetime(2021, 5, 10, 10, 0, 0)},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 1, "timestamp": datetime(2021, 5, 10, 11, 0, 0)},
+
+        # Election 2 (4 votes → Expect a significant increase from 2 votes)
+        {"id": 3, "election_id": 2, "voter_id": 3, "candidate_id": 1, "timestamp": datetime(2022, 5, 10, 9, 0, 0)},
+        {"id": 4, "election_id": 2, "voter_id": 4, "candidate_id": 1, "timestamp": datetime(2022, 5, 10, 9, 15, 0)},
+        {"id": 5, "election_id": 2, "voter_id": 5, "candidate_id": 1, "timestamp": datetime(2022, 5, 10, 10, 0, 0)},
+        {"id": 6, "election_id": 2, "voter_id": 6, "candidate_id": 1, "timestamp": datetime(2022, 5, 10, 10, 30, 0)},
+
+        # Election 3 (3 votes → Drop from 4 votes)
+        {"id": 7, "election_id": 3, "voter_id": 7, "candidate_id": 1, "timestamp": datetime(2023, 5, 10, 9, 0, 0)},
+        {"id": 8, "election_id": 3, "voter_id": 8, "candidate_id": 1, "timestamp": datetime(2023, 5, 10, 9, 15, 0)},
+        {"id": 9, "election_id": 3, "voter_id": 9, "candidate_id": 1, "timestamp": datetime(2023, 5, 10, 9, 30, 0)}
+    ])
+
+    # Act: Request detailed historical comparisons for elections 1, 2, and 3
+    response = client.get("/votes/analytics/historical_detailed?election_ids=1,2,3")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert: Check that annotations and metrics are computed correctly
+    assert response.status_code == 200
+    # First record should be baseline data (no previous election to compare)
+    assert data[0]["annotation"] == "Baseline data"
+    # Election 2: from 2 votes to 4 votes is a 100% increase → "Major Surge"
+    assert data[1]["annotation"] == "Major Surge"
+    # Election 3: from 4 votes to 3 votes → moderate drop; if -25% (which is > -30%), annotation should be "Stable turnout"
+    assert data[2]["annotation"] == "Stable turnout"
