@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
-from app.application.queries import GetCandidateVoteDistributionQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
+from app.application.queries import GetCandidateVoteDistributionQuery, GetDetailedHistoricalComparisonsQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -72,5 +72,12 @@ def get_seasonal_turnout_forecast(election_id: int, lookback: int = 5, weight_fa
 @router.get("/analytics/turnout_forecast/confidence")
 def get_turnout_confidence(election_id: int, lookback: int = 5):
     query = GetTurnoutConfidenceQuery(election_id=election_id, lookback=lookback)
+    return query_bus.handle(query)
+
+@router.get("/analytics/historical_detailed")
+def get_detailed_historical_comparisons(election_ids: str):
+    # Convert comma-separated string to a list of integers
+    election_ids_list = list(map(int, election_ids.split(",")))
+    query = GetDetailedHistoricalComparisonsQuery(election_ids=election_ids_list)
     return query_bus.handle(query)
     
