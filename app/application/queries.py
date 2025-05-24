@@ -180,3 +180,6 @@ class GetDetailedHistoricalComparisonsQuery(BaseModel):
 
 class GetDetailedHistoricalComparisonsWithExternalQuery(BaseModel):
     election_ids: List[int]
+
+class DashboardAnalyticsQuery(BaseModel):
+    election_id: int
