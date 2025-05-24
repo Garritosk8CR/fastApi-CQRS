@@ -266,3 +266,57 @@ class VoteRepository:
             "confidence_score": confidence_score,
             "status": "Forecast includes confidence analysis based on turnout variability"
         }
+    
+    def get_detailed_comparisons(self, election_ids: list[int]):
+        # Retrieve election data with vote counts and earliest vote timestamp.
+        data = (
+            self.db.query(
+                Election.id,
+                Election.name,
+                func.count(Vote.id).label("vote_count"),
+                func.min(Vote.timestamp).label("start_date")
+            )
+            .join(Vote, Vote.election_id == Election.id)
+            .filter(Election.id.in_(election_ids))
+            .group_by(Election.id, Election.name)
+            .order_by(Election.id)
+            .all()
+        )
+        if not data:
+            return []
+
+        comparisons = []
+        for i, current in enumerate(data):
+            previous = data[i - 1] if i > 0 else None
+            
+            if previous and previous.vote_count > 0:
+                percentage_change = ((current.vote_count - previous.vote_count) / previous.vote_count * 100)
+            else:
+                percentage_change = None
+
+            if previous and previous.start_date and current.start_date:
+                days_diff = (current.start_date - previous.start_date).days
+            else:
+                days_diff = None
+
+            # Annotation based on percentage change:
+            if percentage_change is None:
+                annotation = "Baseline data"
+            elif percentage_change > 50:
+                annotation = "Major Surge"
+            elif percentage_change < -30:
+                annotation = "Significant Drop"
+            else:
+                annotation = "Stable turnout"
+
+            comparisons.append({
+                "election_id": current.id,
+                "election_name": current.name,
+                "vote_count": current.vote_count,
+                "start_date": current.start_date.isoformat() if current.start_date else None,
+                "percentage_change": round(percentage_change, 2) if percentage_change is not None else None,
+                "days_since_previous": days_diff,
+                "annotation": annotation
+            })
+
+        return comparisons
