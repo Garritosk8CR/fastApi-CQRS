@@ -1195,4 +1195,160 @@ def test_turnout_confidence_high(test_db, create_test_elections, create_test_vot
     assert response.status_code == 200
     assert data["confidence_score"] == "High Confidence 🔵"
 
+def test_turnout_confidence_low(test_db, create_test_elections, create_test_votes, create_test_voters, create_test_candidates, client):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+        {"id": 7, "name": "Active Voter 7", "email": "active7@example.com", "role": "voter"},
+        {"id": 8, "name": "Active Voter 8", "email": "active8@example.com", "role": "voter"},
+        {"id": 9, "name": "Active Voter 9", "email": "active9@example.com", "role": "voter"},
+        {"id": 10, "name": "Active Voter 10", "email": "active10@example.com", "role": "voter"},
+        {"id": 11, "name": "Active Voter 11", "email": "active11@example.com", "role": "voter"},
+        {"id": 12, "name": "Active Voter 12", "email": "active12@example.com", "role": "voter"},
+        {"id": 13, "name": "Active Voter 13", "email": "active13@example.com", "role": "voter"},
+        {"id": 14, "name": "Active Voter 14", "email": "active14@example.com", "role": "voter"},
+        {"id": 15, "name": "Active Voter 15", "email": "active15@example.com", "role": "voter"},
+        {"id": 16, "name": "Active Voter 16", "email": "active16@example.com", "role": "voter"},
+        {"id": 17, "name": "Active Voter 17", "email": "active17@example.com", "role": "voter"},
+        {"id": 18, "name": "Active Voter 18", "email": "active18@example.com", "role": "voter"},
+        {"id": 19, "name": "Active Voter 19", "email": "active19@example.com", "role": "voter"},
+        {"id": 20, "name": "Active Voter 20", "email": "active20@example.com", "role": "voter"},
+        {"id": 21, "name": "Active Voter 21", "email": "active21@example.com", "role": "voter"},
+        {"id": 22, "name": "Active Voter 22", "email": "active22@example.com", "role": "voter"},
+        {"id": 23, "name": "Active Voter 23", "email": "active23@example.com", "role": "voter"},
+        {"id": 24, "name": "Active Voter 24", "email": "active24@example.com", "role": "voter"},
+        {"id": 25, "name": "Active Voter 25", "email": "active25@example.com", "role": "voter"},
+        {"id": 26, "name": "Active Voter 26", "email": "active26@example.com", "role": "voter"},
+        {"id": 27, "name": "Active Voter 27", "email": "active27@example.com", "role": "voter"},
+        {"id": 28, "name": "Active Voter 28", "email": "active28@example.com", "role": "voter"},
+        {"id": 29, "name": "Active Voter 29", "email": "active29@example.com", "role": "voter"},
+        {"id": 30, "name": "Active Voter 30", "email": "active30@example.com", "role": "voter"},
+        {"id": 31, "name": "Active Voter 31", "email": "active31@example.com", "role": "voter"},
+        {"id": 32, "name": "Active Voter 32", "email": "active32@example.com", "role": "voter"},
+        {"id": 33, "name": "Active Voter 33", "email": "active33@example.com", "role": "voter"},
+        {"id": 34, "name": "Active Voter 34", "email": "active34@example.com", "role": "voter"},
+        {"id": 35, "name": "Active Voter 35", "email": "active35@example.com", "role": "voter"},
+        {"id": 36, "name": "Active Voter 36", "email": "active36@example.com", "role": "voter"},
+        {"id": 37, "name": "Active Voter 37", "email": "active37@example.com", "role": "voter"},
+        {"id": 38, "name": "Active Voter 38", "email": "active38@example.com", "role": "voter"},
+        {"id": 39, "name": "Active Voter 39", "email": "active39@example.com", "role": "voter"},
+        {"id": 40, "name": "Active Voter 40", "email": "active40@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": True},
+        {"user_id": 6, "has_voted": True},
+        {"user_id": 7, "has_voted": True},
+        {"user_id": 8, "has_voted": True},
+        {"user_id": 9, "has_voted": True},
+        {"user_id": 10, "has_voted": True},
+        {"user_id": 11, "has_voted": True},
+        {"user_id": 12, "has_voted": True},
+        {"user_id": 13, "has_voted": True},
+        {"user_id": 14, "has_voted": True},
+        {"user_id": 15, "has_voted": True},
+        {"user_id": 16, "has_voted": True},
+        {"user_id": 17, "has_voted": True},
+        {"user_id": 18, "has_voted": True},
+        {"user_id": 19, "has_voted": True},
+        {"user_id": 20, "has_voted": True},
+        {"user_id": 21, "has_voted": True},
+        {"user_id": 22, "has_voted": True},
+        {"user_id": 23, "has_voted": True},
+        {"user_id": 24, "has_voted": True},
+        {"user_id": 25, "has_voted": True},
+        {"user_id": 26, "has_voted": True},
+        {"user_id": 27, "has_voted": True},
+        {"user_id": 28, "has_voted": True},
+        {"user_id": 29, "has_voted": True},
+        {"user_id": 30, "has_voted": True},
+        {"user_id": 31, "has_voted": True},
+        {"user_id": 32, "has_voted": True},
+        {"user_id": 33, "has_voted": True},
+        {"user_id": 34, "has_voted": True},
+        {"user_id": 35, "has_voted": True},
+        {"user_id": 36, "has_voted": True},
+        {"user_id": 37, "has_voted": True},
+        {"user_id": 38, "has_voted": True},
+        {"user_id": 39, "has_voted": True},
+        {"user_id": 40, "has_voted": True},
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create elections with inconsistent turnout numbers
+    create_test_elections([
+        {"id": 1, "name": "Election 2021"},
+        {"id": 2, "name": "Election 2022"},
+        {"id": 3, "name": "Election 2023"},
+        {"id": 4, "name": "Upcoming Election"}
+    ])
+    create_test_candidates([
+         {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    create_test_votes([
+        # Low turnout in first election (very few voters)
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 9, 15, 0)},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 9, 45, 0)},
+
+        # Gradual increase in second election
+        {"id": 3, "election_id": 2, "voter_id": 3, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 10, 5, 0)},
+        {"id": 4, "election_id": 2, "voter_id": 4, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 11, 30, 0)},
+        {"id": 5, "election_id": 2, "voter_id": 5, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 12, 0, 0)},
+
+        # Huge surge in third election (Anomaly detected!)
+        {"id": 6, "election_id": 3, "voter_id": 6, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 9, 15, 0)},
+        {"id": 7, "election_id": 3, "voter_id": 7, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 9, 45, 0)},
+        {"id": 8, "election_id": 3, "voter_id": 8, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 10, 5, 0)},
+        {"id": 9, "election_id": 3, "voter_id": 9, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 11, 30, 0)},
+        {"id": 10, "election_id": 3, "voter_id": 10, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 12, 0, 0)},
+        {"id": 11, "election_id": 3, "voter_id": 11, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 12, 10, 0)},
+        {"id": 12, "election_id": 3, "voter_id": 12, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 12, 20, 0)},
+        {"id": 13, "election_id": 3, "voter_id": 13, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 12, 30, 0)},
+        {"id": 14, "election_id": 3, "voter_id": 14, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 12, 40, 0)},
+        {"id": 15, "election_id": 3, "voter_id": 15, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 12, 50, 0)},
+        {"id": 16, "election_id": 3, "voter_id": 16, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 13, 0, 0)},
+        {"id": 17, "election_id": 3, "voter_id": 17, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 13, 10, 0)},
+        {"id": 18, "election_id": 3, "voter_id": 18, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 13, 20, 0)},
+        {"id": 19, "election_id": 3, "voter_id": 19, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 13, 30, 0)},
+        {"id": 20, "election_id": 3, "voter_id": 20, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 13, 40, 0)},
+        {"id": 21, "election_id": 3, "voter_id": 21, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 13, 50, 0)},
+        {"id": 22, "election_id": 3, "voter_id": 22, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 14, 0, 0)},
+        {"id": 23, "election_id": 3, "voter_id": 23, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 14, 10, 0)},
+        {"id": 24, "election_id": 3, "voter_id": 24, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 14, 20, 0)},
+        {"id": 25, "election_id": 3, "voter_id": 25, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 14, 30, 0)},
+        {"id": 26, "election_id": 3, "voter_id": 26, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 14, 40, 0)},
+        {"id": 27, "election_id": 3, "voter_id": 27, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 14, 50, 0)},
+        {"id": 28, "election_id": 3, "voter_id": 28, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 15, 0, 0)},
+        {"id": 29, "election_id": 3, "voter_id": 29, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 15, 10, 0)},
+        {"id": 30, "election_id": 3, "voter_id": 30, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 15, 20, 0)},
+        {"id": 31, "election_id": 3, "voter_id": 31, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 15, 30, 0)},
+        {"id": 32, "election_id": 3, "voter_id": 32, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 15, 40, 0)},
+        {"id": 33, "election_id": 3, "voter_id": 33, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 15, 50, 0)},
+        {"id": 34, "election_id": 3, "voter_id": 34, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 16, 0, 0)},
+        {"id": 35, "election_id": 3, "voter_id": 35, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 16, 10, 0)},
+        {"id": 36, "election_id": 3, "voter_id": 36, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 16, 20, 0)},
+        {"id": 37, "election_id": 3, "voter_id": 37, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 16, 30, 0)},
+        {"id": 38, "election_id": 3, "voter_id": 38, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 16, 40, 0)},
+        {"id": 39, "election_id": 3, "voter_id": 39, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 16, 50, 0)},
+        {"id": 40, "election_id": 3, "voter_id": 40, "candidate_id": 1, "timestamp": datetime(2026, 5, 10, 17, 0, 0)}
+    ])
+
+    # Act: Request turnout confidence scoring
+    response = client.get("/votes/analytics/turnout_forecast/confidence?election_id=38&lookback=10")
+
+    test_db.rollback()
+    gc.collect()
+    # Assert: Verify confidence is low due to inconsistent turnout history
+    data = response.json()
+    assert response.status_code == 200
+    assert data["confidence_score"] == "Low Confidence 🔴"
+
     

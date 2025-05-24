@@ -251,7 +251,7 @@ class VoteRepository:
 
         # Compute standard deviation of turnout
         std_dev = np.std(vote_counts)
-
+        print(f"Standard deviation of turnout: {std_dev}")
         # Define confidence level based on variability
         if std_dev < 5:
             confidence_score = "High Confidence 🔵"
