@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
-from app.application.queries import GetCandidateVoteDistributionQuery, GetDetailedHistoricalComparisonsQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
+from app.application.queries import GetCandidateVoteDistributionQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -81,3 +81,9 @@ def get_detailed_historical_comparisons(election_ids: str):
     query = GetDetailedHistoricalComparisonsQuery(election_ids=election_ids_list)
     return query_bus.handle(query)
     
+@router.get("/analytics/historical_detailed/external")
+def get_detailed_historical_comparisons_with_external(election_ids: str):
+    # Convert a comma-separated string of election IDs to a list of integers.
+    election_ids_list = list(map(int, election_ids.split(",")))
+    query = GetDetailedHistoricalComparisonsWithExternalQuery(election_ids=election_ids_list)
+    return query_bus.handle(query)
