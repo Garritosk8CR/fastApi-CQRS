@@ -5,6 +5,8 @@ from textblob import TextBlob
 from app.infrastructure.models import Candidate, Election, ObserverFeedback, Vote
 import numpy as np
 
+from app.infrastructure.observer_feedback_repo import ObserverFeedbackRepository
+
 class VoteRepository:
     def __init__(self, db: Session):
         self.db = db
@@ -402,4 +404,42 @@ class VoteRepository:
             "observer_sentiment": observer_sentiment,
             "historical_trend": historical_trend,
             "external_data": external_data,
+        }
+    
+    def get_real_time_summary(self, election_id: int) -> dict:
+        # Total votes so far for the election
+        total_votes = (
+            self.db.query(func.count(Vote.id))
+            .filter(Vote.election_id == election_id)
+            .scalar()
+        )
+
+        # Candidate vote distribution
+        candidate_distribution_query = (
+            self.db.query(Vote.candidate_id, func.count(Vote.id).label("votes"))
+            .filter(Vote.election_id == election_id)
+            .group_by(Vote.candidate_id)
+            .all()
+        )
+        candidate_distribution = [
+            {"candidate_id": cid, "votes": votes}
+            for cid, votes in candidate_distribution_query
+        ]
+
+        # Get the timestamp of the latest vote for the last update time
+        last_update = (
+            self.db.query(func.max(Vote.timestamp))
+            .filter(Vote.election_id == election_id)
+            .scalar()
+        )
+
+        # Instead of mocking, use the existing observer sentiment repository:
+        observer_sentiment = ObserverFeedbackRepository(self.db).get_sentiment_by_election(election_id)
+        
+        return {
+            "election_id": election_id,
+            "total_votes": total_votes,
+            "candidate_distribution": candidate_distribution,
+            "last_update": last_update.isoformat() if last_update else None,
+            "observer_sentiment": observer_sentiment,
         }
