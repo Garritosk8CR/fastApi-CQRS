@@ -320,3 +320,25 @@ class VoteRepository:
             })
 
         return comparisons
+    
+
+    def get_external_data(self, election_id: int) -> dict:
+        """
+        Simulate an external API call which returns extra data based on the election.
+        In a real system, this might be a network call using requests or an async HTTP client.
+        """
+        # For demonstration, we assign simulated values:
+        simulated_data = {
+            "weather": "Sunny" if election_id % 2 == 0 else "Cloudy",
+            "economic_index": 100 + election_id * 2  # Just a sample computation
+        }
+        return simulated_data
+
+    def get_detailed_comparisons_with_external(self, election_ids: list[int]) -> list:
+        # Retrieve the internal detailed comparisons first.
+        comparisons = self.internal_repo.get_detailed_comparisons(election_ids)
+        # For each election record, fetch and merge external data.
+        for comp in comparisons:
+            external_data = self.get_external_data(comp["election_id"])
+            comp["external"] = external_data
+        return comparisons
