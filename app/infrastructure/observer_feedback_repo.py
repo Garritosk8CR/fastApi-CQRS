@@ -98,6 +98,34 @@ class ObserverFeedbackRepository:
 
         return sentiments
     
+    def get_sentiment_by_election(self, election_id: int):
+    # Retrieve only observer feedback associated with the specified election.
+        feedbacks = (
+            self.db.query(ObserverFeedback.id, ObserverFeedback.description)
+            .filter(ObserverFeedback.election_id == election_id)
+            .all()
+        )
+
+        sentiments = []
+        for feedback in feedbacks:
+            sentiment_score = TextBlob(feedback.description).sentiment.polarity
+            # Assign sentiment category based on score thresholds.
+            if sentiment_score > 0.2:
+                sentiment_category = "Positive"
+            elif -0.2 <= sentiment_score <= 0.2:
+                sentiment_category = "Neutral"
+            else:
+                sentiment_category = "Negative"
+
+            sentiments.append({
+                "feedback_id": feedback.id,
+                "description": feedback.description,
+                "sentiment": sentiment_category,
+                "score": round(sentiment_score, 2)
+            })
+
+        return sentiments
+    
     def export_observer_feedback(self, export_format: str = "json"):
         feedbacks = self.db.query(ObserverFeedback).all()
         
