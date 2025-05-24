@@ -342,3 +342,64 @@ class VoteRepository:
             external_data = self.get_external_data(comp["election_id"])
             comp["external"] = external_data
         return comparisons
+    
+    def get_dashboard_metrics(self, election_id: int) -> dict:
+        # 1. Total votes for the specified election
+        total_votes = (
+            self.db.query(func.count(Vote.id))
+            .filter(Vote.election_id == election_id)
+            .scalar()
+        )
+
+        # 2. Vote distribution per candidate for the specified election
+        candidate_distribution = (
+            self.db.query(Vote.candidate_id, func.count(Vote.id).label("votes"))
+            .filter(Vote.election_id == election_id)
+            .group_by(Vote.candidate_id)
+            .all()
+        )
+        candidate_distribution = [
+            {"candidate_id": candidate_id, "votes": votes}
+            for candidate_id, votes in candidate_distribution
+        ]
+
+        # 3. Mock observer sentiment summary (in a real system, you'd analyze feedback)
+        observer_sentiment = {"positive": 70, "neutral": 20, "negative": 10}
+
+        # 4. Historical turnout trends: average turnout of past elections and change percentage
+        past_elections_data = (
+            self.db.query(Election.id, func.count(Vote.id).label("vote_count"))
+            .join(Vote, Vote.election_id == Election.id)
+            .filter(Election.id < election_id)
+            .group_by(Election.id)
+            .all()
+        )
+        past_vote_counts = [row.vote_count for row in past_elections_data]
+        historical_trend = None
+        if past_vote_counts:
+            historical_average = sum(past_vote_counts) / len(past_vote_counts)
+            change_percentage = ((total_votes - historical_average) / historical_average * 100
+                                 ) if historical_average > 0 else None
+            historical_trend = {
+                "historical_average": historical_average,
+                "current_vs_average_change": round(change_percentage, 2)
+                if change_percentage is not None
+                else None,
+            }
+        else:
+            historical_trend = {"historical_average": None, "current_vs_average_change": None}
+
+        # 5. External data (mocked for now)
+        external_data = {
+            "weather": "Sunny" if election_id % 2 == 0 else "Cloudy",
+            "economic_index": 100 + election_id * 3,
+        }
+
+        return {
+            "election_id": election_id,
+            "total_votes": total_votes,
+            "candidate_distribution": candidate_distribution,
+            "observer_sentiment": observer_sentiment,
+            "historical_trend": historical_trend,
+            "external_data": external_data,
+        }
