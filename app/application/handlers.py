@@ -1019,6 +1019,7 @@ query_bus.register_handler(GetTurnoutPredictionQuery, GetTurnoutPredictionHandle
 query_bus.register_handler(GetSeasonalTurnoutPredictionQuery, GetSeasonalTurnoutPredictionHandler())
 query_bus.register_handler(GetTurnoutConfidenceQuery, GetTurnoutConfidenceHandler())
 query_bus.register_handler(GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsHandler())
+query_bus.register_handler(GetDetailedHistoricalComparisonsWithExternalQuery, GetDetailedHistoricalComparisonsWithExternalHandler())
 
 
 
