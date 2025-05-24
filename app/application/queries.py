@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel
 
 
@@ -173,3 +174,6 @@ class GetSeasonalTurnoutPredictionQuery(BaseModel):
 class GetTurnoutConfidenceQuery(BaseModel):
     election_id: int
     lookback: int = 5  # Use last 5 elections by default
+
+class GetDetailedHistoricalComparisonsQuery(BaseModel):
+    election_ids: List[int]
