@@ -1489,3 +1489,80 @@ def test_detailed_historical_comparisons_with_external(client, test_db, create_t
         # Since we simulate weather based on election_id parity:
         expected_weather = "Sunny" if record["election_id"] % 2 == 0 else "Cloudy"
         assert record["external"]["weather"] == expected_weather
+
+def test_dashboard_endpoint(test_db, create_test_elections, create_test_votes, create_test_voters, create_test_candidates, client):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+        {"id": 7, "name": "Active Voter 7", "email": "active7@example.com", "role": "voter"},
+        {"id": 8, "name": "Active Voter 8", "email": "active8@example.com", "role": "voter"},
+        {"id": 9, "name": "Active Voter 9", "email": "active9@example.com", "role": "voter"},
+        {"id": 10, "name": "Active Voter 10", "email": "active10@example.com", "role": "voter"},
+        {"id": 11, "name": "Active Voter 11", "email": "active11@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": True},
+        {"user_id": 6, "has_voted": True},
+        {"user_id": 7, "has_voted": True},
+        {"user_id": 8, "has_voted": True},
+        {"user_id": 9, "has_voted": True},
+        {"user_id": 10, "has_voted": True},
+        {"user_id": 11, "has_voted": True},
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create a few elections and their votes.
+    create_test_elections([
+        {"id": 1, "name": "Election 2021"},
+        {"id": 2, "name": "Election 2022"},
+        {"id": 3, "name": "Election 2023"}
+    ])
+    create_test_candidates([
+         {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    create_test_votes([
+        # Election 1 (2 votes)
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "timestamp": datetime(2021, 5, 10, 10, 0, 0)},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 1, "timestamp": datetime(2021, 5, 10, 11, 0, 0)},
+        
+        # Election 2 (4 votes, candidate 1 gets 3 out of 4)
+        {"id": 3, "election_id": 2, "voter_id": 3, "candidate_id": 1, "timestamp": datetime(2022, 5, 10, 9, 0, 0)},
+        {"id": 4, "election_id": 2, "voter_id": 4, "candidate_id": 1, "timestamp": datetime(2022, 5, 10, 9, 15, 0)},
+        {"id": 5, "election_id": 2, "voter_id": 5, "candidate_id": 1, "timestamp": datetime(2022, 5, 10, 10, 0, 0)},
+        {"id": 6, "election_id": 2, "voter_id": 6, "candidate_id": 2, "timestamp": datetime(2022, 5, 10, 10, 30, 0)},
+
+        # Election3 (Current election, 5 votes)
+        {"id": 7, "election_id": 3, "voter_id": 7, "candidate_id": 1, "timestamp": datetime(2023, 5, 10, 9, 0, 0)},
+        {"id": 8, "election_id": 3, "voter_id": 8, "candidate_id": 1, "timestamp": datetime(2023, 5, 10, 9, 15, 0)},
+        {"id": 9, "election_id": 3, "voter_id": 9, "candidate_id": 2, "timestamp": datetime(2023, 5, 10, 9, 30, 0)},
+        {"id": 10, "election_id": 3, "voter_id": 10, "candidate_id": 1, "timestamp": datetime(2023, 5, 10, 10, 0, 0)},
+        {"id": 11, "election_id": 3, "voter_id": 11, "candidate_id": 2, "timestamp": datetime(2023, 5, 10, 10, 15, 0)},
+    ])
+
+    # Act: Request the dashboard for election 3.
+    response = client.get("/votes/analytics/dashboard?election_id=3")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert: Verify the structure and values in the dashboard response.
+    assert response.status_code == 200
+    assert data["election_id"] == 3
+    assert "total_votes" in data
+    assert "candidate_distribution" in data
+    assert "observer_sentiment" in data
+    assert "historical_trend" in data
+    assert "external_data" in data
+    # Check mocked external data based on election_id (3 is odd, expect "Cloudy")
+    assert data["external_data"]["weather"] == "Cloudy"
