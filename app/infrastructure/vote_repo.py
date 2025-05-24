@@ -336,7 +336,7 @@ class VoteRepository:
 
     def get_detailed_comparisons_with_external(self, election_ids: list[int]) -> list:
         # Retrieve the internal detailed comparisons first.
-        comparisons = self.internal_repo.get_detailed_comparisons(election_ids)
+        comparisons = self.get_detailed_comparisons(election_ids)
         # For each election record, fetch and merge external data.
         for comp in comparisons:
             external_data = self.get_external_data(comp["election_id"])
