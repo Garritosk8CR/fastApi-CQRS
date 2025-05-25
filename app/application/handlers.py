@@ -1040,6 +1040,7 @@ query_bus.register_handler(GetDetailedHistoricalComparisonsQuery, GetDetailedHis
 query_bus.register_handler(GetDetailedHistoricalComparisonsWithExternalQuery, GetDetailedHistoricalComparisonsWithExternalHandler())
 query_bus.register_handler(DashboardAnalyticsQuery, DashboardAnalyticsHandler())
 query_bus.register_handler(RealTimeElectionSummaryQuery, RealTimeElectionSummaryHandler())
+query_bus.register_handler(GeolocationAnalyticsQuery, GeolocationAnalyticsHandler())
 
 
 
