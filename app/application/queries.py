@@ -183,3 +183,6 @@ class GetDetailedHistoricalComparisonsWithExternalQuery(BaseModel):
 
 class DashboardAnalyticsQuery(BaseModel):
     election_id: int
+
+class RealTimeElectionSummaryQuery(BaseModel):
+    election_id: int
