@@ -186,3 +186,6 @@ class DashboardAnalyticsQuery(BaseModel):
 
 class RealTimeElectionSummaryQuery(BaseModel):
     election_id: int
+
+class GeolocationAnalyticsQuery(BaseModel):
+    election_id: int
