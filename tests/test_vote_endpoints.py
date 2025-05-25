@@ -1566,3 +1566,45 @@ def test_dashboard_endpoint(test_db, create_test_elections, create_test_votes, c
     assert "external_data" in data
     # Check mocked external data based on election_id (3 is odd, expect "Cloudy")
     assert data["external_data"]["weather"] == "Cloudy"
+
+def test_real_time_summary_endpoint(test_db, create_test_elections, create_test_votes, create_test_voters, create_test_candidates, client):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"}       
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True}
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create an election and some votes.
+    create_test_elections([
+        {"id": 1, "name": "Real-Time Election Test"},
+    ])
+    create_test_candidates([
+         {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 10, 0, 0)},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 2, "timestamp": datetime(2025, 5, 10, 10, 5, 0)},
+        {"id": 3, "election_id": 1, "voter_id": 3, "candidate_id": 1, "timestamp": datetime(2025, 5, 10, 10, 10, 0)},
+    ])
+
+    # Act
+    response = client.get("/votes/analytics/real_time_summary?election_id=1")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert
+    assert response.status_code == 200
+    assert data["election_id"] == 1
+    assert data["total_votes"] == 3
+    assert isinstance(data["candidate_distribution"], list)
+    assert data["last_update"] is not None
