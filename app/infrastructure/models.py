@@ -119,6 +119,7 @@ class Vote(Base):
     candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
     election_id = Column(Integer, ForeignKey("elections.id"), nullable=False)
     timestamp = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
+    region = Column(String, nullable=True)  # New optional region field
 
     voter = relationship("Voter", back_populates="votes")
     candidate = relationship("Candidate")
