@@ -1608,3 +1608,57 @@ def test_real_time_summary_endpoint(test_db, create_test_elections, create_test_
     assert data["total_votes"] == 3
     assert isinstance(data["candidate_distribution"], list)
     assert data["last_update"] is not None
+
+def test_geolocation_analytics_endpoint(test_db, create_test_elections, create_test_votes, create_test_voters, create_test_candidates, client):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"}
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": False},
+        {"user_id": 5, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create an election and votes with a "region" field.
+    create_test_elections([
+        {"id": 1, "name": "Regional Election"}
+    ])
+    create_test_candidates([
+         {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "region": "North", "timestamp": datetime(2025, 5, 10, 10, 0, 0)},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 2, "region": "North", "timestamp": datetime(2025, 5, 10, 10, 5, 0)},
+        {"id": 3, "election_id": 1, "voter_id": 3, "candidate_id": 1, "region": "South", "timestamp": datetime(2025, 5, 10, 10, 10, 0)},
+        {"id": 4, "election_id": 1, "voter_id": 4, "candidate_id": 2, "region": "South", "timestamp": datetime(2025, 5, 10, 10, 15, 0)},
+        {"id": 5, "election_id": 1, "voter_id": 5, "candidate_id": 1, "region": "North", "timestamp": datetime(2025, 5, 10, 10, 20, 0)},
+    ])
+
+    # Act: Request geolocation analytics for election 1.
+    response = client.get("/votes/analytics/geolocation?election_id=1")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert: Verify the structure and content.
+    assert response.status_code == 200
+    assert isinstance(data, list)
+    # Verify that for each region, we get total_votes and candidate distribution.
+    regions = {entry["region"] for entry in data}
+    assert "North" in regions
+    assert "South" in regions
+
+    # Optionally, check that candidate distribution is structured as expected.
+    for region_data in data:
+        assert "total_votes" in region_data
+        assert "candidate_distribution" in region_data

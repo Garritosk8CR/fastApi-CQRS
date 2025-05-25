@@ -99,6 +99,6 @@ def real_time_election_summary(election_id: int):
     return query_bus.handle(query)
 
 @router.get("/analytics/geolocation")
-def get_geolocation_analytics(election_id: int, db: Session = Depends(get_db)):
+def get_geolocation_analytics(election_id: int):
     query = GeolocationAnalyticsQuery(election_id=election_id)
     return query_bus.handle(query)
