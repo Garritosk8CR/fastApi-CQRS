@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
-from app.application.queries import DashboardAnalyticsQuery, GetCandidateVoteDistributionQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, RealTimeElectionSummaryQuery
+from app.application.queries import DashboardAnalyticsQuery, GeolocationAnalyticsQuery, GetCandidateVoteDistributionQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, RealTimeElectionSummaryQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -96,4 +96,9 @@ def get_dashboard(election_id: int):
 @router.get("/analytics/real_time_summary")
 def real_time_election_summary(election_id: int):
     query = RealTimeElectionSummaryQuery(election_id=election_id)
+    return query_bus.handle(query)
+
+@router.get("/analytics/geolocation")
+def get_geolocation_analytics(election_id: int, db: Session = Depends(get_db)):
+    query = GeolocationAnalyticsQuery(election_id=election_id)
     return query_bus.handle(query)
