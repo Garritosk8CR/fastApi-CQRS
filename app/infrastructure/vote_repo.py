@@ -443,3 +443,41 @@ class VoteRepository:
             "last_update": last_update.isoformat() if last_update else None,
             "observer_sentiment": observer_sentiment,
         }
+    
+    def get_geolocation_metrics(self, election_id: int) -> list:
+        # Query total votes grouped by region.
+        region_votes = (
+            self.db.query(Vote.region, func.count(Vote.id).label("total_votes"))
+            .filter(Vote.election_id == election_id)
+            .group_by(Vote.region)
+            .all()
+        )
+
+        # Query candidate distribution within each region.
+        candidate_distribution_query = (
+            self.db.query(Vote.region, Vote.candidate_id, func.count(Vote.id).label("votes"))
+            .filter(Vote.election_id == election_id)
+            .group_by(Vote.region, Vote.candidate_id)
+            .all()
+        )
+
+        # Transform candidate distribution into a dict keyed by region.
+        candidate_distribution = {}
+        for region, candidate_id, votes in candidate_distribution_query:
+            if region not in candidate_distribution:
+                candidate_distribution[region] = []
+            candidate_distribution[region].append({
+                "candidate_id": candidate_id,
+                "votes": votes
+            })
+
+        # Merge the data for each region.
+        results = []
+        for region, total_votes in region_votes:
+            results.append({
+                "region": region,
+                "total_votes": total_votes,
+                "candidate_distribution": candidate_distribution.get(region, [])
+            })
+
+        return results
