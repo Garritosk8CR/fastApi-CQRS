@@ -481,3 +481,54 @@ class VoteRepository:
             })
 
         return results
+    
+    def get_polling_station_insights(self, election_id: int) -> list:
+        """
+        Computes basic analytics per polling station for the given election:
+          - Total votes cast per station.
+          - Average interval (in seconds) between consecutive votes.
+          - Peak hour and the vote count during that hour.
+        """
+        # Retrieve votes for the election that have a polling station assigned.
+        votes = (
+            self.db.query(Vote)
+            .filter(Vote.election_id == election_id, Vote.polling_station != None)
+            .all()
+        )
+
+        station_dict = defaultdict(list)
+        # Group vote timestamps by polling_station.
+        for vote in votes:
+            station_dict[vote.polling_station].append(vote.timestamp)
+
+        results = []
+        for station, timestamps in station_dict.items():
+            total_votes = len(timestamps)
+            # Sort timestamps to calculate time differences.
+            timestamps_sorted = sorted(timestamps)
+            if len(timestamps_sorted) > 1:
+                intervals = [
+                    (t2 - t1).total_seconds()
+                    for t1, t2 in zip(timestamps_sorted, timestamps_sorted[1:])
+                ]
+                avg_interval = sum(intervals) / len(intervals)
+            else:
+                avg_interval = None  # Not enough data to compute an interval.
+
+            # Peak hour: count votes per hour.
+            hours = [timestamp.hour for timestamp in timestamps]
+            hour_counts = Counter(hours)
+            if hour_counts:
+                peak_hour, peak_votes = hour_counts.most_common(1)[0]
+            else:
+                peak_hour, peak_votes = None, None
+
+            results.append({
+                "polling_station": station,
+                "total_votes": total_votes,
+                "average_interval_seconds": avg_interval,
+                "peak_hour": peak_hour,
+                "votes_in_peak_hour": peak_votes,
+            })
+
+        return results

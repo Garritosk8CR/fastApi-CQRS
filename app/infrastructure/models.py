@@ -74,6 +74,7 @@ class PollingStation(Base):
     capacity = Column(Integer, nullable=False)
 
     election = relationship("Election", back_populates="polling_stations")
+    votes = relationship("Vote", back_populates="polling_station")
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
@@ -119,11 +120,15 @@ class Vote(Base):
     candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
     election_id = Column(Integer, ForeignKey("elections.id"), nullable=False)
     timestamp = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
-    region = Column(String, nullable=True)  # New optional region field
+    region = Column(String, nullable=True)  # Existing optional region field
+
+    # New optional field to link to a polling station.
+    polling_station_id = Column(Integer, ForeignKey("polling_stations.id"), nullable=True)
 
     voter = relationship("Voter", back_populates="votes")
     candidate = relationship("Candidate")
     election = relationship("Election", back_populates="vote")
+    polling_station = relationship("PollingStation", back_populates="votes")
 
 class ObserverFeedback(Base):
     __tablename__ = "observer_feedback"
