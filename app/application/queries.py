@@ -189,3 +189,6 @@ class RealTimeElectionSummaryQuery(BaseModel):
 
 class GeolocationAnalyticsQuery(BaseModel):
     election_id: int
+
+class PollingStationAnalyticsQuery(BaseModel):
+    election_id: int
