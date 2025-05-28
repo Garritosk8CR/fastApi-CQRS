@@ -1696,7 +1696,7 @@ def test_polling_station_analytics_endpoint(test_db, create_test_elections, crea
         {"id": 1, "name": "Station Analytics Election"}
     ])
     create_test_candidates([
-         {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
         {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
         {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
     ])
@@ -1737,3 +1737,67 @@ def test_polling_station_analytics_endpoint(test_db, create_test_elections, crea
         if entry["polling_station"] == "Station A":
             # The intervals are 60 seconds between votes, so the average should be 60.
             assert abs(entry["average_interval_seconds"] - 60) < 1  # Allow small floating point differences.
+
+def test_historical_polling_station_trends_endpoint(
+    test_db, create_test_elections, create_test_polling_stations, create_test_votes, create_test_voters, create_test_candidates, client
+):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"}
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": False},
+        {"user_id": 5, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create elections, polling stations, and votes across different elections.
+    create_test_elections([
+        {"id": 1, "name": "Election 2020"},
+        {"id": 2, "name": "Election 2021"},
+    ])
+    create_test_candidates([
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    stations = create_test_polling_stations([
+        {"id": 1, "name": "Station A", "location": "School", "election_id": 1, "capacity": 300},
+        {"id": 2, "name": "Station B", "location": "Park", "election_id": 1, "capacity": 200},
+    ])
+
+    now = datetime.now(timezone.utc)
+    # Votes for Election 2020, Station A
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "polling_station_id": 1, "timestamp": now},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 1, "polling_station_id": 1, "timestamp": now + timedelta(seconds=60)},
+    ])
+    # Votes for Election 2021, Station A
+    create_test_votes([
+        {"id": 3, "election_id": 2, "voter_id": 3, "candidate_id": 1, "polling_station_id": 1, "timestamp": now + timedelta(days=365)},
+        {"id": 4, "election_id": 2, "voter_id": 4, "candidate_id": 1, "polling_station_id": 1, "timestamp": now + timedelta(days=365, seconds=90)},
+    ])
+
+    # Act: Request historical trends for elections 1 and 2.
+    response = client.get("/votes/analytics/historical_polling_station_trends?election_ids=1,2&polling_station_id=1")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert: Verify the structure and content of the response.
+    assert response.status_code == 200
+    assert isinstance(data, list)
+    for entry in data:
+        assert "election_id" in entry
+        assert "polling_station" in entry
+        assert "total_votes" in entry
+        assert "average_interval_seconds" in entry
+        assert "peak_hour" in entry
+        assert "votes_in_peak_hour" in entry
