@@ -102,3 +102,11 @@ def real_time_election_summary(election_id: int):
 def get_geolocation_analytics(election_id: int):
     query = GeolocationAnalyticsQuery(election_id=election_id)
     return query_bus.handle(query)
+
+@router.get("/analytics/polling_station")
+def get_polling_station_analytics(election_id: int):
+    """
+    Returns basic performance metrics for polling stations for the specified election.
+    """
+    query = PollingStationAnalyticsQuery(election_id=election_id)
+    return query_bus.handle(query)

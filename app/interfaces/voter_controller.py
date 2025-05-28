@@ -80,11 +80,5 @@ def bulk_voter_upload(query: VoterUploadQuery):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@router.get("/analytics/polling_station")
-def get_polling_station_analytics(election_id: int):
-    """
-    Returns basic performance metrics for polling stations for the specified election.
-    """
-    query = PollingStationAnalyticsQuery(election_id=election_id)
-    return query_bus.handle(query)
+
 
