@@ -1054,6 +1054,7 @@ query_bus.register_handler(DashboardAnalyticsQuery, DashboardAnalyticsHandler())
 query_bus.register_handler(RealTimeElectionSummaryQuery, RealTimeElectionSummaryHandler())
 query_bus.register_handler(GeolocationAnalyticsQuery, GeolocationAnalyticsHandler())
 query_bus.register_handler(PollingStationAnalyticsQuery, PollingStationAnalyticsHandler())
+query_bus.register_handler(HistoricalPollingStationTrendsQuery, HistoricalPollingStationTrendsHandler())
 
 
 
