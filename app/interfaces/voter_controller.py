@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from app.application.query_bus import query_bus
 from app.application.commands import RegisterVoterCommand, CastVoteCommand
 from app.application.handlers import HasVotedHandler, command_bus
-from app.application.queries import HasVotedQuery, InactiveVotersQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import HasVotedQuery, InactiveVotersQuery, PollingStationAnalyticsQuery, VoterDetailsQuery, VotingStatusQuery
 from app.infrastructure.models import VoterUploadQuery
 
 
@@ -79,4 +79,12 @@ def bulk_voter_upload(query: VoterUploadQuery):
         return command_bus.handle(query)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/analytics/polling_station")
+def get_polling_station_analytics(election_id: int):
+    """
+    Returns basic performance metrics for polling stations for the specified election.
+    """
+    query = PollingStationAnalyticsQuery(election_id=election_id)
+    return query_bus.handle(query)
 
