@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -192,3 +192,7 @@ class GeolocationAnalyticsQuery(BaseModel):
 
 class PollingStationAnalyticsQuery(BaseModel):
     election_id: int
+
+class HistoricalPollingStationTrendsQuery(BaseModel):
+    election_ids: List[int]
+    polling_station_id: Optional[int] = None
