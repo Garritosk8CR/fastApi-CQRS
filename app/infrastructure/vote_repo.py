@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import Counter
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from textblob import TextBlob

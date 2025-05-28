@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import pytest
 from fastapi.testclient import TestClient
-from app.infrastructure.models import Candidate, Election, Observer, ObserverFeedback, User, Vote, Voter
+from app.infrastructure.models import Candidate, Election, Observer, ObserverFeedback, PollingStation, User, Vote, Voter
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import Base, SessionLocal, engine
 import gc
@@ -155,6 +155,18 @@ def create_test_feedback(test_db):
         test_db.commit()
         return feedbacks
     return _create
+
+@pytest.fixture
+def create_test_polling_stations(test_db):
+    def _create_stations(stations_data):
+        stations = []
+        for station_data in stations_data:
+            station = PollingStation(**station_data)
+            test_db.add(station)
+            stations.append(station)
+        test_db.commit()
+        return stations
+    return _create_stations
 
 def test_cast_vote(client, test_db):
     # Step 1: Create an election
@@ -1662,3 +1674,66 @@ def test_geolocation_analytics_endpoint(test_db, create_test_elections, create_t
     for region_data in data:
         assert "total_votes" in region_data
         assert "candidate_distribution" in region_data
+
+def test_polling_station_analytics_endpoint(test_db, create_test_elections, create_test_votes, create_test_voters, create_test_candidates, create_test_polling_stations, client):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"}
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": False},
+        {"user_id": 5, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create an election and votes with a polling_station field.
+    create_test_elections([
+        {"id": 1, "name": "Station Analytics Election"}
+    ])
+    create_test_candidates([
+         {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    stations_data = [
+        {"id": 1, "name": "Station A", "location": "School", "election_id": 1, "capacity": 300},
+        {"id": 2, "name": "Station B", "location": "Park", "election_id": 1, "capacity": 200}
+    ]
+    create_test_polling_stations(stations_data)
+    # Create votes with different timestamps for two polling stations.
+    now = datetime.now(timezone.utc)
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "polling_station_id": 1, "timestamp": now},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 1, "polling_station_id": 1, "timestamp": now + timedelta(seconds=60)},
+        {"id": 3, "election_id": 1, "voter_id": 3, "candidate_id": 2, "polling_station_id": 1, "timestamp": now + timedelta(seconds=120)},
+        {"id": 4, "election_id": 1, "voter_id": 4, "candidate_id": 1, "polling_station_id": 2, "timestamp": now + timedelta(seconds=30)},
+        {"id": 5, "election_id": 1, "voter_id": 5, "candidate_id": 2, "polling_station_id": 2, "timestamp": now + timedelta(seconds=90)},
+    ])
+
+    # Act: Request polling station analytics for election with ID 1.
+    response = client.get("/votes/analytics/polling_station?election_id=1")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert: Verify the structure and content.
+    assert response.status_code == 200
+    assert isinstance(data, list)
+    print(data)
+    # Check that we have insights for both Station A and Station B.
+    stations = {entry["polling_station"]["name"] for entry in data}
+    assert "Station A" in stations
+    assert "Station B" in stations
+
+    # Optionally, verify the average interval for Station A.
+    for entry in data:
+        if entry["polling_station"] == "Station A":
+            # The intervals are 60 seconds between votes, so the average should be 60.
+            assert abs(entry["average_interval_seconds"] - 60) < 1  # Allow small floating point differences.
