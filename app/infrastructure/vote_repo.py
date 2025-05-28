@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Counter
+from typing import Counter, List, Optional
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from textblob import TextBlob
@@ -526,6 +526,78 @@ class VoteRepository:
 
             results.append({
                 "polling_station": station,
+                "total_votes": total_votes,
+                "average_interval_seconds": avg_interval,
+                "peak_hour": peak_hour,
+                "votes_in_peak_hour": peak_votes,
+            })
+
+        return results
+    
+    def get_historical_trends(
+        self, election_ids: List[int], polling_station_id: Optional[int] = None
+    ) -> list:
+        """
+        For the given election IDs (and optionally filtered by a specific polling station),
+        returns historical performance metrics grouped by (election, polling station):
+          - total_votes
+          - average_interval_seconds between consecutive votes
+          - peak_hour and votes_in_peak_hour
+        """
+        query = self.db.query(Vote).filter(
+            Vote.election_id.in_(election_ids),
+            Vote.polling_station_id.isnot(None)  # only consider votes with a polling station
+        )
+        if polling_station_id is not None:
+            query = query.filter(Vote.polling_station_id == polling_station_id)
+
+        votes = query.all()
+
+        # Group votes by (election_id, polling_station_id)
+        groups = defaultdict(list)
+        for vote in votes:
+            key = (vote.election_id, vote.polling_station_id)
+            groups[key].append(vote)
+
+        results = []
+        for (election_id, polling_station_id), vote_group in groups.items():
+            # Extract timestamps and sort them
+            timestamps = sorted([v.timestamp for v in vote_group])
+            total_votes = len(timestamps)
+
+            # Calculate average interval (in seconds) between consecutive votes
+            if total_votes > 1:
+                intervals = [
+                    (t2 - t1).total_seconds()
+                    for t1, t2 in zip(timestamps, timestamps[1:])
+                ]
+                avg_interval = sum(intervals) / len(intervals)
+            else:
+                avg_interval = None
+
+            # Determine peak hour
+            hours = [ts.hour for ts in timestamps]
+            hour_counts = Counter(hours)
+            if hour_counts:
+                peak_hour, peak_votes = hour_counts.most_common(1)[0]
+            else:
+                peak_hour, peak_votes = None, None
+
+            # We'll extract polling station details from one of the votes.
+            polling_station = vote_group[0].polling_station
+            # Assume polling_station is serialized as a dict when returned, or customize as needed.
+            # Here, we construct a simplified dict if needed.
+            polling_station_data = {
+                "id": polling_station.id if polling_station else None,
+                "name": polling_station.name if polling_station else None,
+                "location": getattr(polling_station, "location", None),
+                "capacity": getattr(polling_station, "capacity", None),
+                "election_id": polling_station.election_id if hasattr(polling_station, "election_id") else None
+            }
+
+            results.append({
+                "election_id": election_id,
+                "polling_station": polling_station_data,
                 "total_votes": total_votes,
                 "average_interval_seconds": avg_interval,
                 "peak_hour": peak_hour,
