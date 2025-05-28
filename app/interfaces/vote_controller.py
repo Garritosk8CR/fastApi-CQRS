@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
-from app.application.queries import DashboardAnalyticsQuery, GeolocationAnalyticsQuery, GetCandidateVoteDistributionQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, PollingStationAnalyticsQuery, RealTimeElectionSummaryQuery
+from app.application.queries import DashboardAnalyticsQuery, GeolocationAnalyticsQuery, GetCandidateVoteDistributionQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, HistoricalPollingStationTrendsQuery, PollingStationAnalyticsQuery, RealTimeElectionSummaryQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -109,4 +109,14 @@ def get_polling_station_analytics(election_id: int):
     Returns basic performance metrics for polling stations for the specified election.
     """
     query = PollingStationAnalyticsQuery(election_id=election_id)
+    return query_bus.handle(query)
+
+@router.get("/analytics/historical_polling_station_trends")
+def historical_polling_station_trends(
+    election_ids: str = Query(..., description="Comma separated list of election IDs"),
+    polling_station_id: int = Query(None, description="Optional polling station ID to filter by")
+):
+    # Convert comma-separated string to a list of ints
+    ids = list(map(int, election_ids.split(",")))
+    query = HistoricalPollingStationTrendsQuery(election_ids=ids, polling_station_id=polling_station_id)
     return query_bus.handle(query)
