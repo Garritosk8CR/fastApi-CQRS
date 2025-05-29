@@ -196,3 +196,6 @@ class PollingStationAnalyticsQuery(BaseModel):
 class HistoricalPollingStationTrendsQuery(BaseModel):
     election_ids: List[int]
     polling_station_id: Optional[int] = None
+
+class PredictiveVoterTurnoutQuery(BaseModel):
+    upcoming_election_id: int
