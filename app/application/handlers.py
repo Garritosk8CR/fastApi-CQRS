@@ -1060,6 +1060,7 @@ query_bus.register_handler(RealTimeElectionSummaryQuery, RealTimeElectionSummary
 query_bus.register_handler(GeolocationAnalyticsQuery, GeolocationAnalyticsHandler())
 query_bus.register_handler(PollingStationAnalyticsQuery, PollingStationAnalyticsHandler())
 query_bus.register_handler(HistoricalPollingStationTrendsQuery, HistoricalPollingStationTrendsHandler())
+query_bus.register_handler(PredictiveVoterTurnoutQuery, PredictiveVoterTurnoutHandler())
 
 
 
