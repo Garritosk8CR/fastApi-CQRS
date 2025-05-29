@@ -605,3 +605,50 @@ class VoteRepository:
             })
 
         return results
+    
+    def predict_and_historical_turnout(self, upcoming_election_id: int) -> dict:
+        """
+        Predict the voter turnout for the upcoming election based on historical data.
+        It returns a dictionary containing:
+          - predicted_turnout
+          - historical_turnouts: a list of dictionaries for each past election with keys election_id and turnout.
+        """
+        # Query historical turnout grouped by election_id for elections before the upcoming one.
+        historical_data = (
+            self.db.query(
+                Vote.election_id,
+                func.count(Vote.id).label("turnout")
+            )
+            .filter(Vote.election_id < upcoming_election_id)
+            .group_by(Vote.election_id)
+            .order_by(Vote.election_id)
+            .all()
+        )
+
+        # Prepare a list of historical turnouts.
+        historical_turnouts = [
+            {"election_id": election_id, "turnout": turnout}
+            for election_id, turnout in historical_data
+        ]
+
+        if not historical_turnouts:
+            # No historical data available.
+            return {"predicted_turnout": None, "historical_turnouts": []}
+
+        if len(historical_turnouts) == 1:
+            # Only one historical election available; return its turnout as the prediction.
+            predicted_turnout = historical_turnouts[0]["turnout"]
+        else:
+            # Compute increases between consecutive elections.
+            increases = []
+            for i in range(1, len(historical_turnouts)):
+                diff = historical_turnouts[i]["turnout"] - historical_turnouts[i-1]["turnout"]
+                increases.append(diff)
+            average_increase = sum(increases) / len(increases)
+            # Predicted turnout is the last turnout plus the average increase.
+            predicted_turnout = historical_turnouts[-1]["turnout"] + average_increase
+
+        return {
+            "predicted_turnout": predicted_turnout,
+            "historical_turnouts": historical_turnouts,
+        }
