@@ -1821,3 +1821,51 @@ def test_historical_trends_no_votes(test_db, client, create_test_elections, crea
     # Assert: When there are no votes, expect an empty list.
     assert response.status_code == 200
     assert data == []
+
+def test_historical_trends_single_vote(test_db, client, create_test_elections, create_test_polling_stations, create_test_votes, create_test_voters, create_test_candidates):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"}
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": False},
+        {"user_id": 5, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create an election, polling station, and a single vote.
+    from datetime import datetime
+    create_test_elections([
+        {"id": 1, "name": "Election 2020"},
+    ])
+    create_test_candidates([
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    create_test_polling_stations([
+        {"id": 1, "name": "Station A", "location": "School", "election_id": 1, "capacity": 300},
+    ])
+    now = datetime.now(timezone.utc)
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "polling_station_id": 1, "timestamp": now},
+    ])
+
+    # Act: Call the endpoint.
+    response = client.get("/votes/analytics/historical_polling_station_trends?election_ids=1&polling_station_id=1")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert: With one vote, total_votes is 1, and average_interval_seconds is None.
+    assert response.status_code == 200
+    assert len(data) == 1
+    assert data[0]["total_votes"] == 1
+    assert data[0]["average_interval_seconds"] is None
