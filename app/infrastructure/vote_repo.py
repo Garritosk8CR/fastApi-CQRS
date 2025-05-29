@@ -652,3 +652,25 @@ class VoteRepository:
             "predicted_turnout": predicted_turnout,
             "historical_turnouts": historical_turnouts,
         }
+    
+    def detect_anomalies(self, election_id: int) -> list:
+        """
+        Detect anomalies for a given election based on polling station performance.
+        Currently, if the average interval between votes at a station is less than a threshold (e.g., 10 seconds),
+        that polling station is flagged as anomalous.
+        """
+        # Reuse our analytics to get all station insights.
+        station_insights = self.get_polling_station_insights(election_id)
+
+        anomalies = []
+        threshold = 10  # seconds; flag stations with unusually rapid vote submissions.
+        for station in station_insights:
+            avg_interval = station.get("average_interval_seconds")
+            if avg_interval is not None and avg_interval < threshold:
+                anomalies.append({
+                    "polling_station": station["polling_station"],
+                    "total_votes": station["total_votes"],
+                    "average_interval_seconds": avg_interval,
+                    "anomaly": f"High vote rate detected (avg interval {avg_interval:.1f}s is below threshold of {threshold}s)"
+                })
+        return anomalies
