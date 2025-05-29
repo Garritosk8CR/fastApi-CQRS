@@ -140,27 +140,6 @@ def detect_anomalies(election_id: int):
     query = AnomalyDetectionQuery(election_id=election_id)
     return query_bus.handle(query)
 
-@router.websocket("/ws/election/{election_id}")
-async def realtime_election_summary_ws(websocket: WebSocket, election_id: int):
-    """
-    Establish a WebSocket connection that continuously sends real-time election summary updates.
-    """
-    await websocket.accept()
-    try:
-        while True:
-            # Use our existing handler to get the real-time summary.
-            query = RealTimeElectionSummaryQuery(election_id=election_id)
-            summary = query_bus.handle(query)
-            
-            # Send the updated summary to the client.
-            await websocket.send_json(summary)
-            
-            # Wait a few seconds before sending the next update.
-            await asyncio.sleep(5)
-    except WebSocketDisconnect:
-        # Handle disconnection gracefully.
-        print("Client disconnected from real-time updates")
-
 @router.get("/analytics/export_results")
 def export_election_results(
     election_id: int = Query(..., description="The election ID to export results for"),
@@ -208,3 +187,25 @@ def export_election_results(
     else:
         # Default to JSON export.
         return JSONResponse(content=data)
+
+@router.websocket("/ws/election/{election_id}")
+async def realtime_election_summary_ws(websocket: WebSocket, election_id: int):
+    """
+    Establish a WebSocket connection that continuously sends real-time election summary updates.
+    """
+    await websocket.accept()
+    try:
+        while True:
+            # Use our existing handler to get the real-time summary.
+            query = RealTimeElectionSummaryQuery(election_id=election_id)
+            summary = query_bus.handle(query)
+            
+            # Send the updated summary to the client.
+            await websocket.send_json(summary)
+            
+            # Wait a few seconds before sending the next update.
+            await asyncio.sleep(5)
+    except WebSocketDisconnect:
+        # Handle disconnection gracefully.
+        print("Client disconnected from real-time updates")
+
