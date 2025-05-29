@@ -1978,3 +1978,22 @@ def test_historical_trends_without_polling_station_filter(test_db, create_test_e
     station_ids_returned = {entry["polling_station"]["id"] for entry in data}
     assert 1 in station_ids_returned
     assert 2 in station_ids_returned
+
+def test_predictive_turnout_no_historical_data(test_db, client, create_test_elections):
+    # Arrange: Create no past elections.
+    create_test_elections([
+        {"id": 1, "name": "Upcoming Election"}
+    ])
+
+    # Act: Request prediction for upcoming election with id=1.
+    response = client.get("/votes/analytics/predictive_voter_turnout?upcoming_election_id=1")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert: No historical data implies prediction is None.
+    assert response.status_code == 200
+    assert data["predicted_turnout"] is None
+    assert data["historical_turnouts"] == []
