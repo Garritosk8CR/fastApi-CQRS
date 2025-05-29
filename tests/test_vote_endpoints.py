@@ -1997,3 +1997,49 @@ def test_predictive_turnout_no_historical_data(test_db, client, create_test_elec
     assert response.status_code == 200
     assert data["predicted_turnout"] is None
     assert data["historical_turnouts"] == []
+
+def test_predictive_turnout_single_historical_election(test_db, client, create_test_elections, create_test_votes, create_test_voters, create_test_candidates):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"}
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create one historical election.
+    create_test_elections([
+        {"id": 1, "name": "Election 1"},
+        {"id": 2, "name": "Upcoming Election"}
+    ])
+    create_test_candidates([
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    now = datetime.now(timezone.utc)
+    # Create votes for election 1.
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "timestamp": now},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 1, "timestamp": now + timedelta(seconds=60)},
+    ])
+
+    # Act: Request prediction for upcoming election (id=2).
+    response = client.get("/votes/analytics/predictive_voter_turnout?upcoming_election_id=2")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert: With one historical election, the prediction is the turnout of that election.
+    assert response.status_code == 200
+    assert data["predicted_turnout"] == 2
+    assert len(data["historical_turnouts"]) == 1
