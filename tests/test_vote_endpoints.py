@@ -2100,3 +2100,58 @@ def test_predictive_turnout_multiple_historical_elections(test_db, client, creat
     assert response.status_code == 200
     assert data["predicted_turnout"] == 140
     assert len(data["historical_turnouts"]) == 2
+
+def test_anomalies_detection(test_db, client, create_test_elections, create_test_polling_stations, create_test_votes, create_test_voters, create_test_candidates):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"}
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+
+    create_test_elections([
+        {"id": 1, "name": "Election Anomaly Test"}
+    ])
+    create_test_candidates([
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    create_test_polling_stations([
+        {"id": 1, "name": "Station A", "location": "School", "election_id": 1, "capacity": 300}
+    ])
+    
+    now = datetime.now(timezone.utc)
+    # Create votes at Station A with just 5-second intervals (which is below our threshold of 10 seconds)
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "polling_station_id": 1, "timestamp": now},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 1, "polling_station_id": 1, "timestamp": now + timedelta(seconds=5)},
+        {"id": 3, "election_id": 1, "voter_id": 3, "candidate_id": 1, "polling_station_id": 1, "timestamp": now + timedelta(seconds=10)},
+    ])
+    
+    # Act: Call the anomaly detection endpoint for election 1.
+    response = client.get("/votes/analytics/anomalies?election_id=1")
+
+    test_db.rollback()
+    gc.collect()
+
+
+    data = response.json()
+    
+    # Assert: Expect an anomaly to be flagged since the average interval (~5s) is below threshold.
+    assert response.status_code == 200
+    assert isinstance(data, list)
+    assert len(data) > 0
+    anomaly = data[0]
+    assert "polling_station" in anomaly
+    assert "anomaly" in anomaly
+    assert "High vote rate" in anomaly["anomaly"]
