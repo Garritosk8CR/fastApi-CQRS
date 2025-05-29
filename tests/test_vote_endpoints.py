@@ -1801,3 +1801,23 @@ def test_historical_polling_station_trends_endpoint(
         assert "average_interval_seconds" in entry
         assert "peak_hour" in entry
         assert "votes_in_peak_hour" in entry
+
+def test_historical_trends_no_votes(test_db, client, create_test_elections, create_test_polling_stations):
+    # Arrange: Create an election and a polling station but no votes.
+    create_test_elections([
+        {"id": 1, "name": "Election 2020"},
+    ])
+    create_test_polling_stations([
+        {"id": 1, "name": "Station A", "location": "School", "election_id": 1, "capacity": 300},
+    ])
+
+    response = client.get("/votes/analytics/historical_polling_station_trends?election_ids=1&polling_station_id=1")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert: When there are no votes, expect an empty list.
+    assert response.status_code == 200
+    assert data == []
