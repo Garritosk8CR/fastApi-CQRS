@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query, WebSocket, WebSock
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
-from app.application.queries import DashboardAnalyticsQuery, GeolocationAnalyticsQuery, GetCandidateVoteDistributionQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, HistoricalPollingStationTrendsQuery, PollingStationAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery
+from app.application.queries import AnomalyDetectionQuery, DashboardAnalyticsQuery, GeolocationAnalyticsQuery, GetCandidateVoteDistributionQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, HistoricalPollingStationTrendsQuery, PollingStationAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -127,6 +127,14 @@ def predictive_voter_turnout(
     upcoming_election_id: int = Query(..., description="The ID for the upcoming election for turnout prediction")
 ):
     query = PredictiveVoterTurnoutQuery(upcoming_election_id=upcoming_election_id)
+    return query_bus.handle(query)
+
+@router.get("/analytics/anomalies")
+def detect_anomalies(election_id: int):
+    """
+    Detect anomalies in polling station performance for a given election.
+    """
+    query = AnomalyDetectionQuery(election_id=election_id)
     return query_bus.handle(query)
 
 @router.websocket("/ws/election/{election_id}")
