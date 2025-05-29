@@ -1,5 +1,8 @@
 import asyncio
+import csv
+from io import StringIO
 from fastapi import APIRouter, HTTPException, Depends, Query, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
@@ -157,3 +160,51 @@ async def realtime_election_summary_ws(websocket: WebSocket, election_id: int):
     except WebSocketDisconnect:
         # Handle disconnection gracefully.
         print("Client disconnected from real-time updates")
+
+@router.get("/analytics/export_results")
+def export_election_results(
+    election_id: int = Query(..., description="The election ID to export results for"),
+    export_format: str = Query("json", description="Export format: 'json' or 'csv'")
+):
+    """
+    Exports the polling station analytics for the given election. Supports JSON and CSV output.
+    """
+    query = PollingStationAnalyticsQuery(election_id=election_id)
+    data = query_bus.handle(query)
+    
+    if export_format.lower() == "csv":
+        # Create CSV output using StringIO and the csv module.
+        output = StringIO()
+        writer = csv.writer(output)
+
+        # Write header row.
+        header = [
+            "polling_station_id",
+            "polling_station_name",
+            "total_votes",
+            "average_interval_seconds",
+            "peak_hour",
+            "votes_in_peak_hour"
+        ]
+        writer.writerow(header)
+        
+        # Write data rows.
+        for entry in data:
+            polling_station = entry.get("polling_station", {})
+            row = [
+                polling_station.get("id"),
+                polling_station.get("name"),
+                entry.get("total_votes"),
+                entry.get("average_interval_seconds"),
+                entry.get("peak_hour"),
+                entry.get("votes_in_peak_hour")
+            ]
+            writer.writerow(row)
+        
+        output.seek(0)
+        response = StreamingResponse(output, media_type="text/csv")
+        response.headers["Content-Disposition"] = f"attachment; filename=election_{election_id}_results.csv"
+        return response
+    else:
+        # Default to JSON export.
+        return JSONResponse(content=data)
