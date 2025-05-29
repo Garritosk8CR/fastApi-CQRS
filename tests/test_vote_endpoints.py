@@ -2224,3 +2224,64 @@ def test_anomaly_detection_exact_threshold(test_db, client, create_test_election
     # Assert: Since our anomaly condition is < 10 seconds, an interval exactly at 10 seconds should not be flagged.
     assert response.status_code == 200
     assert data == []  # No anomalies expected.
+
+def test_anomaly_detection_multiple_polling_stations(test_db, client, create_test_elections, create_test_polling_stations, create_test_votes, create_test_voters, create_test_candidates):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False},
+        {"user_id": 6, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create one election with two polling stations.
+    create_test_elections([
+        {"id": 1, "name": "Election Multi Station"}
+    ])
+    create_test_candidates([
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    create_test_polling_stations([
+        {"id": 1, "name": "Anomalous Station", "location": "Center", "election_id": 1, "capacity": 150},
+        {"id": 2, "name": "Normal Station", "location": "Suburb", "election_id": 1, "capacity": 150},
+    ])
+
+    now = datetime.now(timezone.utc)
+    # For Station 1, create votes quickly (intervals < 10s)
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "polling_station_id": 1, "timestamp": now},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 1, "polling_station_id": 1, "timestamp": now + timedelta(seconds=5)},
+        {"id": 3, "election_id": 1, "voter_id": 3, "candidate_id": 1, "polling_station_id": 1, "timestamp": now + timedelta(seconds=8)},
+    ])
+    # For Station 2, create votes with longer intervals (above threshold, e.g. 15 seconds)
+    create_test_votes([
+        {"id": 4, "election_id": 1, "voter_id": 4, "candidate_id": 1, "polling_station_id": 2, "timestamp": now},
+        {"id": 5, "election_id": 1, "voter_id": 5, "candidate_id": 1, "polling_station_id": 2, "timestamp": now + timedelta(seconds=15)},
+        {"id": 6, "election_id": 1, "voter_id": 6, "candidate_id": 1, "polling_station_id": 2, "timestamp": now + timedelta(seconds=30)},
+    ])
+    
+    response = client.get("/votes/analytics/anomalies?election_id=1")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+    
+    # Assert: Only Station 1 should be flagged.
+    assert response.status_code == 200
+    anomalous_stations = [entry for entry in data if entry["polling_station"]["id"] == 1]
+    normal_stations = [entry for entry in data if entry["polling_station"]["id"] == 2]
+    
+    assert len(anomalous_stations) == 1  # Station 1 flagged as anomaly
+    assert len(normal_stations) == 0     # Station 2 not flagged
