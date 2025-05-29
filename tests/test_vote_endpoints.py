@@ -2043,3 +2043,60 @@ def test_predictive_turnout_single_historical_election(test_db, client, create_t
     assert response.status_code == 200
     assert data["predicted_turnout"] == 2
     assert len(data["historical_turnouts"]) == 1
+
+def test_predictive_turnout_multiple_historical_elections(test_db, client, create_test_elections, create_test_votes, create_test_voters, create_test_candidates):
+    for i in range(220):
+        create_test_voters([{
+            "id": i + 1, 
+            "name": "Active Voter" + str(i + 1), 
+            "email": "active" + str(i + 1) + "@example.com", 
+            "role": "voter"
+        }], 
+        [{
+            "user_id": i + 1, 
+            "has_voted": True
+        }])
+    # Arrange: Create multiple historical elections.
+    create_test_elections([
+        {"id": 1, "name": "Election 1"},
+        {"id": 2, "name": "Election 2"},
+        {"id": 3, "name": "Upcoming Election"}
+    ])
+    create_test_candidates([
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    now = datetime.now(timezone.utc)
+    # Votes for Election 1: 100 votes (simulate by count)
+    for i in range(100):
+        create_test_votes([{
+            "election_id": 1,
+            "voter_id": i + 1,
+            "candidate_id": 1,
+            "timestamp": now + timedelta(seconds=i)
+        }])
+    # Votes for Election 2: 120 votes.
+    for i in range(120):
+        create_test_votes([{
+            "election_id": 2,
+            "voter_id": i + 100 + 1,
+            "candidate_id": 1,
+            "timestamp": now + timedelta(seconds=i)
+        }])
+
+    # Act: Predict turnout for the upcoming election (id=3).
+    response = client.get("/votes/analytics/predictive_voter_turnout?upcoming_election_id=3")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert:
+    # Historical turnouts: Election 1 = 100, Election 2 = 120.
+    # Average increase = (120 - 100) = 20.
+    # So predicted turnout = 120 + 20 = 140.
+    assert response.status_code == 200
+    assert data["predicted_turnout"] == 140
+    assert len(data["historical_turnouts"]) == 2
