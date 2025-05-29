@@ -199,3 +199,6 @@ class HistoricalPollingStationTrendsQuery(BaseModel):
 
 class PredictiveVoterTurnoutQuery(BaseModel):
     upcoming_election_id: int
+
+class AnomalyDetectionQuery(BaseModel):
+    election_id: int
