@@ -2155,3 +2155,24 @@ def test_anomalies_detection(test_db, client, create_test_elections, create_test
     assert "polling_station" in anomaly
     assert "anomaly" in anomaly
     assert "High vote rate" in anomaly["anomaly"]
+
+def test_anomaly_detection_no_votes(test_db, client, create_test_elections, create_test_polling_stations):
+    # Arrange: Create an election and its polling station but no votes.
+    create_test_elections([
+        {"id": 1, "name": "Election No Votes"}
+    ])
+    create_test_polling_stations([
+        {"id": 1, "name": "Station No Votes", "location": "Library", "election_id": 1, "capacity": 100}
+    ])
+
+    # Act:
+    response = client.get("/votes/analytics/anomalies?election_id=1")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert:
+    assert response.status_code == 200
+    assert data == []  # No votes means no anomalies.
