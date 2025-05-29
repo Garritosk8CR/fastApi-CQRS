@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+import asyncio
+from fastapi import APIRouter, HTTPException, Depends, Query, WebSocket, WebSocketDisconnect
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
@@ -127,3 +128,24 @@ def predictive_voter_turnout(
 ):
     query = PredictiveVoterTurnoutQuery(upcoming_election_id=upcoming_election_id)
     return query_bus.handle(query)
+
+@router.websocket("/ws/election/{election_id}")
+async def realtime_election_summary_ws(websocket: WebSocket, election_id: int):
+    """
+    Establish a WebSocket connection that continuously sends real-time election summary updates.
+    """
+    await websocket.accept()
+    try:
+        while True:
+            # Use our existing handler to get the real-time summary.
+            query = RealTimeElectionSummaryQuery(election_id=election_id)
+            summary = query_bus.handle(query)
+            
+            # Send the updated summary to the client.
+            await websocket.send_json(summary)
+            
+            # Wait a few seconds before sending the next update.
+            await asyncio.sleep(5)
+    except WebSocketDisconnect:
+        # Handle disconnection gracefully.
+        print("Client disconnected from real-time updates")
