@@ -2365,7 +2365,6 @@ def test_export_csv_format(test_db, client, create_test_elections, create_test_p
     create_test_polling_stations([
         {"id": 1, "name": "Station B", "location": "Park", "election_id": 1, "capacity": 200}
     ])
-    from datetime import datetime, timedelta
     now = datetime.now(timezone.utc)
     create_test_votes([
         {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "polling_station_id": 1, "timestamp": now},
@@ -2392,3 +2391,52 @@ def test_export_csv_format(test_db, client, create_test_elections, create_test_p
     expected_headers = ["polling_station_id", "polling_station_name", "total_votes", "average_interval_seconds", "peak_hour", "votes_in_peak_hour"]
     assert header == expected_headers
     assert len(rows) > 0  # There should be data rows.
+
+def test_geolocation_trends_all_regions(test_db, client, create_test_elections, create_test_votes, create_test_voters, create_test_candidates):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False},
+        {"user_id": 6, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create an election along with votes in different regions.
+    create_test_elections([{"id": 1, "name": "Election Region Trends"}])
+    create_test_candidates([
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    now = datetime.now(timezone.utc)
+    create_test_votes([
+        {"id": 1, "election_id": 1, "voter_id": 1, "candidate_id": 1, "region": "North", "timestamp": now},
+        {"id": 2, "election_id": 1, "voter_id": 2, "candidate_id": 1, "region": "North", "timestamp": now + timedelta(seconds=60)},
+        {"id": 3, "election_id": 1, "voter_id": 3, "candidate_id": 2, "region": "South", "timestamp": now + timedelta(seconds=120)},
+        {"id": 4, "election_id": 1, "voter_id": 4, "candidate_id": 2, "region": "East", "timestamp": now + timedelta(seconds=180)},
+    ])
+
+    # Act: Do not filter by region.
+    response = client.get("/votes/analytics/region_trends?election_id=1")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert: Expect aggregated counts by region.
+    assert response.status_code == 200
+    # Should return one entry per unique region.
+    regions = {entry["region"] for entry in data}
+    assert "North" in regions
+    assert "South" in regions
+    assert "East" in regions
