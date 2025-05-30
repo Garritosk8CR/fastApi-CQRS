@@ -524,8 +524,14 @@ class VoteRepository:
             else:
                 peak_hour, peak_votes = None, None
 
+            polling_station_data = {
+                "id": station.id,
+                "name": station.name,
+                "location": station.location,
+                "capacity": station.capacity
+            }
             results.append({
-                "polling_station": station,
+                "polling_station": polling_station_data,
                 "total_votes": total_votes,
                 "average_interval_seconds": avg_interval,
                 "peak_hour": peak_hour,
