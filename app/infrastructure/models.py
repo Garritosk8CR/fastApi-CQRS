@@ -165,5 +165,11 @@ class VoterData(BaseModel):
 class VoterUploadQuery(BaseModel):
     voters: List[VoterData]
 
-
+class AlertResponse(BaseModel):
+    id: int
+    election_id: int
+    alert_type: str
+    message: str
+    status: str
+    created_at: str  # ISO formatted datetime
 
