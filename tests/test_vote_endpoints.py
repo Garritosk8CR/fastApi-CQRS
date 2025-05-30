@@ -2440,3 +2440,49 @@ def test_geolocation_trends_all_regions(test_db, client, create_test_elections, 
     assert "North" in regions
     assert "South" in regions
     assert "East" in regions
+
+def test_geolocation_trends_specific_region(test_db, client, create_test_elections, create_test_votes, create_test_voters, create_test_candidates):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False},
+        {"user_id": 6, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    # Arrange: Create an election and votes with regions.
+    create_test_elections([{"id": 1, "name": "Election Specific Region"}])
+    create_test_candidates([
+        {"id": 1, "name": "Candidate A", "party": "Group X", "bio": "Experienced leader.", "election_id": 1},
+        {"id": 2, "name": "Candidate B", "party": "Group Y", "bio": "Visionary thinker.", "election_id": 1},
+        {"id": 3, "name": "Candidate C", "party": "Group Z", "bio": "Innovative innovator.", "election_id": 1}
+    ])
+    now = datetime.now(timezone.utc)
+    create_test_votes([
+        {"id": 5, "election_id": 1, "voter_id": 1, "candidate_id": 1, "region": "West", "timestamp": now},
+        {"id": 6, "election_id": 1, "voter_id": 2, "candidate_id": 1, "region": "West", "timestamp": now + timedelta(seconds=30)},
+        {"id": 7, "election_id": 1, "voter_id": 3, "candidate_id": 2, "region": "Central", "timestamp": now + timedelta(seconds=60)},
+    ])
+    
+    # Act: Filter by region "West"
+    response = client.get("/votes/analytics/region_trends?election_id=1&region=West")
+
+    test_db.rollback()
+    gc.collect()
+
+    data = response.json()
+
+    # Assert: The result should contain only entries for "West".
+    assert response.status_code == 200
+    assert len(data) == 1
+    assert data[0]["region"] == "West"
+    assert data[0]["total_votes"] == 2
