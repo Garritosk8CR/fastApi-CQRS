@@ -680,3 +680,34 @@ class VoteRepository:
                     "anomaly": f"High vote rate detected (avg interval {avg_interval:.1f}s is below threshold of {threshold}s)"
                 })
         return anomalies
+    
+    def get_votes_by_region(self, election_id: int, region: str = None) -> list:
+        """
+        Aggregates vote data by region for the specified election.
+        Optionally filter by a specific region.
+        
+        Returns a list of dictionaries with:
+          - region
+          - total_votes
+          - (optionally, you can add more metrics like average vote interval or peak hour)
+        """
+        query = self.db.query(
+            Vote.region,
+            func.count(Vote.id).label("total_votes")
+        ).filter(Vote.election_id == election_id)
+
+        # If a specific region filter is provided, add it.
+        if region:
+            query = query.filter(Vote.region == region)
+        
+        query = query.group_by(Vote.region)
+        results = query.all()
+
+        # Convert results to a list of dictionaries.
+        analytics = []
+        for region_val, total_votes in results:
+            analytics.append({
+                "region": region_val,
+                "total_votes": total_votes,
+            })
+        return analytics
