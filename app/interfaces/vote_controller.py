@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
-from app.application.queries import AnomalyDetectionQuery, DashboardAnalyticsQuery, GeolocationAnalyticsQuery, GetCandidateVoteDistributionQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, HistoricalPollingStationTrendsQuery, PollingStationAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery
+from app.application.queries import AnomalyDetectionQuery, DashboardAnalyticsQuery, GeolocationAnalyticsQuery, GeolocationTrendsQuery, GetCandidateVoteDistributionQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, HistoricalPollingStationTrendsQuery, PollingStationAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
@@ -189,6 +189,14 @@ def export_election_results(
     else:
         # Default to JSON export.
         return JSONResponse(content=data)
+    
+@router.get("/analytics/region_trends")
+def get_geolocation_trends(
+    election_id: int = Query(..., description="Election ID to fetch regional trends for"),
+    region: str = Query(None, description="Optional: Filter by a specific region")
+):
+    query = GeolocationTrendsQuery(election_id=election_id, region=region)
+    return query_bus.handle(query)
 
 @router.websocket("/ws/election/{election_id}")
 async def realtime_election_summary_ws(websocket: WebSocket, election_id: int):
