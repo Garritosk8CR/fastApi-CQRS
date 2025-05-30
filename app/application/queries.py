@@ -202,3 +202,7 @@ class PredictiveVoterTurnoutQuery(BaseModel):
 
 class AnomalyDetectionQuery(BaseModel):
     election_id: int
+
+class GeolocationTrendsQuery(BaseModel):
+    election_id: int
+    region: Optional[str] = None  # Optional filter to restrict to a specific region.
