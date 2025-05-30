@@ -150,6 +150,8 @@ def export_election_results(
     """
     query = PollingStationAnalyticsQuery(election_id=election_id)
     data = query_bus.handle(query)
+
+    print(f"Data: {data}")
     
     if export_format.lower() == "csv":
         # Create CSV output using StringIO and the csv module.
