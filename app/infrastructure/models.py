@@ -24,6 +24,7 @@ class Election(Base):
     candidatesv2 = relationship("Candidate", back_populates="election")
     vote = relationship("Vote", back_populates="election")
     observer_feedback = relationship("ObserverFeedback", back_populates="election")
+    alerts = relationship("Alert", back_populates="election")
 
     def increment_vote(self, candidate_name: str):
         candidate_list = self.candidates.split(",")
@@ -142,6 +143,19 @@ class ObserverFeedback(Base):
 
     observer = relationship("Observer", back_populates="feedback")
     election = relationship("Election", back_populates="observer_feedback")
+
+class Alert(Base):
+    __tablename__ = "alerts"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    election_id = Column(Integer, ForeignKey("elections.id"), nullable=False)
+    alert_type = Column(String, nullable=False)  # e.g., "anomaly", "fraud", "system"
+    message = Column(String, nullable=False)
+    status = Column(String, default="new")  # possible states: new, acknowledged, resolved
+    created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
+
+    # Optional back-reference (assuming your Election model is set up accordingly)
+    election = relationship("Election", back_populates="alerts")
     
 class VoterData(BaseModel):
     name: str
