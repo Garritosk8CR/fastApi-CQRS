@@ -170,6 +170,32 @@ def create_test_polling_stations(test_db):
         return stations
     return _create_stations
 
+@pytest.fixture
+def create_test_alert(test_db):
+    def create_alert(election_id: int, alert_type: str, message: str, status: str = "new"):
+        alert = Alert(
+            election_id=election_id,
+            alert_type=alert_type,
+            message=message,
+            status=status,
+            created_at=datetime.now(timezone.utc)
+        )
+        test_db.add(alert)
+        test_db.commit()
+        test_db.refresh(alert)
+        return alert
+    return create_alert
+
+@pytest.fixture
+def create_test_election(test_db):
+    def create_election(id: int, name: str):
+        election = Election(id=id, name=name)
+        test_db.add(election)
+        test_db.commit()
+        test_db.refresh(election)
+        return election
+    return create_election
+
 def test_alerts_ws_empty(client, test_db):
     """
     Test that when no new alerts exist, the WebSocket returns an empty list.
@@ -238,3 +264,28 @@ def test_get_alerts_empty(client, test_db):
     data = response.json()
     assert isinstance(data, list)
     assert len(data) == 0
+
+def test_get_alerts_filter_by_election(client, test_db, create_test_election, create_test_alert):
+    """
+    Create two elections and several alerts.
+    Then verify that using the election filter returns only matching alerts.
+    """
+    
+    election1 = create_test_election(id=1, name="Election One")
+    election2 = create_test_election(id=2, name="Election Two")
+    # Create alerts belonging to each election.
+    alert1 = create_test_alert(election_id=election1.id, alert_type="anomaly", message="Alert for election one")
+    alert2 = create_test_alert(election_id=election2.id, alert_type="fraud", message="Alert for election two")
+    
+    # When filtering by election_id=1, we should only return the first alert.
+    response = client.get("/alerts?election_id=1")
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 1
+    assert data[0]["election_id"] == 1
+    assert data[0]["message"] == "Alert for election one"
