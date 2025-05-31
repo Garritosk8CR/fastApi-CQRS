@@ -319,3 +319,31 @@ def test_create_alert(client, test_db, create_test_election):
     assert data["status"] == "new"
     # Check that "created_at" exists & is a string timestamp.
     assert "created_at" in data
+
+# ---------------------------------------------------------------------------
+# Test PUT /alerts/{alert_id} Endpoint
+# ---------------------------------------------------------------------------
+def test_update_alert_success(client, test_db, create_test_election, create_test_alert):
+    """
+    PUT /alerts/{alert_id} should update an alert.
+    """
+        # Create an alert to update.
+    create_test_election(id=1, name="Election Four")
+    alert = create_test_alert(election_id=1, alert_type="anomaly", message="Alert to be updated", status="new")
+    
+    # Prepare the update payload. In our endpoint, the request expects the UpdateAlertCommand.
+    # We'll send the new status in JSON.
+    update_payload = {
+        "alert_id": 1,
+        "status": "resolved"   # We want to mark the alert as resolved.
+    }
+    
+    response = client.put(f"/alerts/1", json=update_payload)
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == 1
+    assert data["status"] == "resolved"

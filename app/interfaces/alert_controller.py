@@ -37,8 +37,9 @@ def update_alert(
     alert_id: int,
     command: UpdateAlertCommand
 ):
+    print(f"Command: {command}")
     # Override command.alert_id with the path parameter.
-    command.alert_id = alert_id
+    # command.alert_id = alert_id
     try:
         return command_bus.handle(command)
     except Exception as e:
