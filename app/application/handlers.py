@@ -1033,6 +1033,7 @@ command_bus.register_handler(DeleteCandidateCommand, DeleteCandidateHandler())
 command_bus.register_handler(CastVoteCommandv2, CastVoteHandlerv2())
 command_bus.register_handler(SubmitFeedbackCommand, SubmitFeedbackHandler())
 command_bus.register_handler(CreateAlertCommand, CreateAlertHandler())
+command_bus.register_handler(UpdateAlertCommand, UpdateAlertHandler())
 
 
 # Create and register the query handler
