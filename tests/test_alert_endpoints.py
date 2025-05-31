@@ -347,3 +347,21 @@ def test_update_alert_success(client, test_db, create_test_election, create_test
     data = response.json()
     assert data["id"] == 1
     assert data["status"] == "resolved"
+
+def test_update_alert_not_found(client, test_db):
+    """
+    If we try to update an alert that does not exist, we should get a 404.
+    """
+    update_payload = {
+        "alert_id": 9999,
+        "status": "resolved"
+    }
+    # Assuming 9999 doesn't exist.
+    response = client.put("/alerts/9999", json=update_payload)
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 404
+    data = response.json()
+    assert "Alert not found" in data["detail"]
