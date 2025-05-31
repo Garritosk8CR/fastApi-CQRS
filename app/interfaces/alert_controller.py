@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CreateAlertCommand, UpdateAlertCommand
-from app.application.queries import GetAlertsQuery
+from app.application.queries import GetAlertsQuery, GetAlertsWSQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import SessionLocal, get_db
 from app.application.handlers import command_bus
@@ -49,19 +49,9 @@ async def alerts_ws(websocket: WebSocket):
     await websocket.accept()
     try:
         while True:
-            with SessionLocal() as db:
-                new_alerts = db.query(Alert).filter(Alert.status == "new").all()
-                data = [
-                    {
-                        "id": alert.id,
-                        "election_id": alert.election_id,
-                        "alert_type": alert.alert_type,
-                        "message": alert.message,
-                        "status": alert.status,
-                        "created_at": alert.created_at.isoformat()
-                    }
-                    for alert in new_alerts
-                ]
+            # Build the CQRS query with status filter "new"
+            query = GetAlertsWSQuery(status="new")
+            data = query_bus.handle(query)
             await websocket.send_json(data)
             await asyncio.sleep(5)
     except WebSocketDisconnect:
