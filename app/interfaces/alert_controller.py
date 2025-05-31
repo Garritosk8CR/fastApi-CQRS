@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query, WebSocket, WebSock
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.application.commands import CastVoteCommand, CastVoteCommandv2
+from app.application.commands import CastVoteCommand, CastVoteCommandv2, CreateAlertCommand
 from app.application.queries import GetAlertsQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
@@ -22,3 +22,12 @@ def list_alerts(
 ):
     query_model = GetAlertsQuery(election_id=election_id)
     return query_bus.handle(query_model)
+
+@router.post("/", response_model=AlertResponse)
+def create_alert(
+    election_id: int,
+    alert_type: str,
+    message: str
+):
+    command = CreateAlertCommand(election_id=election_id, alert_type=alert_type, message=message)
+    return command_bus.handle(command)
