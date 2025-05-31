@@ -209,3 +209,7 @@ class GeolocationTrendsQuery(BaseModel):
 
 class GetAlertsQuery(BaseModel):
     election_id: Optional[int] = None
+
+class GetAlertsWSQuery(BaseModel):
+    election_id: Optional[int] = None
+    status: Optional[str] = None  # e.g., "new", "acknowledged", "resolved"

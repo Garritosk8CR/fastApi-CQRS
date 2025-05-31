@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query, WebSocket, WebSock
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.application.commands import CastVoteCommand, CastVoteCommandv2, CreateAlertCommand, UpdateAlertCommand
+from app.application.commands import CreateAlertCommand, UpdateAlertCommand
 from app.application.queries import GetAlertsQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import SessionLocal, get_db
