@@ -8,10 +8,12 @@ class AlertRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_alerts(self, election_id: int = None) -> list:
+    def get_alerts(self, election_id: int = None, status: str = None) -> list:
         query = self.db.query(Alert)
         if election_id:
             query = query.filter(Alert.election_id == election_id)
+        if status:
+            query = query.filter(Alert.status == status)
         alerts = query.all()
         return [
             {
