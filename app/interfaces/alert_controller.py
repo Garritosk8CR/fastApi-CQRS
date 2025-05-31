@@ -1,15 +1,24 @@
 import asyncio
 import csv
 from io import StringIO
+from typing import List
 from fastapi import APIRouter, HTTPException, Depends, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import CastVoteCommand, CastVoteCommandv2
-from app.application.queries import AnomalyDetectionQuery, DashboardAnalyticsQuery, GeolocationAnalyticsQuery, GeolocationTrendsQuery, GetCandidateVoteDistributionQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionSummaryQuery, GetHistoricalTurnoutTrendsQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentTrendQuery, GetTimeBasedVotingPatternsQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, HistoricalPollingStationTrendsQuery, PollingStationAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery
+from app.application.queries import GetAlertsQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
 from app.application.handlers import command_bus
+from app.infrastructure.models import AlertResponse
 
 router = APIRouter(prefix="/alerts", tags=["Alerts"])
 templates = Jinja2Templates(directory="app/templates")
+
+@router.get("/", response_model=List[AlertResponse])
+def list_alerts(
+    election_id: int = Query(None, description="Filter alerts by election ID")
+):
+    query_model = GetAlertsQuery(election_id=election_id)
+    return query_bus.handle(query_model)
