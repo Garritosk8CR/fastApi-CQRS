@@ -170,17 +170,17 @@ def create_test_polling_stations(test_db):
         return stations
     return _create_stations
 
-# def test_alerts_ws_empty(client, test_db):
-#     """
-#     Test that when no new alerts exist, the WebSocket returns an empty list.
-#     """
-#     with client.websocket_connect("/alerts/ws") as websocket:
-#         # Receive the first message from the WebSocket
-#         data = websocket.receive_json()
-#         gc.collect()
-#         test_db.rollback()
-#         assert isinstance(data, list), "Expected a list of alerts"
-#         assert len(data) == 0, "Expected no alerts, but found some"
+def test_alerts_ws_empty(client, test_db):
+    """
+    Test that when no new alerts exist, the WebSocket returns an empty list.
+    """
+    with client.websocket_connect("/alerts/ws") as websocket:
+        # Receive the first message from the WebSocket
+        data = websocket.receive_json()
+        gc.collect()
+        test_db.rollback()
+        assert isinstance(data, list), "Expected a list of alerts"
+        assert len(data) == 0, "Expected no alerts, but found some"
 
 # ---------------------------------------------------------------------------
 # Test GET /alerts Endpoint
@@ -193,7 +193,7 @@ def test_get_alerts_empty(client, test_db):
 
     gc.collect()
     test_db.rollback()
-    
+
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
