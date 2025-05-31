@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query, WebSocket, WebSock
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.application.commands import CastVoteCommand, CastVoteCommandv2, CreateAlertCommand
+from app.application.commands import CastVoteCommand, CastVoteCommandv2, CreateAlertCommand, UpdateAlertCommand
 from app.application.queries import GetAlertsQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import get_db
@@ -31,3 +31,15 @@ def create_alert(
 ):
     command = CreateAlertCommand(election_id=election_id, alert_type=alert_type, message=message)
     return command_bus.handle(command)
+
+@router.put("/{alert_id}", response_model=AlertResponse)
+def update_alert(
+    alert_id: int,
+    command: UpdateAlertCommand
+):
+    # Override command.alert_id with the path parameter.
+    command.alert_id = alert_id
+    try:
+        return command_bus.handle(command)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
