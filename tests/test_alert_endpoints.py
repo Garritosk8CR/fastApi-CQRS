@@ -289,3 +289,33 @@ def test_get_alerts_filter_by_election(client, test_db, create_test_election, cr
     assert len(data) == 1
     assert data[0]["election_id"] == 1
     assert data[0]["message"] == "Alert for election one"
+
+# ---------------------------------------------------------------------------
+# Test POST /alerts Endpoint
+# ---------------------------------------------------------------------------
+def test_create_alert(client, test_db, create_test_election):
+    """
+    POST /alerts should create a new alert and return it.
+    """
+    # Make sure there's an election for the alert.
+    
+    create_test_election(id=1, name="Election Three")
+    
+    params = {
+        "election_id": 1,
+        "alert_type": "anomaly",
+        "message": "Test alert created via POST"
+    }
+    response = client.post("/alerts", params=params)
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["election_id"] == 1
+    assert data["alert_type"] == "anomaly"
+    assert data["message"] == "Test alert created via POST"
+    assert data["status"] == "new"
+    # Check that "created_at" exists & is a string timestamp.
+    assert "created_at" in data
