@@ -44,3 +44,19 @@ class AlertRepository:
             "status": alert.status,
             "created_at": alert.created_at.isoformat(),
         }
+    
+    def update_alert(self, alert_id: int, status: str) -> dict:
+        alert = self.db.query(Alert).filter(Alert.id == alert_id).first()
+        if not alert:
+            raise Exception("Alert not found")
+        alert.status = status
+        self.db.commit()
+        self.db.refresh(alert)
+        return {
+            "id": alert.id,
+            "election_id": alert.election_id,
+            "alert_type": alert.alert_type,
+            "message": alert.message,
+            "status": alert.status,
+            "created_at": alert.created_at.isoformat(),
+        }
