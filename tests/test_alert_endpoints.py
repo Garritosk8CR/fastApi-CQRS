@@ -182,6 +182,46 @@ def test_alerts_ws_empty(client, test_db):
         assert isinstance(data, list), "Expected a list of alerts"
         assert len(data) == 0, "Expected no alerts, but found some"
 
+def test_alerts_ws_with_alert(client, test_db, create_test_elections):
+    create_test_elections([{"id": 1, "name": "Election Region Trends"}])
+    """
+    Test that when a new alert is created, the WebSocket returns that alert.
+    """
+    # Create a new alert with status "new"
+    alert = Alert(
+        election_id=1,
+        alert_type="anomaly",
+        message="Test alert for websocket",
+        status="new",
+        created_at=datetime.now(timezone.utc)
+    )
+    
+    # Insert the alert into the test database
+    with SessionLocal() as db:
+        db.add(alert)
+        db.commit()
+        db.refresh(alert)
+    
+    with client.websocket_connect("/alerts/ws") as websocket:
+        # The WebSocket endpoint sends updates every 5 seconds.
+        # The first message should be sent immediately.
+        data = websocket.receive_json()
+
+        gc.collect()
+        test_db.rollback()
+
+        assert isinstance(data, list), "Expected a list of alerts"
+        
+        # Look for the alert by its ID.
+        found_alert = None
+        for item in data:
+            if item.get("id") == alert.id:
+                found_alert = item
+                break
+        assert found_alert is not None, "Newly created alert not found in WebSocket response"
+        assert found_alert.get("message") == "Test alert for websocket"
+        assert found_alert.get("status") == "new"
+
 # ---------------------------------------------------------------------------
 # Test GET /alerts Endpoint
 # ---------------------------------------------------------------------------
