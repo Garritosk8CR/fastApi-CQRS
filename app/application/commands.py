@@ -104,3 +104,8 @@ class SubmitFeedbackCommand(BaseModel):
     election_id: int
     description: str
     severity: str  # "LOW", "MEDIUM", "HIGH"
+
+class CreateAlertCommand(BaseModel):
+    election_id: int
+    alert_type: str
+    message: str
