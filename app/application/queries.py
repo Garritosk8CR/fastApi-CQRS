@@ -206,3 +206,6 @@ class AnomalyDetectionQuery(BaseModel):
 class GeolocationTrendsQuery(BaseModel):
     election_id: int
     region: Optional[str] = None  # Optional filter to restrict to a specific region.
+
+class GetAlertsQuery(BaseModel):
+    election_id: Optional[int] = None
