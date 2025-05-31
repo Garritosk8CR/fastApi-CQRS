@@ -109,3 +109,7 @@ class CreateAlertCommand(BaseModel):
     election_id: int
     alert_type: str
     message: str
+
+class UpdateAlertCommand(BaseModel):
+    alert_id: int
+    status: str   # e.g., "acknowledged", "resolved"
