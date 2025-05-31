@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import math
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -23,3 +24,23 @@ class AlertRepository:
             }
             for alert in alerts
         ]
+    
+    def create_alert(self, election_id: int, alert_type: str, message: str) -> dict:
+        alert = Alert(
+            election_id=election_id,
+            alert_type=alert_type,
+            message=message,
+            status="new",
+            created_at=datetime.now(timezone.utc)
+        )
+        self.db.add(alert)
+        self.db.commit()
+        self.db.refresh(alert)
+        return {
+            "id": alert.id,
+            "election_id": alert.election_id,
+            "alert_type": alert.alert_type,
+            "message": alert.message,
+            "status": alert.status,
+            "created_at": alert.created_at.isoformat(),
+        }
