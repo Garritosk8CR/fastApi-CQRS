@@ -6,7 +6,7 @@ import traceback
 
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
-from app.application.queries import AnomalyDetectionQuery, CandidateSupportQuery, DashboardAnalyticsQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GeolocationAnalyticsQuery, GeolocationTrendsQuery, GetAlertsQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidateVoteDistributionQuery, GetCandidatesQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetElectionSummaryQuery, GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetFeedbackCategoryAnalyticsQuery, GetFeedbackExportQuery, GetHistoricalTurnoutTrendsQuery, GetIntegrityScoreQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentAnalysisQuery, GetSentimentTrendQuery, GetSeverityDistributionQuery, GetTimeBasedVotingPatternsQuery, GetTimePatternsQuery, GetTopObserversQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, HistoricalPollingStationTrendsQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, PollingStationAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import AnomalyDetectionQuery, CandidateSupportQuery, DashboardAnalyticsQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GeolocationAnalyticsQuery, GeolocationTrendsQuery, GetAlertsQuery, GetAlertsWSQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidateVoteDistributionQuery, GetCandidatesQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetElectionSummaryQuery, GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetFeedbackCategoryAnalyticsQuery, GetFeedbackExportQuery, GetHistoricalTurnoutTrendsQuery, GetIntegrityScoreQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentAnalysisQuery, GetSentimentTrendQuery, GetSeverityDistributionQuery, GetTimeBasedVotingPatternsQuery, GetTimePatternsQuery, GetTopObserversQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, HistoricalPollingStationTrendsQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, PollingStationAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import CastVoteCommand, CastVoteCommandv2, CheckVoterExistsQuery, CreateAlertCommand, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteCandidateCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, RegisterVoterCommand, SubmitFeedbackCommand, UpdateAlertCommand, UpdateCandidateCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -993,6 +993,13 @@ class UpdateAlertHandler:
         with SessionLocal() as db:
             repo = AlertRepository(db)
             return repo.update_alert(command.alert_id, command.status)
+        
+class GetAlertsWebSocketHandler:
+    def handle(self, query: GetAlertsWSQuery) -> list:
+        with SessionLocal() as db:
+            repo = AlertRepository(db)
+            # Pass both election_id and status if provided.
+            return repo.get_alerts(query.election_id, query.status)
    
 class CommandBus:
     def __init__(self):
