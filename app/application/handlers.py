@@ -1097,6 +1097,7 @@ query_bus.register_handler(HistoricalPollingStationTrendsQuery, HistoricalPollin
 query_bus.register_handler(PredictiveVoterTurnoutQuery, PredictiveVoterTurnoutHandler())
 query_bus.register_handler(AnomalyDetectionQuery, AnomalyDetectionHandler())
 query_bus.register_handler(GeolocationTrendsQuery, GeolocationTrendsHandler())
+query_bus.register_handler(GetAlertsQuery, GetAlertsHandler())
 
 
 
