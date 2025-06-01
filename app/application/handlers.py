@@ -1067,6 +1067,7 @@ command_bus.register_handler(SubmitFeedbackCommand, SubmitFeedbackHandler())
 command_bus.register_handler(CreateAlertCommand, CreateAlertHandler())
 command_bus.register_handler(UpdateAlertCommand, UpdateAlertHandler())
 command_bus.register_handler(MarkNotificationReadCommand, MarkNotificationReadHandler())
+command_bus.register_handler(MarkAllNotificationsReadCommand, MarkAllNotificationsReadHandler())
 
 
 # Create and register the query handler
