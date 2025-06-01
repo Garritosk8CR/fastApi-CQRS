@@ -216,3 +216,7 @@ class GetAlertsWSQuery(BaseModel):
 
 class GetNotificationsQuery(BaseModel):
     user_id: int
+
+# New query for the summary.
+class GetNotificationsSummaryQuery(BaseModel):
+    user_id: int
