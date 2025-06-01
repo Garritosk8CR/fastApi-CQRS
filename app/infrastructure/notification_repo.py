@@ -69,3 +69,13 @@ class NotificationRepository:
         total = self.db.query(Notification).filter(Notification.user_id == user_id).count()
         unread = self.db.query(Notification).filter(Notification.user_id == user_id, Notification.is_read == False).count()
         return {"total": total, "unread": unread}
+    
+    # New method: Mark all notifications as read for a given user.
+    def mark_all_notifications_as_read(self, user_id: int) -> dict:
+        notifications = self.db.query(Notification).filter(Notification.user_id == user_id, Notification.is_read == False).all()
+        count = 0
+        for n in notifications:
+            n.is_read = True
+            count += 1
+        self.db.commit()
+        return {"marked_read": count}
