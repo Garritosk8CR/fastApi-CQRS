@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 import io
 import pytest
 from fastapi.testclient import TestClient
-from app.infrastructure.models import Candidate, Election, Observer, ObserverFeedback, PollingStation, User, Vote, Voter, Alert
+from app.infrastructure.models import Candidate, Election, Notification, Observer, ObserverFeedback, PollingStation, User, Vote, Voter, Alert
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import Base, SessionLocal, engine
 import gc
@@ -195,3 +195,19 @@ def create_test_election(test_db):
         test_db.refresh(election)
         return election
     return create_election
+
+@pytest.fixture
+def create_test_notification(test_db):
+    def create_notification(alert_id: int, user_id: int, message: str, is_read: bool = False):
+        notification = Notification(
+            alert_id=alert_id,
+            user_id=user_id,
+            message=message,
+            is_read=is_read,
+            created_at=datetime.now(timezone.utc)
+        )
+        test_db.add(notification)
+        test_db.commit()
+        test_db.refresh(notification)
+        return notification
+    return create_notification
