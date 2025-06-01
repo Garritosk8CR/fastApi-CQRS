@@ -1054,6 +1054,7 @@ command_bus.register_handler(CastVoteCommandv2, CastVoteHandlerv2())
 command_bus.register_handler(SubmitFeedbackCommand, SubmitFeedbackHandler())
 command_bus.register_handler(CreateAlertCommand, CreateAlertHandler())
 command_bus.register_handler(UpdateAlertCommand, UpdateAlertHandler())
+command_bus.register_handler(MarkNotificationReadCommand, MarkNotificationReadHandler())
 
 
 # Create and register the query handler
