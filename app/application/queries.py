@@ -213,3 +213,6 @@ class GetAlertsQuery(BaseModel):
 class GetAlertsWSQuery(BaseModel):
     election_id: Optional[int] = None
     status: Optional[str] = None  # e.g., "new", "acknowledged", "resolved"
+
+class GetNotificationsQuery(BaseModel):
+    user_id: int
