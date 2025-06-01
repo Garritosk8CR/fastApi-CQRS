@@ -63,3 +63,9 @@ class NotificationRepository:
             "is_read": notification.is_read,
             "created_at": notification.created_at.isoformat(),
         }
+    
+    # New method: Get a summary for a user—both total and unread counts.
+    def get_notifications_summary(self, user_id: int) -> dict:
+        total = self.db.query(Notification).filter(Notification.user_id == user_id).count()
+        unread = self.db.query(Notification).filter(Notification.user_id == user_id, Notification.is_read == False).count()
+        return {"total": total, "unread": unread}
