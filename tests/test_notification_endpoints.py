@@ -245,3 +245,48 @@ def test_get_notifications_empty(client, test_db, create_test_voters):
     data = response.json()
     assert isinstance(data, list)
     assert len(data) == 0
+
+def test_get_notifications_returns_results(client, test_db, create_test_voters, create_test_alert, create_test_notification, create_test_election):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False},
+        {"user_id": 6, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    """
+    Create a notification for a given user and verify GET /notifications returns it.
+    """
+    
+        # Create a test election and alert (for foreign key integrity).
+    election = create_test_election(id=1, name="Test Election")
+    alert = create_test_alert(election_id=1, alert_type="anomaly", message="Test alert")
+    # Create a notification for user_id 1.
+    create_test_notification(alert_id=1, user_id=1, message="This is a test notification")
+    
+    response = client.get("/notifications?user_id=1")
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 1
+    
+    notif = data[0]
+    assert notif["user_id"] == 1
+    assert notif["alert_id"] == 1
+    assert notif["message"] == "This is a test notification"
+    assert notif["is_read"] is False
+    assert "created_at" in notif
