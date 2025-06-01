@@ -113,3 +113,6 @@ class CreateAlertCommand(BaseModel):
 class UpdateAlertCommand(BaseModel):
     alert_id: int
     status: str   # e.g., "acknowledged", "resolved"
+
+class MarkNotificationReadCommand(BaseModel):
+    notification_id: int
