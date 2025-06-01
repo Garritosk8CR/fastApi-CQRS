@@ -27,3 +27,19 @@ class NotificationRepository:
             }
             for n in notifications
         ]
+    
+    def mark_notification_as_read(self, notification_id: int) -> dict:
+        n = self.db.query(Notification).filter(Notification.id == notification_id).first()
+        if not n:
+            raise Exception("Notification not found")
+        n.is_read = True
+        self.db.commit()
+        self.db.refresh(n)
+        return {
+            "id": n.id,
+            "alert_id": n.alert_id,
+            "user_id": n.user_id,
+            "message": n.message,
+            "is_read": n.is_read,
+            "created_at": n.created_at.isoformat(),
+        }
