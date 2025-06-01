@@ -290,3 +290,51 @@ def test_get_notifications_returns_results(client, test_db, create_test_voters, 
     assert notif["message"] == "This is a test notification"
     assert notif["is_read"] is False
     assert "created_at" in notif
+
+# ---------------------------------------------------------------------------
+# Test PUT /notifications/{notification_id} Endpoint
+# ---------------------------------------------------------------------------
+def test_mark_notification_as_read_success(client, test_db, create_test_voters, create_test_alert, create_test_notification, create_test_election):
+    """
+    PUT /notifications/{notification_id} should mark a notification as read.
+    """
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False},
+        {"user_id": 6, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    election = create_test_election(id=1, name="Election For Update")
+    alert = create_test_alert(election_id=1, alert_type="fraud", message="Update Test Alert")
+    notification = create_test_notification(alert_id=1, user_id=1, message="Please read me", is_read=False)
+    
+    # Issue PUT request to mark as read.
+    update_payload = {"notification_id": 1, "status": None}  # The command expects only notification_id in URL.
+    # Our endpoint uses PUT /notifications/{notification_id} and expects just a JSON payload with "status"
+    # Actually, our MarkNotificationReadCommand only needs notification_id, so we pass JSON with "notification_id": <id>
+    # But in our implementation above, the endpoint only accepts the notification_id from the path and the command
+    # is built to only update the `is_read` status.
+    # Our code uses the command as: MarkNotificationReadCommand(notification_id=notification_id)
+    # So for our PUT request, we only need to pass in an empty object perhaps or we can mimic the structure.
+    
+    # Here we assume our endpoint is structured to pick "notification_id" from path only.
+    response = client.put(f"/notifications/{1}", json={"notification_id": 1, "status": None})
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == 1
+    assert data["is_read"] is True
