@@ -21,3 +21,11 @@ templates = Jinja2Templates(directory="app/templates")
 def list_notifications(user_id: int = Query(..., description="User ID to fetch notifications for")):
     query = GetNotificationsQuery(user_id=user_id)
     return query_bus.handle(query)
+
+@router.put("/{notification_id}", response_model=NotificationResponse)
+def mark_notification_as_read(notification_id: int):
+    command = MarkNotificationReadCommand(notification_id=notification_id)
+    try:
+        return command_bus.handle(command)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
