@@ -338,3 +338,16 @@ def test_mark_notification_as_read_success(client, test_db, create_test_voters, 
     data = response.json()
     assert data["id"] == 1
     assert data["is_read"] is True
+
+def test_mark_notification_as_read_not_found(client,test_db):
+    """
+    If the notification doesn't exist, PUT /notifications/{notification_id} should return 404.
+    """
+    response = client.put("/notifications/9999", json={"notification_id": 9999})
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 404
+    data = response.json()
+    assert "Notification not found" in data["detail"]
