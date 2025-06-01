@@ -156,6 +156,22 @@ class Alert(Base):
 
     # Optional back-reference (assuming your Election model is set up accordingly)
     election = relationship("Election", back_populates="alerts")
+    notifications = relationship("Notification", back_populates="alert")
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    alert_id = Column(Integer, ForeignKey("alerts.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    message = Column(String, nullable=False)
+    is_read = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
+
+    # Optional back-references (if your models support them)
+    alert = relationship("Alert", back_populates="notifications")
+    # Assuming there is a User model
+    user = relationship("User")
     
 class VoterData(BaseModel):
     name: str
