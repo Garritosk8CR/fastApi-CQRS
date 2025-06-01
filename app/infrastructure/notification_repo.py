@@ -43,3 +43,23 @@ class NotificationRepository:
             "is_read": n.is_read,
             "created_at": n.created_at.isoformat(),
         }
+    
+    def create_notification(self, alert_id: int, user_id: int, message: str) -> dict:
+        notification = Notification(
+            alert_id=alert_id,
+            user_id=user_id,
+            message=message,
+            is_read=False,
+            created_at=datetime.now(timezone.utc)
+        )
+        self.db.add(notification)
+        self.db.commit()
+        self.db.refresh(notification)
+        return {
+            "id": notification.id,
+            "alert_id": notification.alert_id,
+            "user_id": notification.user_id,
+            "message": notification.message,
+            "is_read": notification.is_read,
+            "created_at": notification.created_at.isoformat(),
+        }
