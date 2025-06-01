@@ -189,3 +189,11 @@ class AlertResponse(BaseModel):
     status: str
     created_at: str  # ISO formatted datetime
 
+class NotificationResponse(BaseModel):
+    id: int
+    alert_id: int
+    user_id: int
+    message: str
+    is_read: bool
+    created_at: str
+
