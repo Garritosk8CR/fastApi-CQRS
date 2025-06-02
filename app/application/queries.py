@@ -220,3 +220,6 @@ class GetNotificationsQuery(BaseModel):
 # New query for the summary.
 class GetNotificationsSummaryQuery(BaseModel):
     user_id: int
+
+class GetSubscriptionsQuery(BaseModel):
+    user_id: int
