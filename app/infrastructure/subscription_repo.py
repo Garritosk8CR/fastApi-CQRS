@@ -84,3 +84,18 @@ class SubscriptionRepository:
             }
             for s in results
         ]
+    
+    def initialize_default_subscriptions(self, user_id: int, default_alert_types: list) -> list:
+        results = []
+        for alert_type in default_alert_types:
+            subscription = NotificationSubscription(
+                user_id=user_id,
+                alert_type=alert_type,
+                is_subscribed=True  # default to subscribed
+            )
+            self.db.add(subscription)
+            results.append(subscription)
+        self.db.commit()
+        for subscription in results:
+            self.db.refresh(subscription)
+        return results
