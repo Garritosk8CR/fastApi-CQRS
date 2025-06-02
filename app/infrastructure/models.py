@@ -210,3 +210,10 @@ class NotificationResponse(BaseModel):
     is_read: bool
     created_at: str
 
+class SubscriptionResponse(BaseModel):
+    id: int
+    user_id: int
+    alert_type: str
+    is_subscribed: bool
+    created_at: str
+    updated_at: str
