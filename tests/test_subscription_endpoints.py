@@ -372,3 +372,55 @@ def test_bulk_update_subscription_creates(client, test_db, create_test_voters):
             assert sub["is_subscribed"] is False
         elif sub["alert_type"] in ["anomaly", "system"]:
             assert sub["is_subscribed"] is True
+
+# ---------------------------------------------------------------------------
+# Test Bulk Update to Modify Existing Subscriptions.
+# ---------------------------------------------------------------------------
+def test_bulk_update_subscription_modifies(client, test_db, create_test_voters):
+    user_id = 1
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False},
+        {"user_id": 6, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    with SessionLocal() as db:
+        # Create initial subscriptions for user1.
+        sub1 = NotificationSubscription(user_id=user_id, alert_type="anomaly", is_subscribed=True)
+        sub2 = NotificationSubscription(user_id=user_id, alert_type="fraud", is_subscribed=True)
+        db.add(sub1)
+        db.add(sub2)
+        db.commit()
+    
+    payload = {
+        "user_id": user_id,
+        "updates": [
+            {"alert_type": "anomaly", "is_subscribed": False},
+            {"alert_type": "fraud", "is_subscribed": False},
+        ]
+    }
+    response = client.put("/subscriptions/bulk", json=payload)
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+    for sub in data:
+        if sub["alert_type"] == "anomaly":
+            assert sub["is_subscribed"] is False
+        elif sub["alert_type"] == "fraud":
+            assert sub["is_subscribed"] is False
