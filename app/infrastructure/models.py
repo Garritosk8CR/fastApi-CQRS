@@ -172,6 +172,19 @@ class Notification(Base):
     alert = relationship("Alert", back_populates="notifications")
     # Assuming there is a User model
     user = relationship("User")
+
+class NotificationSubscription(Base):
+    __tablename__ = "notification_subscriptions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    alert_type = Column(String, nullable=False)  # e.g., "anomaly", "fraud", "system"
+    is_subscribed = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc), nullable=False)
+
+    # Optionally, create a relationship to the User model if needed.
+    user = relationship("User")
     
 class VoterData(BaseModel):
     name: str
