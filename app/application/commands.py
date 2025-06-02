@@ -120,3 +120,8 @@ class MarkNotificationReadCommand(BaseModel):
 # New command for marking all as read.
 class MarkAllNotificationsReadCommand(BaseModel):
     user_id: int
+
+class UpdateSubscriptionCommand(BaseModel):
+    user_id: int
+    alert_type: str
+    is_subscribed: bool
