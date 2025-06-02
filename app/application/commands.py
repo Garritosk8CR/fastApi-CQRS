@@ -125,3 +125,11 @@ class UpdateSubscriptionCommand(BaseModel):
     user_id: int
     alert_type: str
     is_subscribed: bool
+
+class SubscriptionUpdate(BaseModel):
+    alert_type: str
+    is_subscribed: bool
+
+class BulkUpdateSubscriptionsCommand(BaseModel):
+    user_id: int
+    updates: List[SubscriptionUpdate]
