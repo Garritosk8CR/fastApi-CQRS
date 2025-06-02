@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from app.application.queries import AnomalyDetectionQuery, CandidateSupportQuery, DashboardAnalyticsQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GeolocationAnalyticsQuery, GeolocationTrendsQuery, GetAlertsQuery, GetAlertsWSQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidateVoteDistributionQuery, GetCandidatesQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetElectionSummaryQuery, GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetFeedbackCategoryAnalyticsQuery, GetFeedbackExportQuery, GetHistoricalTurnoutTrendsQuery, GetIntegrityScoreQuery, GetNotificationsQuery, GetNotificationsSummaryQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentAnalysisQuery, GetSentimentTrendQuery, GetSeverityDistributionQuery, GetSubscriptionsQuery, GetTimeBasedVotingPatternsQuery, GetTimePatternsQuery, GetTopObserversQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, HistoricalPollingStationTrendsQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, PollingStationAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
-from app.application.commands import CastVoteCommand, CastVoteCommandv2, CheckVoterExistsQuery, CreateAlertCommand, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteCandidateCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, MarkAllNotificationsReadCommand, MarkNotificationReadCommand, RegisterVoterCommand, SubmitFeedbackCommand, UpdateAlertCommand, UpdateCandidateCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateSubscriptionCommand, UpdateUserRoleCommand, UserSignUp
+from app.application.commands import BulkUpdateSubscriptionsCommand, CastVoteCommand, CastVoteCommandv2, CheckVoterExistsQuery, CreateAlertCommand, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteCandidateCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, MarkAllNotificationsReadCommand, MarkNotificationReadCommand, RegisterVoterCommand, SubmitFeedbackCommand, UpdateAlertCommand, UpdateCandidateCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateSubscriptionCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.alert_repo import AlertRepository
 from app.infrastructure.audit_log_repo import AuditLogRepository
@@ -1038,6 +1038,12 @@ class UpdateSubscriptionHandler:
         with SessionLocal() as db:
             repo = SubscriptionRepository(db)
             return repo.update_subscription(command.user_id, command.alert_type, command.is_subscribed)
+        
+class BulkUpdateSubscriptionsHandler:
+    def handle(self, command: BulkUpdateSubscriptionsCommand) -> list:
+        with SessionLocal() as db:
+            repo = SubscriptionRepository(db)
+            return repo.bulk_update_subscriptions(command.user_id, [u.model_dump() for u in command.updates])
    
 class CommandBus:
     def __init__(self):
