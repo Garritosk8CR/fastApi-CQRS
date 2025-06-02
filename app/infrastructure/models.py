@@ -217,3 +217,11 @@ class SubscriptionResponse(BaseModel):
     is_subscribed: bool
     created_at: str
     updated_at: str
+
+class BulkSubscriptionResponse(BaseModel):
+    id: int
+    user_id: int
+    alert_type: str
+    is_subscribed: bool
+    created_at: str
+    updated_at: str
