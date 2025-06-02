@@ -1088,6 +1088,7 @@ command_bus.register_handler(UpdateAlertCommand, UpdateAlertHandler())
 command_bus.register_handler(MarkNotificationReadCommand, MarkNotificationReadHandler())
 command_bus.register_handler(MarkAllNotificationsReadCommand, MarkAllNotificationsReadHandler())
 command_bus.register_handler(UpdateSubscriptionCommand, UpdateSubscriptionHandler())
+command_bus.register_handler(BulkUpdateSubscriptionsCommand, BulkUpdateSubscriptionsHandler())
 
 
 # Create and register the query handler
