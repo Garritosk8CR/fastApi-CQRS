@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import MarkNotificationReadCommand
-from app.application.queries import GetNotificationsQuery
+from app.application.queries import GetNotificationsQuery, GetNotificationsSummaryQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import SessionLocal, get_db
 from app.application.handlers import command_bus
@@ -29,3 +29,8 @@ def mark_notification_as_read(notification_id: int):
         return command_bus.handle(command)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
+    
+@router.get("/summary")
+def notifications_summary(user_id: int = Query(..., description="User ID for summary")):
+    query = GetNotificationsSummaryQuery(user_id=user_id)
+    return query_bus.handle(query)
