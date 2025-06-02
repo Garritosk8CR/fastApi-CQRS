@@ -17,6 +17,7 @@ from app.interfaces.vote_controller import router as votes_router
 from app.interfaces.observer_feedback_controller import router as observer_feedback_router
 from app.interfaces.alert_controller import router as alert_router
 from app.interfaces.notification_controller import router as notification_router
+from app.interfaces.subscription_controller import router as subscription_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -39,6 +40,7 @@ app.include_router(votes_router)
 app.include_router(observer_feedback_router)
 app.include_router(alert_router)
 app.include_router(notification_router)
+app.include_router(subscription_router)
 
 
 # Create tables in the database
