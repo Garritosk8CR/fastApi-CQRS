@@ -36,3 +36,28 @@ def bulk_update_subscriptions(command: BulkUpdateSubscriptionsCommand):
         return command_bus.handle(command)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@router.websocket("/ws")
+async def subscriptions_ws(websocket: WebSocket, user_id: int):
+    await websocket.accept()
+    try:
+        while True:
+            with SessionLocal() as db:
+                subscriptions = db.query(NotificationSubscription).filter(
+                    NotificationSubscription.user_id == user_id
+                ).all()
+                data = [
+                    {
+                        "id": s.id,
+                        "user_id": s.user_id,
+                        "alert_type": s.alert_type,
+                        "is_subscribed": s.is_subscribed,
+                        "created_at": s.created_at.isoformat(),
+                        "updated_at": s.updated_at.isoformat() if s.updated_at else None
+                    }
+                    for s in subscriptions
+                ]
+            await websocket.send_json(data)
+            await asyncio.sleep(5)
+    except WebSocketDisconnect:
+        print("User disconnected from subscription websocket")
