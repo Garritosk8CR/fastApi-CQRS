@@ -1149,6 +1149,8 @@ query_bus.register_handler(GetAlertsQuery, GetAlertsHandler())
 query_bus.register_handler(GetAlertsWSQuery, GetAlertsWebSocketHandler())
 query_bus.register_handler(GetNotificationsQuery, GetNotificationsHandler())
 query_bus.register_handler(GetNotificationsSummaryQuery, GetNotificationsSummaryHandler())
+query_bus.register_handler(GetSubscriptionsQuery, GetSubscriptionsHandler())
+
 
 
 
