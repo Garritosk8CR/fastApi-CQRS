@@ -424,3 +424,43 @@ def test_bulk_update_subscription_modifies(client, test_db, create_test_voters):
             assert sub["is_subscribed"] is False
         elif sub["alert_type"] == "fraud":
             assert sub["is_subscribed"] is False
+
+# ---------------------------------------------------------------------------
+# Test WebSocket Endpoint for Subscriptions
+# ---------------------------------------------------------------------------
+def test_subscriptions_websocket(client, test_db, create_test_voters):
+    user_id = 1
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False},
+        {"user_id": 6, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    with SessionLocal() as db:
+        sub = NotificationSubscription(user_id=user_id, alert_type="anomaly", is_subscribed=True)
+        db.add(sub)
+        db.commit()
+        db.refresh(sub)
+    
+    # Connect to the subscriptions WebSocket endpoint.
+    with client.websocket_connect(f"subscriptions/ws?user_id={user_id}") as websocket:
+        data = websocket.receive_json()
+
+        gc.collect()
+        test_db.rollback()
+
+        assert isinstance(data, list)
+        # Verify that at least one subscription (anomaly) is present.
+        found = any(s.get("alert_type") == "anomaly" for s in data)
+        assert found
