@@ -35,7 +35,8 @@ def notifications_summary(user_id: int = Query(..., description="User ID for sum
     query = GetNotificationsSummaryQuery(user_id=user_id)
     return query_bus.handle(query)
 
-@router.put("/mark_all_read")
-def mark_all_notifications_as_read(user_id: int = Query(..., description="User ID to mark all notifications as read")):
+@router.put("/mark_all_read/{user_id}")
+def mark_all_notifications_as_read(user_id: int):
+    print(f"Marking all notifications as read for user ID: {user_id}")
     command = MarkAllNotificationsReadCommand(user_id=user_id)
     return command_bus.handle(command)

@@ -421,3 +421,43 @@ def test_notifications_summary_with_data(client, test_db, create_test_election, 
     # Total notifications = 2; unread notifications = 1.
     assert data["total"] == 2
     assert data["unread"] == 1
+
+# ---------------------------------------------------------------------------
+# Test PUT /notifications/mark_all_read Endpoint
+# ---------------------------------------------------------------------------
+def test_mark_all_notifications_as_read(client, test_db, create_test_voters, create_test_election, create_test_alert, create_test_notification):
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False},
+        {"user_id": 6, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    user_id = 1
+    
+    election = create_test_election(id=1, name="Election For Bulk Read")
+    alert = create_test_alert(election_id=1, alert_type="fraud", message="Alert Bulk")
+    # Create three unread notifications.
+    create_test_notification(alert_id=1, user_id=user_id, message="Bulk notif 1", is_read=False)
+    create_test_notification(alert_id=1, user_id=user_id, message="Bulk notif 2", is_read=False)
+    create_test_notification(alert_id=1, user_id=user_id, message="Bulk notif 3", is_read=False)
+    
+    response = client.put(f"/notifications/mark_all_read/{user_id}")
+
+    gc.collect()
+    test_db.rollback()
+    print(response.json())
+    assert response.status_code == 200
+    data = response.json()
+    # Check that three notifications were marked as read.
+    assert data["marked_read"] == 3
