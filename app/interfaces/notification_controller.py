@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query, WebSocket, WebSock
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.application.commands import MarkNotificationReadCommand
+from app.application.commands import MarkAllNotificationsReadCommand, MarkNotificationReadCommand
 from app.application.queries import GetNotificationsQuery, GetNotificationsSummaryQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import SessionLocal, get_db
@@ -34,3 +34,8 @@ def mark_notification_as_read(notification_id: int):
 def notifications_summary(user_id: int = Query(..., description="User ID for summary")):
     query = GetNotificationsSummaryQuery(user_id=user_id)
     return query_bus.handle(query)
+
+@router.put("/mark_all_read")
+def mark_all_notifications_as_read(user_id: int = Query(..., description="User ID to mark all notifications as read")):
+    command = MarkAllNotificationsReadCommand(user_id=user_id)
+    return command_bus.handle(command)
