@@ -243,3 +243,39 @@ def test_get_subscriptions_empty(client, test_db, create_test_voters):
     # When no subscriptions exist for the user, expect an empty list.
     assert isinstance(data, list)
     assert len(data) == 0
+
+def test_update_subscription_creates(client, test_db, create_test_voters):
+    user_id = 1
+    alert_type = "anomaly"
+    is_subscribed = False
+    
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False},
+        {"user_id": 6, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    # Optionally, create a test user if required.
+    
+
+    response = client.put(f"/subscriptions?user_id={user_id}&alert_type={alert_type}&is_subscribed={str(is_subscribed).lower()}")
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["user_id"] == user_id
+    assert data["alert_type"] == alert_type
+    assert data["is_subscribed"] == is_subscribed
