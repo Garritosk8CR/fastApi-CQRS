@@ -23,3 +23,29 @@ class SubscriptionRepository:
             }
             for s in subscriptions
         ]
+    
+    def update_subscription(self, user_id: int, alert_type: str, is_subscribed: bool) -> dict:
+        subscription = self.db.query(NotificationSubscription).filter(
+            NotificationSubscription.user_id == user_id,
+            NotificationSubscription.alert_type == alert_type
+        ).first()
+        if not subscription:
+            # Create a new record if one doesn't exist.
+            subscription = NotificationSubscription(
+                user_id=user_id,
+                alert_type=alert_type,
+                is_subscribed=is_subscribed
+            )
+            self.db.add(subscription)
+        else:
+            subscription.is_subscribed = is_subscribed
+        self.db.commit()
+        self.db.refresh(subscription)
+        return {
+            "id": subscription.id,
+            "user_id": subscription.user_id,
+            "alert_type": subscription.alert_type,
+            "is_subscribed": subscription.is_subscribed,
+            "created_at": subscription.created_at.isoformat(),
+            "updated_at": subscription.updated_at.isoformat() if subscription.updated_at else None,
+        }
