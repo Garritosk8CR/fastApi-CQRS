@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import BulkUpdateSubscriptionsCommand, UpdateSubscriptionCommand
-from app.application.queries import GetSubscriptionsQuery
+from app.application.queries import GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import SessionLocal, get_db
 from app.application.handlers import command_bus
@@ -39,6 +39,12 @@ async def bulk_update_subscriptions(command: BulkUpdateSubscriptionsCommand):
         raise HTTPException(status_code=400, detail=str(e))
     asyncio.create_task(subscription_manager.broadcast(command.user_id, {"subscriptions": result}))
     return result
+
+@router.get("/analytics")
+def get_subscription_analytics(user_id: int = Query(..., description="User ID for subscription analytics")):
+    query = GetSubscriptionAnalyticsQuery(user_id=user_id)
+    return query_bus.handle(query)
+
 @router.websocket("/ws")
 async def subscriptions_ws(websocket: WebSocket, user_id: int = Query(...)):
     await subscription_manager.connect(user_id, websocket)
