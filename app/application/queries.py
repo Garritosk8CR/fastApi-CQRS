@@ -223,3 +223,6 @@ class GetNotificationsSummaryQuery(BaseModel):
 
 class GetSubscriptionsQuery(BaseModel):
     user_id: int
+
+class GetSubscriptionAnalyticsQuery(BaseModel):
+    user_id: int
