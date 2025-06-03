@@ -12,6 +12,7 @@ from app.application.query_bus import query_bus
 from app.infrastructure.database import SessionLocal, get_db
 from app.application.handlers import command_bus
 from app.infrastructure.models import BulkSubscriptionResponse, NotificationSubscription, SubscriptionResponse
+from app.interfaces.managers.connection_manager import subscription_manager
 
 
 router = APIRouter(prefix="/subscriptions", tags=["Subscriptions"])
@@ -38,26 +39,30 @@ def bulk_update_subscriptions(command: BulkUpdateSubscriptionsCommand):
         raise HTTPException(status_code=400, detail=str(e))
     
 @router.websocket("/ws")
-async def subscriptions_ws(websocket: WebSocket, user_id: int):
-    await websocket.accept()
+async def subscriptions_ws(websocket: WebSocket, user_id: int = Query(...)):
+    await subscription_manager.connect(user_id, websocket)
     try:
+        # Optionally, you can send an initial state.
+        with SessionLocal() as db:
+            subscriptions = db.query(NotificationSubscription).filter(
+                NotificationSubscription.user_id == user_id
+            ).all()
+            data = [
+                {
+                    "id": s.id,
+                    "user_id": s.user_id,
+                    "alert_type": s.alert_type,
+                    "is_subscribed": s.is_subscribed,
+                    "created_at": s.created_at.isoformat(),
+                    "updated_at": s.updated_at.isoformat() if s.updated_at else None,
+                }
+                for s in subscriptions
+            ]
+        await websocket.send_json(data)
+        # Keep connection open.
         while True:
-            with SessionLocal() as db:
-                subscriptions = db.query(NotificationSubscription).filter(
-                    NotificationSubscription.user_id == user_id
-                ).all()
-                data = [
-                    {
-                        "id": s.id,
-                        "user_id": s.user_id,
-                        "alert_type": s.alert_type,
-                        "is_subscribed": s.is_subscribed,
-                        "created_at": s.created_at.isoformat(),
-                        "updated_at": s.updated_at.isoformat() if s.updated_at else None
-                    }
-                    for s in subscriptions
-                ]
-            await websocket.send_json(data)
-            await asyncio.sleep(5)
+            # This connection now waits indefinitely. You can implement a ping/keepalive if needed.
+            await asyncio.sleep(60)
     except WebSocketDisconnect:
-        print("User disconnected from subscription websocket")
+        subscription_manager.disconnect(user_id, websocket)
+        print("User disconnected from subscriptions WS")
