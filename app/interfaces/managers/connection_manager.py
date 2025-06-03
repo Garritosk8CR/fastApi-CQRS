@@ -11,3 +11,9 @@ class SubscriptionConnectionManager:
             self.active_connections[user_id] = []
         self.active_connections[user_id].append(websocket)
         await websocket.accept()
+
+    def disconnect(self, user_id: int, websocket: WebSocket):
+        if user_id in self.active_connections:
+            self.active_connections[user_id].remove(websocket)
+            if not self.active_connections[user_id]:
+                del self.active_connections[user_id]
