@@ -464,3 +464,47 @@ def test_subscriptions_websocket(client, test_db, create_test_voters):
         # Verify that at least one subscription (anomaly) is present.
         found = any(s.get("alert_type") == "anomaly" for s in data)
         assert found
+
+def test_realtime_subscription_update(client, test_db, create_test_voters):
+    user_id = 1
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False},
+        {"user_id": 6, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    # Assume a test user exists; if not, it’s enough to use the user_id.
+    # Connect to the WebSocket endpoint.
+    with client.websocket_connect(f"/subscriptions/ws?user_id={user_id}") as websocket:
+        # Initially, the WebSocket sends the current state (could be empty).
+        initial_data = websocket.receive_json()
+        # Now perform a bulk update for this user.
+        payload = {
+            "user_id": user_id,
+            "updates": [
+                {"alert_type": "anomaly", "is_subscribed": True},
+                {"alert_type": "fraud", "is_subscribed": False}
+            ]
+        }
+        response = client.put("/subscriptions/bulk", json=payload)
+        assert response.status_code == 200
+        # The update call should trigger a broadcast.
+        updated_msg = websocket.receive_json()
+
+        gc.collect()
+        test_db.rollback()
+        # Expect the broadcast message to contain the updated subscriptions.
+        assert "subscriptions" in updated_msg
+        subs = updated_msg["subscriptions"]
+        assert any(s["alert_type"] == "fraud" and s["is_subscribed"] is False for s in subs)
