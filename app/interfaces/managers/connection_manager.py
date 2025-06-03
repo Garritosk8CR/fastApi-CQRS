@@ -17,3 +17,12 @@ class SubscriptionConnectionManager:
             self.active_connections[user_id].remove(websocket)
             if not self.active_connections[user_id]:
                 del self.active_connections[user_id]
+
+    async def broadcast(self, user_id: int, message: dict):
+        if user_id in self.active_connections:
+            for connection in self.active_connections[user_id]:
+                try:
+                    await connection.send_json(message)
+                except Exception as e:
+                    # You might log the error or remove the faulty connection.
+                    print(f"Error sending message: {e}")
