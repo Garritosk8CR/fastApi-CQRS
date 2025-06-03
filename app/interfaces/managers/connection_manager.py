@@ -5,3 +5,9 @@ class SubscriptionConnectionManager:
     def __init__(self):
         # Dictionary mapping user_id to a list of active websocket connections.
         self.active_connections: dict[int, list[WebSocket]] = {}
+
+    async def connect(self, user_id: int, websocket: WebSocket):
+        if user_id not in self.active_connections:
+            self.active_connections[user_id] = []
+        self.active_connections[user_id].append(websocket)
+        await websocket.accept()
