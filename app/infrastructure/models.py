@@ -185,6 +185,16 @@ class NotificationSubscription(Base):
 
     # Optionally, create a relationship to the User model if needed.
     user = relationship("User")
+
+class SubscriptionEvent(Base):
+    __tablename__ = "subscription_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False)
+    alert_type = Column(String, nullable=False)
+    old_value = Column(Boolean, nullable=False)
+    new_value = Column(Boolean, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
     
 class VoterData(BaseModel):
     name: str
