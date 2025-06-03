@@ -2,6 +2,7 @@ import math
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.infrastructure.models import NotificationSubscription
+from app.infrastructure.subscription_event_repo import SubscriptionEventRepository
 
 
 class SubscriptionRepository:
@@ -52,13 +53,19 @@ class SubscriptionRepository:
     
     def bulk_update_subscriptions(self, user_id: int, updates: list) -> list:
         results = []
+        event_repo = SubscriptionEventRepository(self.db)
         for update in updates:
             alert_type = update.get("alert_type")
             is_subscribed = update.get("is_subscribed")
-            subscription = self.db.query(NotificationSubscription).filter(
-                NotificationSubscription.user_id == user_id,
-                NotificationSubscription.alert_type == alert_type
-            ).first()
+            subscription = (
+                self.db.query(NotificationSubscription)
+                .filter(
+                    NotificationSubscription.user_id == user_id,
+                    NotificationSubscription.alert_type == alert_type
+                )
+                .first()
+            )
+            old_value = subscription.is_subscribed if subscription else None
             if not subscription:
                 subscription = NotificationSubscription(
                     user_id=user_id,
@@ -69,8 +76,12 @@ class SubscriptionRepository:
             else:
                 subscription.is_subscribed = is_subscribed
             results.append(subscription)
+            self.db.flush()  # ensures IDs and changes are available
+            # Log event if there is a change (even creation is considered a change)
+            if old_value is None or old_value != is_subscribed:
+                effective_old = old_value if old_value is not None else False
+                event_repo.log_event(user_id, alert_type, effective_old, is_subscribed)
         self.db.commit()
-        # Refresh subscriptions before returning
         for subscription in results:
             self.db.refresh(subscription)
         return [
