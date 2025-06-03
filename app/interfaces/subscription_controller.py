@@ -32,12 +32,13 @@ def update_subscription(user_id: int, alert_type: str, is_subscribed: bool):
         raise HTTPException(status_code=400, detail=str(e))
     
 @router.put("/bulk", response_model=List[BulkSubscriptionResponse])
-def bulk_update_subscriptions(command: BulkUpdateSubscriptionsCommand):
+async def bulk_update_subscriptions(command: BulkUpdateSubscriptionsCommand):
     try:
-        return command_bus.handle(command)
+        result = command_bus.handle(command)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    
+    asyncio.create_task(subscription_manager.broadcast(command.user_id, {"subscriptions": result}))
+    return result
 @router.websocket("/ws")
 async def subscriptions_ws(websocket: WebSocket, user_id: int = Query(...)):
     await subscription_manager.connect(user_id, websocket)
