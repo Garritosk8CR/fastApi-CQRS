@@ -6,7 +6,7 @@ import traceback
 
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
-from app.application.queries import AnomalyDetectionQuery, CandidateSupportQuery, DashboardAnalyticsQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GeolocationAnalyticsQuery, GeolocationTrendsQuery, GetAlertsQuery, GetAlertsWSQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidateVoteDistributionQuery, GetCandidatesQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetElectionSummaryQuery, GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetFeedbackCategoryAnalyticsQuery, GetFeedbackExportQuery, GetHistoricalTurnoutTrendsQuery, GetIntegrityScoreQuery, GetNotificationsQuery, GetNotificationsSummaryQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentAnalysisQuery, GetSentimentTrendQuery, GetSeverityDistributionQuery, GetSubscriptionsQuery, GetTimeBasedVotingPatternsQuery, GetTimePatternsQuery, GetTopObserversQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, HistoricalPollingStationTrendsQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, PollingStationAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import AnomalyDetectionQuery, CandidateSupportQuery, DashboardAnalyticsQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GeolocationAnalyticsQuery, GeolocationTrendsQuery, GetAlertsQuery, GetAlertsWSQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidateVoteDistributionQuery, GetCandidatesQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetElectionSummaryQuery, GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetFeedbackCategoryAnalyticsQuery, GetFeedbackExportQuery, GetHistoricalTurnoutTrendsQuery, GetIntegrityScoreQuery, GetNotificationsQuery, GetNotificationsSummaryQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentAnalysisQuery, GetSentimentTrendQuery, GetSeverityDistributionQuery, GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery, GetTimeBasedVotingPatternsQuery, GetTimePatternsQuery, GetTopObserversQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, HistoricalPollingStationTrendsQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, PollingStationAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery, ResultsBreakdownQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import BulkUpdateSubscriptionsCommand, CastVoteCommand, CastVoteCommandv2, CheckVoterExistsQuery, CreateAlertCommand, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteCandidateCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, MarkAllNotificationsReadCommand, MarkNotificationReadCommand, RegisterVoterCommand, SubmitFeedbackCommand, UpdateAlertCommand, UpdateCandidateCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateSubscriptionCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -21,6 +21,7 @@ from app.infrastructure.notification_repo import NotificationRepository
 from app.infrastructure.observer_feedback_repo import ObserverFeedbackRepository
 from app.infrastructure.observer_repo import ObserverRepository
 from app.infrastructure.polling_station_repo import PollingStationRepository
+from app.infrastructure.subscription_event_repo import SubscriptionEventRepository
 from app.infrastructure.subscription_repo import SubscriptionRepository
 from app.infrastructure.user_repo import UserRepository
 from app.infrastructure.vote_repo import VoteRepository
@@ -1044,6 +1045,12 @@ class BulkUpdateSubscriptionsHandler:
         with SessionLocal() as db:
             repo = SubscriptionRepository(db)
             return repo.bulk_update_subscriptions(command.user_id, [u.model_dump() for u in command.updates])
+        
+class GetSubscriptionAnalyticsHandler:
+    def handle(self, query: GetSubscriptionAnalyticsQuery) -> list:
+        with SessionLocal() as db:
+            repo = SubscriptionEventRepository(db)
+            return repo.get_subscription_analytics(query.user_id)
    
 class CommandBus:
     def __init__(self):
