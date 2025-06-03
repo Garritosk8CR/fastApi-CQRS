@@ -26,3 +26,6 @@ class SubscriptionConnectionManager:
                 except Exception as e:
                     # You might log the error or remove the faulty connection.
                     print(f"Error sending message: {e}")
+
+# Create a global instance
+subscription_manager = SubscriptionConnectionManager()
