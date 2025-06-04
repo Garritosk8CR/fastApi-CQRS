@@ -36,3 +36,29 @@ class SubscriptionEventRepository:
             }
             for row in results
         ]
+    
+    def get_subscription_analytics_time_series(self, user_id: int, group_by: str = "day") -> list:
+        # Choose the date_trunc format: "day", "week", or "month"
+        if group_by not in ["day", "week", "month"]:
+            group_by = "day"
+        trunc_func = func.date_trunc(group_by, SubscriptionEvent.created_at)
+        
+        query = self.db.query(
+            trunc_func.label("period"),
+            SubscriptionEvent.alert_type,
+            func.count(SubscriptionEvent.id).label("total_changes"),
+            func.sum(case((SubscriptionEvent.new_value == True, 1), else_=0)).label("enabled_count"),
+            func.sum(case((SubscriptionEvent.new_value == False, 1), else_=0)).label("disabled_count")
+        ).filter(SubscriptionEvent.user_id == user_id).group_by("period", SubscriptionEvent.alert_type).order_by("period")
+        
+        results = query.all()
+        return [
+            {
+                "period": row[0].isoformat() if row[0] else None,
+                "alert_type": row[1],
+                "total_changes": row[2],
+                "enabled_count": row[3],
+                "disabled_count": row[4]
+            }
+            for row in results
+        ]
