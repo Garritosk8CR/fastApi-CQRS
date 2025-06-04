@@ -1222,6 +1222,7 @@ query_bus.register_handler(GetSubscriptionAnalyticsQuery, GetSubscriptionAnalyti
 query_bus.register_handler(TimeSeriesSubscriptionAnalyticsQuery, TimeSeriesSubscriptionAnalyticsHandler())
 query_bus.register_handler(SegmentSubscriptionAnalyticsQuery, SegmentSubscriptionAnalyticsHandler())
 query_bus.register_handler(SubscriptionConversionMetricsQuery, SubscriptionConversionMetricsHandler())
+query_bus.register_handler(PredictiveSubscriptionAnalyticsQuery, PredictiveSubscriptionAnalyticsHandler())
 
 
 
