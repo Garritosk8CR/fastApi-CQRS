@@ -23,8 +23,8 @@ class SubscriptionEventRepository:
         query = self.db.query(
             SubscriptionEvent.alert_type,
             func.count(SubscriptionEvent.id).label("total_changes"),
-            func.sum(case([(SubscriptionEvent.new_value == True, 1)], else_=0)).label("enabled_count"),
-            func.sum(case([(SubscriptionEvent.new_value == False, 1)], else_=0)).label("disabled_count")
+            func.sum(case((SubscriptionEvent.new_value == True, 1), else_=0)).label("enabled_count"),
+            func.sum(case((SubscriptionEvent.new_value == False, 1), else_=0)).label("disabled_count")
         ).filter(SubscriptionEvent.user_id == user_id).group_by(SubscriptionEvent.alert_type)
         results = query.all()
         return [

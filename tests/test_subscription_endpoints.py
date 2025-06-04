@@ -508,3 +508,15 @@ def test_realtime_subscription_update(client, test_db, create_test_voters):
         assert "subscriptions" in updated_msg
         subs = updated_msg["subscriptions"]
         assert any(s["alert_type"] == "fraud" and s["is_subscribed"] is False for s in subs)
+
+def test_subscription_analytics_empty(client, test_db, create_test_voters):
+    
+    response = client.get("/subscriptions/analytics?user_id=1")
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 0
