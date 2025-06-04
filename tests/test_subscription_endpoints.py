@@ -214,7 +214,7 @@ def create_test_notification(test_db):
     return create_notification
 
 @pytest.fixture
-def create_test_subscription_event(db):
+def create_test_subscription_event(test_db):
     def create_subscription_event(user_id: int, alert_type: str, new_value: bool, created_at: datetime):
         """
         Helper function to create a subscription event.
@@ -227,9 +227,9 @@ def create_test_subscription_event(db):
             new_value=new_value,
             created_at=created_at
         )
-        db.add(event)
-        db.commit()
-        db.refresh(event)
+        test_db.add(event)
+        test_db.commit()
+        test_db.refresh(event)
         return event
     return create_subscription_event
 
@@ -579,3 +579,53 @@ def test_subscription_analytics_with_events(client, test_db, create_test_voters)
     alert_types = {entry["alert_type"] for entry in data}
     assert "anomaly" in alert_types
     assert "fraud" in alert_types
+
+def test_time_series_analytics_day_grouping(client, test_db, create_test_subscription_event, create_test_voters):
+    """
+    Create three events: two on one day and one on the next. Then check that
+    the time series endpoint correctly groups these events by day.
+    """
+    user_id = 1
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False},
+        {"user_id": 6, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+    now = datetime.now(timezone.utc)
+
+    # Create two events "today" and one event "tomorrow"
+    create_test_subscription_event(user_id, "anomaly", True, now - timedelta(hours=1))
+    create_test_subscription_event(user_id, "anomaly", False, now - timedelta(hours=2))
+    create_test_subscription_event(user_id, "anomaly", True, now + timedelta(hours=20))
+    
+    # Call endpoint with group_by "day"
+    response = client.get("/subscriptions/analytics/time_series", params={"user_id": user_id, "group_by": "day"})
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+    data = response.json()
+    # Expect two groups because two different days were used.
+    assert isinstance(data, list)
+    # Collect groups by period and alert type
+    groups = {}
+    for entry in data:
+        key = (entry["period"], entry["alert_type"])
+        groups[key] = entry
+
+    # There should be exactly 2 groups for "anomaly" alert type.
+    counts = sorted([entry["total_changes"] for entry in data if entry["alert_type"] == "anomaly"])
+    assert counts == [3]
