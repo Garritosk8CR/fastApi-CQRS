@@ -101,3 +101,19 @@ class SubscriptionEventRepository:
             "conversion_events": conversion_events,
             "conversion_rate": conversion_rate
         }
+    
+    def get_time_series_data_for_alert(self, user_id: int, alert_type: str, group_by: str = "day") -> list:
+        if group_by not in ["day", "week", "month"]:
+            group_by = "day"
+        trunc_func = func.date_trunc(group_by, SubscriptionEvent.created_at)
+        
+        query = self.db.query(
+            trunc_func.label("period"),
+            func.count(SubscriptionEvent.id).label("changes")
+        ).filter(
+            SubscriptionEvent.user_id == user_id,
+            SubscriptionEvent.alert_type == alert_type
+        ).group_by("period").order_by("period")
+        
+        results = query.all()
+        return [(row[0], row[1]) for row in results]
