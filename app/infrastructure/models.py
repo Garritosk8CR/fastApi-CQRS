@@ -50,6 +50,7 @@ class User(Base):
     email = Column(String, unique=True)
     password = Column(String)
     role = Column(String, default="voter")
+    region = Column(String, nullable=True)
     
     # Relationship with Voter
     voter = relationship("Voter", uselist=False, back_populates="user")
