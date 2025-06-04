@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import BulkUpdateSubscriptionsCommand, UpdateSubscriptionCommand
-from app.application.queries import GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery, SegmentSubscriptionAnalyticsQuery, TimeSeriesSubscriptionAnalyticsQuery
+from app.application.queries import GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery, SegmentSubscriptionAnalyticsQuery, SubscriptionConversionMetricsQuery, TimeSeriesSubscriptionAnalyticsQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import SessionLocal, get_db
 from app.application.handlers import command_bus
@@ -53,6 +53,11 @@ def time_series_analytics(user_id: int = Query(...), group_by: str = Query("day"
 @router.get("/analytics/segment")
 def segmented_analytics(region: str):
     query = SegmentSubscriptionAnalyticsQuery(region=region)
+    return query_bus.handle(query)
+
+@router.get("/analytics/conversion")
+def subscription_conversion_analytics(user_id: int):
+    query = SubscriptionConversionMetricsQuery(user_id=user_id)
     return query_bus.handle(query)
 
 @router.websocket("/ws")
