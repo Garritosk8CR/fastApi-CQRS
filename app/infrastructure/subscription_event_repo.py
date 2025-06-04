@@ -87,3 +87,17 @@ class SubscriptionEventRepository:
             }
             for row in results
         ]
+    
+    def get_subscription_conversion_metrics(self, user_id: int) -> dict:
+        total_events = self.db.query(func.count(SubscriptionEvent.id))\
+                            .filter(SubscriptionEvent.user_id == user_id).scalar()
+        
+        conversion_events = self.db.query(func.count(SubscriptionEvent.id))\
+                                .filter(SubscriptionEvent.user_id == user_id,
+                                        SubscriptionEvent.old_value.isnot(None)).scalar()
+        conversion_rate = (conversion_events / total_events) if total_events > 0 else None
+        return {
+            "total_events": total_events,
+            "conversion_events": conversion_events,
+            "conversion_rate": conversion_rate
+        }
