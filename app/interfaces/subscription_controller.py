@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import BulkUpdateSubscriptionsCommand, UpdateSubscriptionCommand
-from app.application.queries import GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery
+from app.application.queries import GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery, TimeSeriesSubscriptionAnalyticsQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import SessionLocal, get_db
 from app.application.handlers import command_bus
@@ -43,6 +43,11 @@ async def bulk_update_subscriptions(command: BulkUpdateSubscriptionsCommand):
 @router.get("/analytics")
 def get_subscription_analytics(user_id: int = Query(..., description="User ID for subscription analytics")):
     query = GetSubscriptionAnalyticsQuery(user_id=user_id)
+    return query_bus.handle(query)
+
+@router.get("/analytics/time_series")
+def time_series_analytics(user_id: int = Query(...), group_by: str = Query("day")):
+    query = TimeSeriesSubscriptionAnalyticsQuery(user_id=user_id, group_by=group_by)
     return query_bus.handle(query)
 
 @router.websocket("/ws")
