@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 import io
 import pytest
 from fastapi.testclient import TestClient
-from app.infrastructure.models import Candidate, Election, Notification, NotificationSubscription, Observer, ObserverFeedback, PollingStation, User, Vote, Voter, Alert
+from app.infrastructure.models import Candidate, Election, Notification, NotificationSubscription, Observer, ObserverFeedback, PollingStation, SubscriptionEvent, User, Vote, Voter, Alert
 from app.infrastructure.subscription_event_repo import SubscriptionEventRepository
 from app.main import app  # Import the FastAPI instance from main.py
 from app.infrastructure.database import Base, SessionLocal, engine
@@ -212,6 +212,26 @@ def create_test_notification(test_db):
         test_db.refresh(notification)
         return notification
     return create_notification
+
+@pytest.fixture
+def create_test_subscription_event(db):
+    def create_subscription_event(user_id: int, alert_type: str, new_value: bool, created_at: datetime):
+        """
+        Helper function to create a subscription event.
+        For testing purposes, we set old_value to the opposite of new_value.
+        """
+        event = SubscriptionEvent(
+            user_id=user_id,
+            alert_type=alert_type,
+            old_value=not new_value,  # simple dummy value
+            new_value=new_value,
+            created_at=created_at
+        )
+        db.add(event)
+        db.commit()
+        db.refresh(event)
+        return event
+    return create_subscription_event
 
 # Test for GET /subscriptions when no subscriptions exist.
 def test_get_subscriptions_empty(client, test_db, create_test_voters):
@@ -541,7 +561,7 @@ def test_subscription_analytics_with_events(client, test_db, create_test_voters)
         {"user_id": 6, "has_voted": False}
     ]
     create_test_voters(users_data, voters_data)
-    
+
     with SessionLocal() as db:
         event_repo = SubscriptionEventRepository(db)
         event_repo.log_event(user_id, "anomaly", False, True)
