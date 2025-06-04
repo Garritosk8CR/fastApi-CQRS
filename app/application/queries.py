@@ -236,3 +236,8 @@ class SegmentSubscriptionAnalyticsQuery(BaseModel):
 
 class SubscriptionConversionMetricsQuery(BaseModel):
     user_id: int
+
+class PredictiveSubscriptionAnalyticsQuery(BaseModel):
+    user_id: int
+    alert_type: str
+    forecast_days: int = 7
