@@ -233,3 +233,6 @@ class TimeSeriesSubscriptionAnalyticsQuery(BaseModel):
 
 class SegmentSubscriptionAnalyticsQuery(BaseModel):
     region: str
+
+class SubscriptionConversionMetricsQuery(BaseModel):
+    user_id: int
