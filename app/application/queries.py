@@ -230,3 +230,6 @@ class GetSubscriptionAnalyticsQuery(BaseModel):
 class TimeSeriesSubscriptionAnalyticsQuery(BaseModel):
     user_id: int
     group_by: str = "day"  # Options: day, week, month
+
+class SegmentSubscriptionAnalyticsQuery(BaseModel):
+    region: str
