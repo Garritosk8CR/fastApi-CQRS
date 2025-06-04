@@ -1171,6 +1171,7 @@ query_bus.register_handler(GetNotificationsQuery, GetNotificationsHandler())
 query_bus.register_handler(GetNotificationsSummaryQuery, GetNotificationsSummaryHandler())
 query_bus.register_handler(GetSubscriptionsQuery, GetSubscriptionsHandler())
 query_bus.register_handler(GetSubscriptionAnalyticsQuery, GetSubscriptionAnalyticsHandler())
+query_bus.register_handler(TimeSeriesSubscriptionAnalyticsQuery, TimeSeriesSubscriptionAnalyticsHandler())
 
 
 
