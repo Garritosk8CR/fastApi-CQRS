@@ -226,3 +226,7 @@ class GetSubscriptionsQuery(BaseModel):
 
 class GetSubscriptionAnalyticsQuery(BaseModel):
     user_id: int
+
+class TimeSeriesSubscriptionAnalyticsQuery(BaseModel):
+    user_id: int
+    group_by: str = "day"  # Options: day, week, month
