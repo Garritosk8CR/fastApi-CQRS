@@ -233,6 +233,27 @@ def create_test_subscription_event(test_db):
         return event
     return create_subscription_event
 
+@pytest.fixture
+def create_conversion_test_event(test_db):
+    def create_subscription_event(user_id: int, alert_type: str, new_value: bool, created_at: datetime, old_value=None):
+        """
+        Helper function to create a subscription event.
+        Pass old_value as None to simulate a default (non-conversion) event.
+        Pass a non-None value to simulate a user-initiated change (conversion).
+        """
+        event = SubscriptionEvent(
+            user_id=user_id,
+            alert_type=alert_type,
+            old_value=old_value,  # If None, then this event won't count as a conversion.
+            new_value=new_value,
+            created_at=created_at
+        )
+        test_db.add(event)
+        test_db.commit()
+        test_db.refresh(event)
+        return event
+    return create_subscription_event
+
 # Test for GET /subscriptions when no subscriptions exist.
 def test_get_subscriptions_empty(client, test_db, create_test_voters):
     users_data = [
