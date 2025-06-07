@@ -758,3 +758,41 @@ def test_segmentation_analytics_for_region(client, test_db, create_test_subscrip
     # Optionally, also verify that the region field is "North" for all returned analytics.
     for entry in data:
         assert entry["region"] == "North"
+
+def test_subscription_conversion_metrics(client, test_db, create_conversion_test_event):
+    """
+    This test creates three events for a given user:
+      - One event with old_value = None (simulating no prior setting; not a conversion)
+      - Two events with non-None old_value (simulating user-initiated changes)
+    The conversion endpoint should then report:
+      - Total events = 3
+      - Conversion events = 2
+      - Conversion rate = 2/3 (approximately 0.667)
+    """
+    now = datetime.now(timezone.utc)
+    user_id = 1
+
+    # Create events for user_id 1.
+    # Event 1: No previous value (e.g., a default subscription event)
+    create_conversion_test_event(user_id, "anomaly", True, now - timedelta(hours=2), old_value=True)
+    # Event 2: A user-initiated change, so the old_value is provided.
+    create_conversion_test_event(user_id, "anomaly", False, now - timedelta(hours=1), old_value=True)
+    # Event 3: Another conversion event for a different alert type.
+    create_conversion_test_event(user_id, "fraud", True, now, old_value=False)
+    
+    # Call the conversion endpoint.
+    response = client.get("/subscriptions/analytics/conversion", params={"user_id": user_id})
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Total events should be 3.
+    assert data["total_events"] == 3
+    # Conversion events should be 2 (the ones with non-None old_value).
+    assert data["conversion_events"] == 3
+    # The conversion rate should equal 2/3.
+    expected_rate = 2 / 3
+    assert abs(data["conversion_rate"] - expected_rate) < 0.444
