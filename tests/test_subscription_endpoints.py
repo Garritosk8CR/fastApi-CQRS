@@ -628,7 +628,7 @@ def test_time_series_analytics_day_grouping(client, test_db, create_test_subscri
 
     # There should be exactly 2 groups for "anomaly" alert type.
     counts = sorted([entry["total_changes"] for entry in data if entry["alert_type"] == "anomaly"])
-    assert counts == [3]
+    assert counts == [1, 2]
 
 def test_time_series_analytics_week_grouping(client, test_db, create_test_subscription_event, create_test_voters):
     """
@@ -670,3 +670,70 @@ def test_time_series_analytics_week_grouping(client, test_db, create_test_subscr
     counts = sorted([entry["total_changes"] for entry in data if entry["alert_type"] == "fraud"])
     # Depending on the exact grouping, you should get counts of 2 for the week with two events and 1 for the other week.
     assert counts == [1, 2]
+
+def test_segmentation_analytics_for_region(client, test_db, create_test_subscription_event, create_test_voters):
+    """
+    Create events for two users in two different regions.
+    Then query the segmentation endpoint for one region and verify the output.
+    """
+    now = datetime.now(timezone.utc)
+
+    # Create two users: one in region "North" and one in region "South".
+    users_data = [
+        {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter", "region": "North"},
+        {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter", "region": "South"},
+        {"id": 3, "name": "Active Voter 3", "email": "active3@example.com", "role": "voter"},
+        {"id": 4, "name": "Active Voter 4", "email": "active4@example.com", "role": "voter"},
+        {"id": 5, "name": "Active Voter 5", "email": "active5@example.com", "role": "voter"},
+        {"id": 6, "name": "Active Voter 6", "email": "active6@example.com", "role": "voter"},
+    ]
+    voters_data = [
+        {"user_id": 1, "has_voted": True},
+        {"user_id": 2, "has_voted": True},
+        {"user_id": 3, "has_voted": True},
+        {"user_id": 4, "has_voted": True},
+        {"user_id": 5, "has_voted": False},
+        {"user_id": 6, "has_voted": False}
+    ]
+    create_test_voters(users_data, voters_data)
+
+    
+
+    # For user in "North", create events with different alert types.
+    # For "anomaly" alert, create two events.
+    create_test_subscription_event(user_id=1, alert_type="anomaly", new_value=True, created_at=now - timedelta(hours=1))
+    create_test_subscription_event(user_id=2, alert_type="anomaly", new_value=False, created_at=now - timedelta(hours=2))
+    
+    # For "fraud" alert, create one event.
+    create_test_subscription_event(user_id=1, alert_type="fraud", new_value=True, created_at=now)
+    
+    # For user in "South", create events that should not appear in the "North" query.
+    create_test_subscription_event(user_id=2, alert_type="anomaly", new_value=True, created_at=now)
+    
+    # Call the segmentation endpoint filtering by region "North".
+    response = client.get("/subscriptions/analytics/segment", params={"region": "North"})
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+
+    data = response.json()
+    # Verify that the data is a list.
+    assert isinstance(data, list)
+    # We expect analytics only for user_north's events.
+    # Group results by alert type.
+    results = {entry["alert_type"]: entry for entry in data}
+    
+    # For "anomaly": expected 2 events.
+    assert "anomaly" in results
+    anomaly_data = results["anomaly"]
+    assert anomaly_data["total_changes"] == 1
+    # For "fraud": expected 1 event.
+    assert "fraud" in results
+    fraud_data = results["fraud"]
+    assert fraud_data["total_changes"] == 1
+
+    # Optionally, also verify that the region field is "North" for all returned analytics.
+    for entry in data:
+        assert entry["region"] == "North"
