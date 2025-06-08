@@ -1361,6 +1361,7 @@ query_bus.register_handler(SegmentSubscriptionAnalyticsQuery, SegmentSubscriptio
 query_bus.register_handler(SubscriptionConversionMetricsQuery, SubscriptionConversionMetricsHandler())
 query_bus.register_handler(PredictiveSubscriptionAnalyticsQuery, PredictiveSubscriptionAnalyticsHandler())
 query_bus.register_handler(EnhancedPredictiveSubscriptionAnalyticsQuery, EnhancedPredictiveSubscriptionAnalyticsHandler())
+query_bus.register_handler(EnhancedNeuralNetworkPredictiveAnalyticsQuery, EnhancedNeuralNetworkPredictiveAnalyticsHandler())
 
 
 
