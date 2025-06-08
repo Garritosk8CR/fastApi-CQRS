@@ -65,6 +65,11 @@ def predictive_analytics(user_id: int, alert_type: str, forecast_days: int = 7):
     query = PredictiveSubscriptionAnalyticsQuery(user_id=user_id, alert_type=alert_type, forecast_days=forecast_days)
     return query_bus.handle(query)
 
+@router.get("/analytics/predict/arima")
+def predictive_analytics_arima(user_id: int = Query(...), alert_type: str = Query(...), forecast_days: int = Query(7)):
+    query = PredictiveSubscriptionAnalyticsQuery(user_id=user_id, alert_type=alert_type, forecast_days=forecast_days)
+    return query_bus.handle(query)
+
 @router.websocket("/ws")
 async def subscriptions_ws(websocket: WebSocket, user_id: int = Query(...)):
     await subscription_manager.connect(user_id, websocket)
