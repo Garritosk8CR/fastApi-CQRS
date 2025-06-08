@@ -6,6 +6,7 @@ import traceback
 
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
+import numpy as np
 import pandas as pd
 from app.application.queries import AnomalyDetectionQuery, CandidateSupportQuery, DashboardAnalyticsQuery, ElectionSummaryQuery, ElectionTurnoutQuery, EnhancedPredictiveSubscriptionAnalyticsQuery, ExportElectionResultsQuery, GeolocationAnalyticsQuery, GeolocationTrendsQuery, GetAlertsQuery, GetAlertsWSQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidateVoteDistributionQuery, GetCandidatesQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetElectionSummaryQuery, GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetFeedbackCategoryAnalyticsQuery, GetFeedbackExportQuery, GetHistoricalTurnoutTrendsQuery, GetIntegrityScoreQuery, GetNotificationsQuery, GetNotificationsSummaryQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentAnalysisQuery, GetSentimentTrendQuery, GetSeverityDistributionQuery, GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery, GetTimeBasedVotingPatternsQuery, GetTimePatternsQuery, GetTopObserversQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, HistoricalPollingStationTrendsQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, PollingStationAnalyticsQuery, PredictiveSubscriptionAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery, ResultsBreakdownQuery, SegmentSubscriptionAnalyticsQuery, SubscriptionConversionMetricsQuery, TimeSeriesSubscriptionAnalyticsQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
@@ -29,6 +30,10 @@ from app.infrastructure.vote_repo import VoteRepository
 from app.infrastructure.voter_repo import VoterRepository
 from app.security import create_access_token
 from app.utils.password_utils import hash_password, verify_password
+from datetime import timedelta
+from keras.models import Sequential
+from keras.layers import LSTM, Dense, Dropout
+from keras.optimizers import Adam
 
 class CheckVoterExistsHandler:
     def handle(self, query: CheckVoterExistsQuery):
@@ -1159,6 +1164,83 @@ class EnhancedPredictiveSubscriptionAnalyticsHandler:
             "forecast_days": query.forecast_days,
             "forecast": forecast,
             "model": "ARIMA(1,1,1)"
+        }
+    
+class EnhancedNeuralNetworkPredictiveAnalyticsHandler:
+    def handle(self, query: PredictiveSubscriptionAnalyticsQuery) -> dict:
+        # Retrieve time series data (grouped by day)
+        with SessionLocal() as db:
+            repo = SubscriptionEventRepository(db)
+            time_series = repo.get_time_series_data_for_alert(query.user_id, query.alert_type, group_by="day")
+        
+        if not time_series:
+            return {"message": "No data available to forecast."}
+        
+        # Convert data into a pandas DataFrame
+        df = pd.DataFrame(time_series, columns=['date', 'count'])
+        df['date'] = pd.to_datetime(df['date'])
+        df = df.sort_values('date')
+        df.set_index('date', inplace=True)
+        
+        # Reindex the DataFrame so that every day is present
+        idx = pd.date_range(start=df.index.min(), end=df.index.max(), freq='D')
+        df = df.reindex(idx, fill_value=0)
+        df.index.name = 'date'
+    
+        series = df['count'].values  # this is a 1D numpy array
+        series = series.astype(np.float32)
+        
+        # Create a dataset for time-series forecasting using a sliding window
+        # Example: using a window of 3 days to predict the next day
+        window_size = 3
+        X, y = [], []
+        for i in range(len(series) - window_size):
+            X.append(series[i:i+window_size])
+            y.append(series[i+window_size])
+        X = np.array(X)
+        y = np.array(y)
+        
+        # Reshape X for LSTM: (samples, time steps, features)
+        X = X.reshape((X.shape[0], X.shape[1], 1))
+        
+        # Build a simple LSTM model
+        model = Sequential([
+            LSTM(50, activation='relu', input_shape=(window_size, 1)),
+            Dropout(0.2),
+            Dense(1)
+        ])
+        model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
+        
+        # Train the model, using a small number of epochs for demonstration.
+        model.fit(X, y, epochs=50, verbose=0)
+        
+        # Forecast for query.forecast_days using rolling predictions
+        predictions = []
+        last_window = series[-window_size:]
+        for _ in range(query.forecast_days):
+            # reshape last window to model input shape
+            input_window = last_window.reshape((1, window_size, 1))
+            pred = model.predict(input_window, verbose=0)
+            predictions.append(float(pred[0, 0]))
+            # update the window by appending the predicted value and removing the oldest
+            last_window = np.append(last_window[1:], pred)
+        
+        # Compute forecast dates starting the day after the last date in our original data
+        last_date = df.index.max()
+        forecast_dates = [last_date + timedelta(days=i) for i in range(1, query.forecast_days + 1)]
+        
+        forecast = []
+        for date, pred in zip(forecast_dates, predictions):
+            forecast.append({
+                "date": date.isoformat(),
+                "predicted_changes": pred
+            })
+        
+        return {
+            "alert_type": query.alert_type,
+            "forecast_days": query.forecast_days,
+            "forecast": forecast,
+            "model": "LSTM Neural Network"
         }
    
 class CommandBus:
