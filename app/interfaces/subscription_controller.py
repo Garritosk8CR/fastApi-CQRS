@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import BulkUpdateSubscriptionsCommand, UpdateSubscriptionCommand
-from app.application.queries import GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery, PredictiveSubscriptionAnalyticsQuery, SegmentSubscriptionAnalyticsQuery, SubscriptionConversionMetricsQuery, TimeSeriesSubscriptionAnalyticsQuery
+from app.application.queries import EnhancedPredictiveSubscriptionAnalyticsQuery, GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery, PredictiveSubscriptionAnalyticsQuery, SegmentSubscriptionAnalyticsQuery, SubscriptionConversionMetricsQuery, TimeSeriesSubscriptionAnalyticsQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import SessionLocal, get_db
 from app.application.handlers import command_bus
@@ -67,7 +67,7 @@ def predictive_analytics(user_id: int, alert_type: str, forecast_days: int = 7):
 
 @router.get("/analytics/predict/arima")
 def predictive_analytics_arima(user_id: int = Query(...), alert_type: str = Query(...), forecast_days: int = Query(7)):
-    query = PredictiveSubscriptionAnalyticsQuery(user_id=user_id, alert_type=alert_type, forecast_days=forecast_days)
+    query = EnhancedPredictiveSubscriptionAnalyticsQuery(user_id=user_id, alert_type=alert_type, forecast_days=forecast_days)
     return query_bus.handle(query)
 
 @router.websocket("/ws")
