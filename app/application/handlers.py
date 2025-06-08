@@ -6,6 +6,7 @@ import traceback
 
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
+import pandas as pd
 from app.application.queries import AnomalyDetectionQuery, CandidateSupportQuery, DashboardAnalyticsQuery, ElectionSummaryQuery, ElectionTurnoutQuery, ExportElectionResultsQuery, GeolocationAnalyticsQuery, GeolocationTrendsQuery, GetAlertsQuery, GetAlertsWSQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidateVoteDistributionQuery, GetCandidatesQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetElectionSummaryQuery, GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetFeedbackCategoryAnalyticsQuery, GetFeedbackExportQuery, GetHistoricalTurnoutTrendsQuery, GetIntegrityScoreQuery, GetNotificationsQuery, GetNotificationsSummaryQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentAnalysisQuery, GetSentimentTrendQuery, GetSeverityDistributionQuery, GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery, GetTimeBasedVotingPatternsQuery, GetTimePatternsQuery, GetTopObserversQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, HistoricalPollingStationTrendsQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, PollingStationAnalyticsQuery, PredictiveSubscriptionAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery, ResultsBreakdownQuery, SegmentSubscriptionAnalyticsQuery, SubscriptionConversionMetricsQuery, TimeSeriesSubscriptionAnalyticsQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import BulkUpdateSubscriptionsCommand, CastVoteCommand, CastVoteCommandv2, CheckVoterExistsQuery, CreateAlertCommand, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteCandidateCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, MarkAllNotificationsReadCommand, MarkNotificationReadCommand, RegisterVoterCommand, SubmitFeedbackCommand, UpdateAlertCommand, UpdateCandidateCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateSubscriptionCommand, UpdateUserRoleCommand, UserSignUp
@@ -1104,6 +1105,60 @@ class PredictiveSubscriptionAnalyticsHandler:
             "alert_type": query.alert_type,
             "forecast_days": query.forecast_days,
             "forecast": forecast
+        }
+    
+class EnhancedPredictiveSubscriptionAnalyticsHandler:
+    def handle(self, query: PredictiveSubscriptionAnalyticsQuery) -> dict:
+        from statsmodels.tsa.arima.model import ARIMA
+        
+        with SessionLocal() as db:
+            repo = SubscriptionEventRepository(db)
+            # Retrieve time series data grouped by day for the alert type
+            time_series = repo.get_time_series_data_for_alert(query.user_id, query.alert_type, group_by="day")
+        
+        if not time_series:
+            return {"message": "No data available to forecast."}
+        
+        # Convert time_series data into a pandas DataFrame
+        df = pd.DataFrame(time_series, columns=['date', 'count'])
+        df['date'] = pd.to_datetime(df['date'])
+        df = df.sort_values('date')
+        df.set_index('date', inplace=True)
+        
+        # Reindex so that every day is present between the first and last date
+        idx = pd.date_range(start=df.index.min(), end=df.index.max(), freq='D')
+        df = df.reindex(idx, fill_value=0)
+        df.index.name = 'date'
+        
+        # Use the 'count' column as our time series
+        series = df['count']
+        
+        # Fit the ARIMA model (using an order of (1, 1, 1) as a starting point)
+        try:
+            model = ARIMA(series, order=(1, 1, 1))
+            model_fit = model.fit()
+        except Exception as e:
+            return {"message": f"ARIMA model failed: {str(e)}"}
+        
+        # Forecast future subscription event counts
+        forecast_values = model_fit.forecast(steps=query.forecast_days)
+        
+        # Compute the forecast dates, starting the day after our last date
+        last_date = df.index.max()
+        forecast_dates = [last_date + timedelta(days=i) for i in range(1, query.forecast_days + 1)]
+        
+        forecast = []
+        for date, pred in zip(forecast_dates, forecast_values):
+            forecast.append({
+                "date": date.isoformat(),
+                "predicted_changes": float(pred)
+            })
+        
+        return {
+            "alert_type": query.alert_type,
+            "forecast_days": query.forecast_days,
+            "forecast": forecast,
+            "model": "ARIMA(1,1,1)"
         }
    
 class CommandBus:
