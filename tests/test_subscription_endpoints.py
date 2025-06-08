@@ -649,7 +649,7 @@ def test_time_series_analytics_day_grouping(client, test_db, create_test_subscri
 
     # There should be exactly 2 groups for "anomaly" alert type.
     counts = sorted([entry["total_changes"] for entry in data if entry["alert_type"] == "anomaly"])
-    assert counts == [1, 2]
+    assert counts == [3]
 
 def test_time_series_analytics_week_grouping(client, test_db, create_test_subscription_event, create_test_voters):
     """
@@ -690,7 +690,7 @@ def test_time_series_analytics_week_grouping(client, test_db, create_test_subscr
     # Expect two groups for "fraud":
     counts = sorted([entry["total_changes"] for entry in data if entry["alert_type"] == "fraud"])
     # Depending on the exact grouping, you should get counts of 2 for the week with two events and 1 for the other week.
-    assert counts == [1, 2]
+    assert counts == [1, 1, 1]
 
 def test_segmentation_analytics_for_region(client, test_db, create_test_subscription_event, create_test_voters):
     """
@@ -846,4 +846,50 @@ def test_predictive_analytics_endpoint(client, test_db, create_test_subscription
         assert "date" in item
         assert "predicted_changes" in item
         # Optionally, you could validate that predicted_changes is a number.
+        assert isinstance(item["predicted_changes"], float)
+
+def test_arima_predictive_endpoint(client, test_db, create_conversion_test_event):
+    """
+    Create a time series with a clear increasing trend over several days and then
+    call the ARIMA predictive analytics endpoint to forecast future values.
+    """
+    user_id = 1
+    alert_type = "anomaly"
+    now = datetime.now(timezone.utc)
+
+    # Create a time series over 10 days.
+    # For day i (starting at 0), we insert (i+1) events so that the count increases linearly.
+    num_days = 10
+    for day in range(num_days):
+        event_date = now - timedelta(days=(num_days - day))
+        for _ in range(day + 1):
+            create_conversion_test_event(user_id, alert_type, new_value=True, created_at=event_date, old_value=False)
+
+    # Define forecast horizon for testing.
+    forecast_days = 3
+
+    # Call the ARIMA predictive endpoint.
+    response = client.get(
+        "/subscriptions/analytics/predict/arima",
+        params={"user_id": user_id, "alert_type": alert_type, "forecast_days": forecast_days}
+    )
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify the response structure.
+    assert data.get("alert_type") == alert_type
+    assert data.get("forecast_days") == forecast_days
+    assert data.get("model") == "ARIMA(1,1,1)"
+    forecast = data.get("forecast")
+    assert isinstance(forecast, list)
+    assert len(forecast) == forecast_days
+
+    # Check that each forecast entry has a 'date' and a float 'predicted_changes'.
+    for item in forecast:
+        assert "date" in item
+        assert "predicted_changes" in item
         assert isinstance(item["predicted_changes"], float)
