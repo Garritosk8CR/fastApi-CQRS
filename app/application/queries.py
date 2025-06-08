@@ -241,3 +241,8 @@ class PredictiveSubscriptionAnalyticsQuery(BaseModel):
     user_id: int
     alert_type: str
     forecast_days: int = 7
+
+class EnhancedPredictiveSubscriptionAnalyticsQuery(BaseModel):
+    user_id: int
+    alert_type: str
+    forecast_days: int = 7
