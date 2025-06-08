@@ -796,3 +796,54 @@ def test_subscription_conversion_metrics(client, test_db, create_conversion_test
     # The conversion rate should equal 2/3.
     expected_rate = 2 / 3
     assert abs(data["conversion_rate"] - expected_rate) < 0.444
+
+def test_predictive_analytics_endpoint(client, test_db, create_test_subscription_event):
+    """
+    Create a linear increasing time series for an alert type,
+    then request a forecast via the predictive analytics endpoint.
+    
+    We simulate a scenario where over 7 days, the event count increases linearly:
+    Day 1: 1 event, Day 2: 2 events, ..., Day 7: 7 events.
+    Then, we call for a 3-day forecast.
+    """
+    user_id = 1
+    alert_type = "anomaly"
+    now = datetime.now(timezone.utc)
+    
+    # Create 7 days of data with a clear increasing trend.
+    # For each day, the number of events equals the day number.
+    for day_offset in range(1, 8):
+        event_date = now - timedelta(days=8 - day_offset)  # older days first, recent day last
+        for _ in range(day_offset):
+            create_test_subscription_event(               
+                user_id,
+                alert_type,
+                True,
+                event_date  # we use a dummy value for conversion events
+            )
+    
+    # Now, call the predictive analytics endpoint.
+    response = client.get(
+        "/subscriptions/analytics/predict",
+        params={"user_id": user_id, "alert_type": alert_type, "forecast_days": 3}
+    )
+
+    gc.collect()
+    test_db.rollback()
+
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Verify the core keys in the response.
+    assert data.get("alert_type") == alert_type
+    assert data.get("forecast_days") == 3
+    forecast = data.get("forecast")
+    assert isinstance(forecast, list)
+    assert len(forecast) == 3
+    
+    # Check that each forecasted item includes a date and predicted_changes.
+    for item in forecast:
+        assert "date" in item
+        assert "predicted_changes" in item
+        # Optionally, you could validate that predicted_changes is a number.
+        assert isinstance(item["predicted_changes"], float)
