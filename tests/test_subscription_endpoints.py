@@ -649,7 +649,7 @@ def test_time_series_analytics_day_grouping(client, test_db, create_test_subscri
 
     # There should be exactly 2 groups for "anomaly" alert type.
     counts = sorted([entry["total_changes"] for entry in data if entry["alert_type"] == "anomaly"])
-    assert counts == [3]
+    assert counts == [1, 2]
 
 def test_time_series_analytics_week_grouping(client, test_db, create_test_subscription_event, create_test_voters):
     """
@@ -889,6 +889,54 @@ def test_arima_predictive_endpoint(client, test_db, create_conversion_test_event
     assert len(forecast) == forecast_days
 
     # Check that each forecast entry has a 'date' and a float 'predicted_changes'.
+    for item in forecast:
+        assert "date" in item
+        assert "predicted_changes" in item
+        assert isinstance(item["predicted_changes"], float)
+
+def test_neural_network_predictive_endpoint(client, test_db, create_conversion_test_event):
+    """
+    Create a time series with a clear pattern over 10 days. For day i, insert (i+1) events so 
+    that the counts increase roughly linearly. Then, call the neural network predictive endpoint
+    to forecast, say, 3 future days.
+    """
+    user_id = 1
+    alert_type = "anomaly"
+    now = datetime.now(timezone.utc)
+    
+    # Insert data for 10 days with increasing event counts.
+    num_days = 10
+    for day in range(num_days):
+        event_date = now - timedelta(days=(num_days - day))
+        # Insert (day + 1) events for each day.
+        for _ in range(day + 1):
+            create_conversion_test_event(user_id, alert_type, new_value=True, created_at=event_date, old_value=False)
+    
+    forecast_days = 3
+
+    # Call the neural network endpoint.
+    response = client.get(
+        "/subscriptions/analytics/predict/nn",
+        params={"user_id": user_id, "alert_type": alert_type, "forecast_days": forecast_days}
+    )
+
+    gc.collect()
+    test_db.rollback()
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Verify response structure.
+    assert data.get("alert_type") == alert_type
+    assert data.get("forecast_days") == forecast_days
+    # Confirm we are using the LSTM Neural Network model.
+    assert data.get("model") == "LSTM Neural Network"
+    
+    forecast = data.get("forecast")
+    assert isinstance(forecast, list)
+    assert len(forecast) == forecast_days
+    
+    # Check that each forecast entry contains a 'date' and a 'predicted_changes' of type float.
     for item in forecast:
         assert "date" in item
         assert "predicted_changes" in item
