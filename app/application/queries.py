@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel
 
@@ -229,7 +230,9 @@ class GetSubscriptionAnalyticsQuery(BaseModel):
 
 class TimeSeriesSubscriptionAnalyticsQuery(BaseModel):
     user_id: int
-    group_by: str = "day"  # Options: day, week, month
+    group_by: str = "day"  # Options: "day", "week", "month"
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
 
 class SegmentSubscriptionAnalyticsQuery(BaseModel):
     region: str
