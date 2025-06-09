@@ -1059,10 +1059,15 @@ class GetSubscriptionAnalyticsHandler:
             return repo.get_subscription_analytics(query.user_id)
         
 class TimeSeriesSubscriptionAnalyticsHandler:
-    def handle(self, query: TimeSeriesSubscriptionAnalyticsQuery) -> list:
+    def handle(self, query: TimeSeriesSubscriptionAnalyticsQuery) -> dict:
         with SessionLocal() as db:
             repo = SubscriptionEventRepository(db)
-            return repo.get_subscription_analytics_time_series(query.user_id, query.group_by)
+            return repo.get_extended_time_series_analytics(
+                user_id=query.user_id,
+                group_by=query.group_by,
+                start_date=query.start_date,
+                end_date=query.end_date
+            )
         
 class SegmentSubscriptionAnalyticsHandler:
     def handle(self, query: SegmentSubscriptionAnalyticsQuery) -> list:
