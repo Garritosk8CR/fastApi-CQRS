@@ -121,39 +121,13 @@ class SubscriptionEventRepository:
         results = query.all()
         return [(row[0], row[1]) for row in results]
     
-    def get_extended_time_series_analytics(
-        self, 
-        user_id: int, 
-        group_by: str = "day", 
-        start_date: Optional[datetime] = None, 
-        end_date: Optional[datetime] = None
-    ) -> dict:
-        # Ensure valid grouping; default to day if invalid
-        if group_by not in ["day", "week", "month"]:
-            group_by = "day"
-        trunc_func = func.date_trunc(group_by, SubscriptionEvent.created_at)
-        
-        query = self.db.query(
-            trunc_func.label("period"),
-            SubscriptionEvent.alert_type,
-            func.count(SubscriptionEvent.id).label("total_changes"),
-            func.sum(case((SubscriptionEvent.new_value == True, 1), else_=0)).label("enabled_count"),
-            func.sum(case((SubscriptionEvent.new_value == False, 1), else_=0)).label("disabled_count")
-        ).filter(SubscriptionEvent.user_id == user_id)
-        
-        # Apply date filtering if provided.
-        if start_date:
-            query = query.filter(SubscriptionEvent.created_at >= start_date)
-        if end_date:
-            query = query.filter(SubscriptionEvent.created_at <= end_date)
-        
-        query = query.group_by("period", SubscriptionEvent.alert_type).order_by("period")
-        results = query.all()
-        
-        # Convert query results to a DataFrame for additional stats.
+    def convert_results_to_df(self, results: list) -> "pd.DataFrame":
+        import pandas as pd
+        # If results is empty, this should return an empty DataFrame.
         df = pd.DataFrame(results, columns=["period", "alert_type", "total_changes", "enabled_count", "disabled_count"])
-        
-        # Build a summary per alert type.
+        return df
+    
+    def compute_summary(self, df: "pd.DataFrame") -> dict:
         summary = {}
         if not df.empty:
             for alert in df["alert_type"].unique():
@@ -163,6 +137,66 @@ class SubscriptionEventRepository:
                     "median_changes": df_alert["total_changes"].median(),
                     "min_changes": df_alert["total_changes"].min(),
                     "max_changes": df_alert["total_changes"].max()
+                }
+        return summary
+    
+    def get_extended_time_series_analytics(
+    self, 
+    user_id: int, 
+    group_by: str = "day", 
+    start_date: Optional[datetime] = None, 
+    end_date: Optional[datetime] = None
+) -> dict:
+        # Validate group_by
+        if group_by not in ["day", "week", "month"]:
+            group_by = "day"
+        trunc_func = func.date_trunc(group_by, SubscriptionEvent.created_at)
+        
+        # Build the query using the actual SQL expression for grouping
+        query = self.db.query(
+            trunc_func.label("period"),
+            SubscriptionEvent.alert_type,
+            func.count(SubscriptionEvent.id).label("total_changes"),
+            func.sum(case((SubscriptionEvent.new_value == True, 1), else_=0)).label("enabled_count"),
+            func.sum(case((SubscriptionEvent.new_value == False, 1), else_=0)).label("disabled_count")
+        ).filter(SubscriptionEvent.user_id == user_id)
+        
+        if start_date:
+            query = query.filter(SubscriptionEvent.created_at >= start_date)
+        if end_date:
+            query = query.filter(SubscriptionEvent.created_at <= end_date)
+        
+        # Use the SQL expression in group_by and order_by instead of literal strings
+        query = query.group_by(trunc_func, SubscriptionEvent.alert_type).order_by(trunc_func)
+        
+        # Optional: print the SQL statement to debug
+        # print(str(query.statement.compile(compile_kwargs={"literal_binds": True})))
+        
+        results = query.all()
+        
+        # Convert results to a DataFrame.
+        import pandas as pd
+        df = pd.DataFrame(
+            results, 
+            columns=["period", "alert_type", "total_changes", "enabled_count", "disabled_count"]
+        )
+        
+        # Explicitly cast the numeric columns.
+        if not df.empty:
+            df["total_changes"] = pd.to_numeric(df["total_changes"], errors="coerce")
+            df["enabled_count"] = pd.to_numeric(df["enabled_count"], errors="coerce")
+            df["disabled_count"] = pd.to_numeric(df["disabled_count"], errors="coerce")
+        
+        # Compute summary metrics per alert type.
+        summary = {}
+        if not df.empty:
+            for alert in df["alert_type"].unique():
+                df_alert = df[df["alert_type"] == alert]
+                summary[alert] = {
+                    "average_changes": float(df_alert["total_changes"].mean()),
+                    "median_changes": float(df_alert["total_changes"].median()),
+                    "min_changes": float(df_alert["total_changes"].min()),
+                    "max_changes": float(df_alert["total_changes"].max())
                 }
         
         # Prepare detailed time series data.
@@ -178,3 +212,39 @@ class SubscriptionEventRepository:
         ]
         
         return {"data": data, "summary": summary}
+
+    def fetch_time_series_results(
+        self, 
+        user_id: int, 
+        group_by: str = "day", 
+        start_date: Optional[datetime] = None, 
+        end_date: Optional[datetime] = None
+    ) -> list:
+        # Validate group_by
+        if group_by not in ["day", "week", "month"]:
+            group_by = "day"
+        trunc_func = func.date_trunc(group_by, SubscriptionEvent.created_at)
+
+        query = self.db.query(
+            trunc_func.label("period"),
+            SubscriptionEvent.alert_type,
+            func.count(SubscriptionEvent.id).label("total_changes"),
+            func.sum(case((SubscriptionEvent.new_value == True, 1), else_=0)).label("enabled_count"),
+            func.sum(case((SubscriptionEvent.new_value == False, 1), else_=0)).label("disabled_count")
+        ).filter(SubscriptionEvent.user_id == user_id)
+
+        if start_date:
+            query = query.filter(SubscriptionEvent.created_at >= start_date)
+        if end_date:
+            query = query.filter(SubscriptionEvent.created_at <= end_date)
+
+        # Use the SQL expression instead of string literal "period"
+        query = query.group_by(trunc_func, SubscriptionEvent.alert_type).order_by(trunc_func)
+
+        # For debugging, you can log the SQL statement:
+        print(str(query.statement.compile(compile_kwargs={"literal_binds": True})))
+        
+        results = query.all()
+        return results
+    
+    

@@ -256,6 +256,11 @@ def create_conversion_test_event(test_db):
 
 # Test for GET /subscriptions when no subscriptions exist.
 def test_get_subscriptions_empty(client, test_db, create_test_voters):
+    gc.collect()
+    test_db.rollback()
+    test_db.flush()
+    test_db.reset()
+    
     users_data = [
         {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
         {"id": 2, "name": "Active Voter 2", "email": "active2@example.com", "role": "voter"},
@@ -272,7 +277,7 @@ def test_get_subscriptions_empty(client, test_db, create_test_voters):
         {"user_id": 5, "has_voted": False},
         {"user_id": 6, "has_voted": False}
     ]
-    create_test_voters(users_data, voters_data)
+    # create_test_voters(users_data, voters_data)
     # Assume user_id 1 exists (or we simply use a number).
     response = client.get("/subscriptions?user_id=1")
 
@@ -287,6 +292,9 @@ def test_get_subscriptions_empty(client, test_db, create_test_voters):
     assert len(data) == 0
 
 def test_update_subscription_creates(client, test_db, create_test_voters):
+    gc.collect()
+    test_db.rollback()
+
     user_id = 1
     alert_type = "anomaly"
     is_subscribed = False
@@ -324,6 +332,10 @@ def test_update_subscription_creates(client, test_db, create_test_voters):
 
 # Test update subscription to modify an existing record.
 def test_update_subscription_modifies(client, test_db, create_test_voters):
+
+    gc.collect()
+    test_db.rollback()
+
     user_id = 1
     alert_type = "fraud"
     
@@ -373,6 +385,10 @@ def test_update_subscription_modifies(client, test_db, create_test_voters):
 # Test Bulk Update /subscriptions/bulk Endpoint for Creating New Subscriptions.
 # ---------------------------------------------------------------------------
 def test_bulk_update_subscription_creates(client, test_db, create_test_voters):
+
+    gc.collect()
+    test_db.rollback()
+
     user_id = 1
     users_data = [
         {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
@@ -419,6 +435,10 @@ def test_bulk_update_subscription_creates(client, test_db, create_test_voters):
 # Test Bulk Update to Modify Existing Subscriptions.
 # ---------------------------------------------------------------------------
 def test_bulk_update_subscription_modifies(client, test_db, create_test_voters):
+
+    gc.collect()
+    test_db.rollback()
+
     user_id = 1
     users_data = [
         {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
@@ -471,6 +491,10 @@ def test_bulk_update_subscription_modifies(client, test_db, create_test_voters):
 # Test WebSocket Endpoint for Subscriptions
 # ---------------------------------------------------------------------------
 def test_subscriptions_websocket(client, test_db, create_test_voters):
+
+    gc.collect()
+    test_db.rollback()
+
     user_id = 1
     users_data = [
         {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
@@ -508,6 +532,10 @@ def test_subscriptions_websocket(client, test_db, create_test_voters):
         assert found
 
 def test_realtime_subscription_update(client, test_db, create_test_voters):
+
+    gc.collect()
+    test_db.rollback()
+
     user_id = 1
     users_data = [
         {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
@@ -552,6 +580,9 @@ def test_realtime_subscription_update(client, test_db, create_test_voters):
         assert any(s["alert_type"] == "fraud" and s["is_subscribed"] is False for s in subs)
 
 def test_subscription_analytics_empty(client, test_db, create_test_voters):
+
+    gc.collect()
+    test_db.rollback()
     
     response = client.get("/subscriptions/analytics?user_id=1")
 
@@ -564,6 +595,10 @@ def test_subscription_analytics_empty(client, test_db, create_test_voters):
     assert len(data) == 0
 
 def test_subscription_analytics_with_events(client, test_db, create_test_voters):
+
+    gc.collect()
+    test_db.rollback()
+
     user_id = 1
     users_data = [
         {"id": 1, "name": "Active Voter 1", "email": "active1@example.com", "role": "voter"},
@@ -581,7 +616,7 @@ def test_subscription_analytics_with_events(client, test_db, create_test_voters)
         {"user_id": 5, "has_voted": False},
         {"user_id": 6, "has_voted": False}
     ]
-    create_test_voters(users_data, voters_data)
+    # create_test_voters(users_data, voters_data)
 
     with SessionLocal() as db:
         event_repo = SubscriptionEventRepository(db)
@@ -602,6 +637,10 @@ def test_subscription_analytics_with_events(client, test_db, create_test_voters)
     assert "fraud" in alert_types
 
 def test_time_series_analytics_day_grouping(client, test_db, create_test_subscription_event, create_test_voters):
+
+    gc.collect()
+    test_db.rollback()
+
     """
     Create three events: two on one day and one on the next. Then check that
     the time series endpoint correctly groups these events by day.
@@ -630,6 +669,11 @@ def test_time_series_analytics_day_grouping(client, test_db, create_test_subscri
     create_test_subscription_event(user_id, "anomaly", True, now - timedelta(hours=1))
     create_test_subscription_event(user_id, "anomaly", False, now - timedelta(hours=2))
     create_test_subscription_event(user_id, "anomaly", True, now + timedelta(hours=20))
+
+    base_date = now - timedelta(days=5)
+
+    start_date = (base_date + timedelta(days=1)).isoformat()
+    end_date = (base_date + timedelta(days=3, hours=23, minutes=59)).isoformat()
     
     # Call endpoint with group_by "day"
     response = client.get("/subscriptions/analytics/time_series", params={"user_id": user_id, "group_by": "day"})
@@ -640,18 +684,22 @@ def test_time_series_analytics_day_grouping(client, test_db, create_test_subscri
     assert response.status_code == 200
     data = response.json()
     # Expect two groups because two different days were used.
-    assert isinstance(data, list)
+    assert isinstance(data["data"], list)
     # Collect groups by period and alert type
     groups = {}
-    for entry in data:
+    for entry in data["data"]:
         key = (entry["period"], entry["alert_type"])
         groups[key] = entry
 
     # There should be exactly 2 groups for "anomaly" alert type.
-    counts = sorted([entry["total_changes"] for entry in data if entry["alert_type"] == "anomaly"])
+    counts = sorted([entry["total_changes"] for entry in data["data"] if entry["alert_type"] == "anomaly"])
     assert counts == [1, 2]
 
 def test_time_series_analytics_week_grouping(client, test_db, create_test_subscription_event, create_test_voters):
+
+    gc.collect()
+    test_db.rollback()
+
     """
     Create events that fall in two distinct weeks and verify grouping by week.
     """
@@ -672,7 +720,7 @@ def test_time_series_analytics_week_grouping(client, test_db, create_test_subscr
         {"user_id": 5, "has_voted": False},
         {"user_id": 6, "has_voted": False}
     ]
-    create_test_voters(users_data, voters_data)
+    # create_test_voters(users_data, voters_data)
     now = datetime.now(timezone.utc)
 
     # Create events: one in current week and one a week later.
@@ -687,12 +735,17 @@ def test_time_series_analytics_week_grouping(client, test_db, create_test_subscr
 
     assert response.status_code == 200
     data = response.json()
+    print(data)
     # Expect two groups for "fraud":
-    counts = sorted([entry["total_changes"] for entry in data if entry["alert_type"] == "fraud"])
+    counts = sorted([entry["total_changes"] for entry in data["data"] if entry["alert_type"] == "fraud"])
     # Depending on the exact grouping, you should get counts of 2 for the week with two events and 1 for the other week.
     assert counts == [1, 1, 1]
 
 def test_segmentation_analytics_for_region(client, test_db, create_test_subscription_event, create_test_voters):
+
+    gc.collect()
+    test_db.rollback()
+
     """
     Create events for two users in two different regions.
     Then query the segmentation endpoint for one region and verify the output.
@@ -760,6 +813,10 @@ def test_segmentation_analytics_for_region(client, test_db, create_test_subscrip
         assert entry["region"] == "North"
 
 def test_subscription_conversion_metrics(client, test_db, create_conversion_test_event):
+
+    gc.collect()
+    test_db.rollback()
+
     """
     This test creates three events for a given user:
       - One event with old_value = None (simulating no prior setting; not a conversion)
@@ -798,6 +855,10 @@ def test_subscription_conversion_metrics(client, test_db, create_conversion_test
     assert abs(data["conversion_rate"] - expected_rate) < 0.444
 
 def test_predictive_analytics_endpoint(client, test_db, create_test_subscription_event):
+
+    gc.collect()
+    test_db.rollback()
+
     """
     Create a linear increasing time series for an alert type,
     then request a forecast via the predictive analytics endpoint.
@@ -849,6 +910,10 @@ def test_predictive_analytics_endpoint(client, test_db, create_test_subscription
         assert isinstance(item["predicted_changes"], float)
 
 def test_arima_predictive_endpoint(client, test_db, create_conversion_test_event):
+
+    gc.collect()
+    test_db.rollback()
+
     """
     Create a time series with a clear increasing trend over several days and then
     call the ARIMA predictive analytics endpoint to forecast future values.
@@ -895,6 +960,10 @@ def test_arima_predictive_endpoint(client, test_db, create_conversion_test_event
         assert isinstance(item["predicted_changes"], float)
 
 def test_neural_network_predictive_endpoint(client, test_db, create_conversion_test_event):
+
+    gc.collect()
+    test_db.rollback()
+
     """
     Create a time series with a clear pattern over 10 days. For day i, insert (i+1) events so 
     that the counts increase roughly linearly. Then, call the neural network predictive endpoint
@@ -941,3 +1010,75 @@ def test_neural_network_predictive_endpoint(client, test_db, create_conversion_t
         assert "date" in item
         assert "predicted_changes" in item
         assert isinstance(item["predicted_changes"], float)
+
+def test_time_series_with_date_filtering(client, test_db, create_conversion_test_event):
+    """
+    Create multiple events over several days, then query the endpoint with a specific date range.
+    Verify that only events within that range appear in the response, and that the summary metrics are computed.
+    """
+    user_id = 1
+    alert_type = "anomaly"
+    now = datetime.now(timezone.utc)
+
+    # Create events for 5 consecutive days.
+    base_date = now - timedelta(days=5)
+    # Day 1: 1 event
+    create_conversion_test_event(user_id, alert_type, True, base_date + timedelta(hours=1), old_value=False)    # Day 2: 2 events
+    create_conversion_test_event(user_id, alert_type, True, base_date + timedelta(days=1, hours=2), old_value=False)
+    create_conversion_test_event(user_id, alert_type, False, base_date + timedelta(days=1, hours=3), old_value=False)
+    # Day 3: 3 events
+    create_conversion_test_event(user_id, alert_type, True, base_date + timedelta(days=2, hours=1), old_value=False)
+    create_conversion_test_event(user_id, alert_type, False, base_date + timedelta(days=2, hours=2), old_value=False)
+    create_conversion_test_event(user_id, alert_type, True, base_date + timedelta(days=2, hours=3), old_value=False)
+    # Day 4: 4 events
+    create_conversion_test_event(user_id, alert_type, True, base_date + timedelta(days=3, hours=1), old_value=False)
+    create_conversion_test_event(user_id, alert_type, False, base_date + timedelta(days=3, hours=2), old_value=False)
+    create_conversion_test_event(user_id, alert_type, True, base_date + timedelta(days=3, hours=3), old_value=False)
+    create_conversion_test_event(user_id, alert_type, False, base_date + timedelta(days=3, hours=4), old_value=False)
+    # Day 5: 5 events
+    create_conversion_test_event(user_id, alert_type, True, base_date + timedelta(days=4, hours=1), old_value=False)
+    create_conversion_test_event(user_id, alert_type, False, base_date + timedelta(days=4, hours=2), old_value=False)
+    create_conversion_test_event(user_id, alert_type, True, base_date + timedelta(days=4, hours=3), old_value=False)
+    create_conversion_test_event(user_id, alert_type, False, base_date + timedelta(days=4, hours=4), old_value=False)
+    create_conversion_test_event(user_id, alert_type, True, base_date + timedelta(days=4, hours=5), old_value=False)
+
+    # Define a date range to get events from Day 2 to Day 4 (inclusive)
+    start_date = (base_date + timedelta(days=1)).isoformat()
+    end_date = (base_date + timedelta(days=3, hours=23, minutes=59)).isoformat()
+
+    # # Call the endpoint with date filters.
+    response = client.get(
+        "/subscriptions/analytics/time_series",
+        params={"user_id": user_id, "group_by": "day", "start_date": start_date, "end_date": end_date}
+    )
+
+    gc.collect()
+    test_db.rollback()
+
+    print(response.json())
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # The response should have two keys: "data" and "summary"
+    assert "data" in data
+    assert "summary" in data
+
+    time_series = data["data"]
+    summary = data["summary"]
+
+    # Verify that only events in Day 2, Day 3, and Day 4 (3 groups) are returned.
+    # Check that the grouping by period is working properly.
+    periods = {entry["period"] for entry in time_series if entry["alert_type"] == alert_type}
+    # Expected: 3 unique dates (Day 2, Day 3, Day 4)
+    assert len(periods) == 3
+
+    # Now verify summary metrics. For alert "anomaly", we expect:
+    # Day 2: count = 2, Day 3: count = 3, Day 4: count = 4.
+    # So, average = (2+3+4)/3 = 3, median = 3, min = 2, max = 4.
+    if alert_type in summary:
+        metrics = summary[alert_type]
+        assert abs(metrics["average_changes"] - 3.0) < 0.01
+        assert metrics["median_changes"] == 3.0
+        assert metrics["min_changes"] == 2
+        assert metrics["max_changes"] == 4

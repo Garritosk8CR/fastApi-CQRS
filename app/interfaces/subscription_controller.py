@@ -47,11 +47,29 @@ def get_subscription_analytics(user_id: int = Query(..., description="User ID fo
     return query_bus.handle(query)
 
 @router.get("/analytics/time_series")
-def time_series_analytics(user_id: int = Query(...), group_by: str = Query("day")):
-    query = TimeSeriesSubscriptionAnalyticsQuery(user_id=user_id, group_by=group_by)
-    return query_bus.handle(query)
+def time_series_analytics(user_id: int = Query(...),
+    group_by: str = Query("day"),
+    start_date: Optional[str] = Query(None, description="Start date in ISO format"),
+    end_date: Optional[str] = Query(None, description="End date in ISO format")):
+    
+    
+    try:
+        parsed_start_date = datetime.fromisoformat(start_date) if start_date else None
+        parsed_end_date = datetime.fromisoformat(end_date) if end_date else None
 
-@router.get("/subscriptions/analytics/time_series/extended")
+        query = TimeSeriesSubscriptionAnalyticsQuery(
+            user_id=user_id,
+            group_by=group_by,
+            start_date=parsed_start_date,
+            end_date=parsed_end_date
+        )
+        
+        return query_bus.handle(query)
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/analytics/time_series/extended")
 def time_series_analytics_extended(
     user_id: int = Query(...),
     group_by: str = Query("day"),
