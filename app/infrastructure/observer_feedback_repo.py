@@ -1,7 +1,9 @@
 from collections import defaultdict
 import csv
+from datetime import datetime
 import io
-from sqlalchemy import func
+from typing import List, Optional
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 from app.infrastructure.models import ObserverFeedback
 from textblob import TextBlob
@@ -193,3 +195,37 @@ class ObserverFeedbackRepository:
         # Convert counts to a list of dictionaries.
         result = [{"category": cat, "count": count} for cat, count in category_counts.items()]
         return result
+    
+    def get_feedback_by_date(
+        self, 
+        observer_id: int, 
+        start_date: Optional[datetime] = None, 
+        end_date: Optional[datetime] = None
+    ) -> List[tuple]:
+        # Group by day using date_trunc on the "timestamp" column.
+        trunc_date = func.date_trunc("day", ObserverFeedback.timestamp)
+        
+        # Map severity to numeric values: LOW = 1, MEDIUM = 2, HIGH = 3.
+        severity_mapping = case(
+            [
+                (ObserverFeedback.severity == "LOW", 1),
+                (ObserverFeedback.severity == "MEDIUM", 2),
+                (ObserverFeedback.severity == "HIGH", 3)
+            ],
+            else_=0
+        )
+        
+        query = self.db.query(
+            trunc_date.label("date"),
+            func.avg(severity_mapping).label("avg_severity"),
+            func.count(ObserverFeedback.id).label("feedback_count")
+        ).filter(ObserverFeedback.observer_id == observer_id)
+        
+        # Apply date filters if provided.
+        if start_date:
+            query = query.filter(ObserverFeedback.timestamp >= start_date)
+        if end_date:
+            query = query.filter(ObserverFeedback.timestamp <= end_date)
+        
+        query = query.group_by(trunc_date).order_by(trunc_date)
+        return query.all()
