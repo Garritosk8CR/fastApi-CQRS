@@ -254,3 +254,8 @@ class EnhancedNeuralNetworkPredictiveAnalyticsQuery(BaseModel):
     user_id: int
     alert_type: str
     forecast_days: int = 7
+
+class CorrelationAnalyticsQuery(BaseModel):
+    user_id: int
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
