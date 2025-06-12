@@ -105,7 +105,14 @@ class SubscriptionEventRepository:
             "conversion_rate": conversion_rate
         }
     
-    def get_time_series_data_for_alert(self, user_id: int, alert_type: str, group_by: str = "day") -> list:
+    def get_time_series_data_for_alert(
+        self, 
+        user_id: int, 
+        alert_type: str, 
+        group_by: str = "day",
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None
+    ) -> list:
         if group_by not in ["day", "week", "month"]:
             group_by = "day"
         trunc_func = func.date_trunc(group_by, SubscriptionEvent.created_at)
@@ -116,7 +123,16 @@ class SubscriptionEventRepository:
         ).filter(
             SubscriptionEvent.user_id == user_id,
             SubscriptionEvent.alert_type == alert_type
-        ).group_by("period").order_by("period")
+        )
+        
+        # Apply the date range filters if provided.
+        if start_date:
+            query = query.filter(SubscriptionEvent.created_at >= start_date)
+        if end_date:
+            query = query.filter(SubscriptionEvent.created_at <= end_date)
+        
+        # Group explicitly with the SQL expression instead of literal "period"
+        query = query.group_by(trunc_func).order_by(trunc_func)
         
         results = query.all()
         return [(row[0], row[1]) for row in results]
