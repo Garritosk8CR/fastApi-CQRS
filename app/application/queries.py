@@ -259,3 +259,4 @@ class CorrelationAnalyticsQuery(BaseModel):
     user_id: int
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
+    alert_type: Optional[str] = None
