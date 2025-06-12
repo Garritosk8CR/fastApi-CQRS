@@ -1,5 +1,5 @@
 import csv
-from datetime import timedelta
+from datetime import datetime, timedelta
 import io
 import math
 import traceback
@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 import numpy as np
 import pandas as pd
-from app.application.queries import AnomalyDetectionQuery, CandidateSupportQuery, DashboardAnalyticsQuery, ElectionSummaryQuery, ElectionTurnoutQuery, EnhancedNeuralNetworkPredictiveAnalyticsQuery, EnhancedPredictiveSubscriptionAnalyticsQuery, ExportElectionResultsQuery, GeolocationAnalyticsQuery, GeolocationTrendsQuery, GetAlertsQuery, GetAlertsWSQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidateVoteDistributionQuery, GetCandidatesQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetElectionSummaryQuery, GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetFeedbackCategoryAnalyticsQuery, GetFeedbackExportQuery, GetHistoricalTurnoutTrendsQuery, GetIntegrityScoreQuery, GetNotificationsQuery, GetNotificationsSummaryQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentAnalysisQuery, GetSentimentTrendQuery, GetSeverityDistributionQuery, GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery, GetTimeBasedVotingPatternsQuery, GetTimePatternsQuery, GetTopObserversQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, HistoricalPollingStationTrendsQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, PollingStationAnalyticsQuery, PredictiveSubscriptionAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery, ResultsBreakdownQuery, SegmentSubscriptionAnalyticsQuery, SubscriptionConversionMetricsQuery, TimeSeriesSubscriptionAnalyticsQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
+from app.application.queries import AnomalyDetectionQuery, CandidateSupportQuery, CorrelationAnalyticsQuery, DashboardAnalyticsQuery, ElectionSummaryQuery, ElectionTurnoutQuery, EnhancedNeuralNetworkPredictiveAnalyticsQuery, EnhancedPredictiveSubscriptionAnalyticsQuery, ExportElectionResultsQuery, GeolocationAnalyticsQuery, GeolocationTrendsQuery, GetAlertsQuery, GetAlertsWSQuery, GetAllElectionsQuery, GetAuditLogsQuery, GetCandidateByIdQuery, GetCandidateVoteDistributionQuery, GetCandidatesQuery, GetDetailedHistoricalComparisonsQuery, GetDetailedHistoricalComparisonsWithExternalQuery, GetElectionDetailsQuery, GetElectionResultsQuery, GetElectionSummaryQuery, GetFeedbackByElectionQuery, GetFeedbackBySeverityQuery, GetFeedbackCategoryAnalyticsQuery, GetFeedbackExportQuery, GetHistoricalTurnoutTrendsQuery, GetIntegrityScoreQuery, GetNotificationsQuery, GetNotificationsSummaryQuery, GetObserverByIdQuery, GetObserverTrustScoresQuery, GetObserversQuery, GetPollingStationQuery, GetPollingStationsByElectionQuery, GetSeasonalTurnoutPredictionQuery, GetSentimentAnalysisQuery, GetSentimentTrendQuery, GetSeverityDistributionQuery, GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery, GetTimeBasedVotingPatternsQuery, GetTimePatternsQuery, GetTopObserversQuery, GetTurnoutConfidenceQuery, GetTurnoutPredictionQuery, GetUserByEmailQuery, GetUserByIdQuery, GetUserProfileQuery, GetVotesByElectionQuery, GetVotesByVoterQuery, GetVotingPageDataQuery, HasVotedQuery, HistoricalPollingStationTrendsQuery, InactiveVotersQuery, ListAdminsQuery, ListUsersQuery, ParticipationByRoleQuery, PollingStationAnalyticsQuery, PredictiveSubscriptionAnalyticsQuery, PredictiveVoterTurnoutQuery, RealTimeElectionSummaryQuery, ResultsBreakdownQuery, SegmentSubscriptionAnalyticsQuery, SubscriptionConversionMetricsQuery, TimeSeriesSubscriptionAnalyticsQuery, TopCandidateQuery, UserStatisticsQuery, UsersByRoleQuery, VoterDetailsQuery, VotingStatusQuery
 from app.application.query_bus import query_bus
 from app.application.commands import BulkUpdateSubscriptionsCommand, CastVoteCommand, CastVoteCommandv2, CheckVoterExistsQuery, CreateAlertCommand, CreateAuditLogCommand, CreateCandidateCommand, CreateElectionCommand, CreateObserverCommand, CreatePollingStationCommand, DeleteCandidateCommand, DeleteObserverCommand, DeletePollingStationCommand, EditUserCommand, EndElectionCommand, LoginUserCommand, MarkAllNotificationsReadCommand, MarkNotificationReadCommand, RegisterVoterCommand, SubmitFeedbackCommand, UpdateAlertCommand, UpdateCandidateCommand, UpdateObserverCommand, UpdatePollingStationCommand, UpdateSubscriptionCommand, UpdateUserRoleCommand, UserSignUp
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -1247,7 +1247,58 @@ class EnhancedNeuralNetworkPredictiveAnalyticsHandler:
             "forecast": forecast,
             "model": "LSTM Neural Network"
         }
-   
+
+class CorrelateFeedbackAnalyticsHandler:
+    def handle(self, query: CorrelationAnalyticsQuery) -> dict:
+        with SessionLocal() as db:
+            # Retrieve subscription data.
+            sub_repo = SubscriptionEventRepository(db)
+            # The updated repository method now accepts date filters.
+            # Here we assume we're interested in alert type "anomaly" (adjust as needed).
+            sub_data = sub_repo.get_time_series_data_for_alert(
+                user_id=query.user_id,
+                alert_type="anomaly",
+                group_by="day",
+                start_date=query.start_date,
+                end_date=query.end_date
+            )
+            # Convert the subscription data to a DataFrame.
+            # Expected columns: ["date", "changes"]
+            df_sub = pd.DataFrame(sub_data, columns=["date", "total_changes"])
+            if not df_sub.empty:
+                # Convert the date to a common format (using just the date part)
+                df_sub["date"] = pd.to_datetime(df_sub["date"]).dt.date
+                # (In this simple case the repository returns one record per day because of grouping.)
+            else:
+                df_sub = pd.DataFrame(columns=["date", "total_changes"])
+            
+            # Retrieve observer feedback aggregated by day.
+            feedback_repo = ObserverFeedbackRepository(db)
+            feedback_data = feedback_repo.get_feedback_by_date(
+                observer_id=query.user_id,  # assuming observer_id equates to user_id for correlation
+                start_date=query.start_date,
+                end_date=query.end_date
+            )
+            # Expected columns: ["date", "avg_severity", "feedback_count"]
+            df_feed = pd.DataFrame(feedback_data, columns=["date", "avg_severity", "feedback_count"])
+            if not df_feed.empty:
+                df_feed["date"] = pd.to_datetime(df_feed["date"]).dt.date
+            
+            # Merge the two datasets on the date.
+            # Using inner join to only include days present in both.
+            df_merged = pd.merge(df_sub, df_feed, on="date", how="inner")
+            
+            # Compute Pearson correlation between daily subscription changes and average feedback severity.
+            correlation = None
+            if not df_merged.empty and len(df_merged) > 1:
+                correlation = df_merged["total_changes"].corr(df_merged["avg_severity"])
+            
+            return {
+                "user_id": query.user_id,
+                "data_points": len(df_merged),
+                "correlation": float(correlation) if correlation is not None else None,
+                "merged_data": df_merged.to_dict(orient="records")
+            } 
 class CommandBus:
     def __init__(self):
         self.handlers = {}
