@@ -1418,6 +1418,7 @@ query_bus.register_handler(SubscriptionConversionMetricsQuery, SubscriptionConve
 query_bus.register_handler(PredictiveSubscriptionAnalyticsQuery, PredictiveSubscriptionAnalyticsHandler())
 query_bus.register_handler(EnhancedPredictiveSubscriptionAnalyticsQuery, EnhancedPredictiveSubscriptionAnalyticsHandler())
 query_bus.register_handler(EnhancedNeuralNetworkPredictiveAnalyticsQuery, EnhancedNeuralNetworkPredictiveAnalyticsHandler())
+query_bus.register_handler(CorrelationAnalyticsQuery, CorrelateFeedbackAnalyticsHandler())
 
 
 
