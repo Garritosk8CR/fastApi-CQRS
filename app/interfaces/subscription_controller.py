@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.application.commands import BulkUpdateSubscriptionsCommand, UpdateSubscriptionCommand
-from app.application.queries import EnhancedNeuralNetworkPredictiveAnalyticsQuery, EnhancedPredictiveSubscriptionAnalyticsQuery, GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery, PredictiveSubscriptionAnalyticsQuery, SegmentSubscriptionAnalyticsQuery, SubscriptionConversionMetricsQuery, TimeSeriesSubscriptionAnalyticsQuery
+from app.application.queries import CorrelationAnalyticsQuery, EnhancedNeuralNetworkPredictiveAnalyticsQuery, EnhancedPredictiveSubscriptionAnalyticsQuery, GetSubscriptionAnalyticsQuery, GetSubscriptionsQuery, PredictiveSubscriptionAnalyticsQuery, SegmentSubscriptionAnalyticsQuery, SubscriptionConversionMetricsQuery, TimeSeriesSubscriptionAnalyticsQuery
 from app.application.query_bus import query_bus
 from app.infrastructure.database import SessionLocal, get_db
 from app.application.handlers import command_bus
@@ -142,3 +142,7 @@ async def subscriptions_ws(websocket: WebSocket, user_id: int = Query(...)):
     except WebSocketDisconnect:
         subscription_manager.disconnect(user_id, websocket)
         print("User disconnected from subscriptions WS")
+
+@router.get("/analytics/correlate_feedback", tags=["Analytics"])
+def correlate_feedback_analytics(query: CorrelationAnalyticsQuery = Depends()):
+    return query_bus.handle(query)
